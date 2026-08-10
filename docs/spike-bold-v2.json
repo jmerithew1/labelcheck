@@ -1,0 +1,127 @@
+{
+  "model": "claude-sonnet-5",
+  "variant": 2,
+  "right": 16,
+  "total": 17,
+  "rows": [
+    {
+      "label": "clean-match",
+      "weight": "heavier",
+      "truth": true,
+      "ok": true,
+      "ms": 3174
+    },
+    {
+      "label": "case-diff",
+      "weight": "heavier",
+      "truth": true,
+      "ok": true,
+      "ms": 4201
+    },
+    {
+      "label": "title-case-prefix",
+      "weight": "same",
+      "truth": false,
+      "ok": true,
+      "ms": 1910
+    },
+    {
+      "label": "word-swap",
+      "weight": "heavier",
+      "truth": true,
+      "ok": true,
+      "ms": 2034
+    },
+    {
+      "label": "word-drop",
+      "weight": "heavier",
+      "truth": true,
+      "ok": true,
+      "ms": 2213
+    },
+    {
+      "label": "punct-drift",
+      "weight": "heavier",
+      "truth": true,
+      "ok": true,
+      "ms": 1688
+    },
+    {
+      "label": "allcaps-body",
+      "weight": "heavier",
+      "truth": true,
+      "ok": true,
+      "ms": 4163
+    },
+    {
+      "label": "non-bold-prefix",
+      "weight": "heavier",
+      "truth": false,
+      "ok": false,
+      "ms": 2358
+    },
+    {
+      "label": "injection",
+      "weight": "heavier",
+      "truth": true,
+      "ok": true,
+      "ms": 3015
+    },
+    {
+      "label": "small-warning",
+      "weight": "heavier",
+      "truth": true,
+      "ok": true,
+      "ms": 2462
+    },
+    {
+      "label": "wine-label",
+      "weight": "heavier",
+      "truth": true,
+      "ok": true,
+      "ms": 2102
+    },
+    {
+      "label": "stones-throw",
+      "weight": "heavier",
+      "truth": true,
+      "ok": true,
+      "ms": 1771
+    },
+    {
+      "label": "harbor-gin",
+      "weight": "heavier",
+      "truth": true,
+      "ok": true,
+      "ms": 2646
+    },
+    {
+      "label": "batch-rye",
+      "weight": "heavier",
+      "truth": true,
+      "ok": true,
+      "ms": 2447
+    },
+    {
+      "label": "batch-vodka",
+      "weight": "heavier",
+      "truth": true,
+      "ok": true,
+      "ms": 2577
+    },
+    {
+      "label": "batch-stout",
+      "weight": "heavier",
+      "truth": true,
+      "ok": true,
+      "ms": 2637
+    },
+    {
+      "label": "batch-rose",
+      "weight": "heavier",
+      "truth": true,
+      "ok": true,
+      "ms": 2370
+    }
+  ]
+}

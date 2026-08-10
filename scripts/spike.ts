@@ -30,12 +30,12 @@ const client = new Anthropic({ timeout: 60_000, maxRetries: 1 });
 interface LabelEntry {
   name: string;
   png: string;
-  json: string;
+  ground_truth: string;
   spike_case?: string;
 }
 
 function sidecar(entry: LabelEntry) {
-  return JSON.parse(fs.readFileSync(path.join(root, entry.json), "utf8"));
+  return JSON.parse(fs.readFileSync(path.join(root, entry.ground_truth), "utf8"));
 }
 
 function imageBlock(entry: LabelEntry) {

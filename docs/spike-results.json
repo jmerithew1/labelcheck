@@ -1,0 +1,491 @@
+{
+  "summary": {
+    "ran_at": "2026-08-10T22:14:27.838Z",
+    "fidelity": [
+      {
+        "model": "claude-sonnet-5",
+        "cases": 12,
+        "verbatim_ok": 12,
+        "p50_ms": 6196,
+        "max_ms": 7296
+      },
+      {
+        "model": "claude-haiku-4-5",
+        "cases": 12,
+        "verbatim_ok": 12,
+        "p50_ms": 3768,
+        "max_ms": 4424
+      }
+    ],
+    "bold": {
+      "total": 17,
+      "correct": 17,
+      "unclear": 0
+    },
+    "burst": {
+      "n": 25,
+      "ok": 25,
+      "rate_limited": 0,
+      "wall_ms": 10426,
+      "errors": []
+    },
+    "total_calls": 66
+  },
+  "results": [
+    {
+      "model": "claude-sonnet-5",
+      "case": "clean-match",
+      "ms": 6037,
+      "stop": "tool_use",
+      "warning_verbatim_ok": true,
+      "warning_status": "found",
+      "bold_read": "bold",
+      "bold_truth": true,
+      "brand_read": "OLD TOM DISTILLERY",
+      "brand_truth": "OLD TOM DISTILLERY",
+      "got_warning": "GOVERNMENT WARNING: (1) According to the Surgeon General, women should not drink alcoholic beverages during pregnancy because of the risk of birth defects. (2) Consumption of alcoholic beverages impairs your ability to drive a car or operate machinery, and may cause health problems.",
+      "want_warning": "GOVERNMENT WARNING: (1) According to the Surgeon General, women should not drink alcoholic beverages during pregnancy because of the risk of birth defects. (2) Consumption of alcoholic beverages impairs your ability to drive a car or operate machinery, and may cause health problems."
+    },
+    {
+      "model": "claude-sonnet-5",
+      "case": "title-case-prefix",
+      "ms": 5657,
+      "stop": "tool_use",
+      "warning_verbatim_ok": true,
+      "warning_status": "found",
+      "bold_read": "not_bold",
+      "bold_truth": false,
+      "brand_read": "OLD TOM DISTILLERY",
+      "brand_truth": "OLD TOM DISTILLERY",
+      "got_warning": "Government Warning: (1) According to the Surgeon General, women should not drink alcoholic beverages during pregnancy because of the risk of birth defects. (2) Consumption of alcoholic beverages impairs your ability to drive a car or operate machinery, and may cause health problems.",
+      "want_warning": "Government Warning: (1) According to the Surgeon General, women should not drink alcoholic beverages during pregnancy because of the risk of birth defects. (2) Consumption of alcoholic beverages impairs your ability to drive a car or operate machinery, and may cause health problems."
+    },
+    {
+      "model": "claude-sonnet-5",
+      "case": "word-swap",
+      "ms": 6196,
+      "stop": "tool_use",
+      "warning_verbatim_ok": true,
+      "warning_status": "found",
+      "bold_read": "bold",
+      "bold_truth": true,
+      "brand_read": "OLD TOM DISTILLERY",
+      "brand_truth": "OLD TOM DISTILLERY",
+      "got_warning": "GOVERNMENT WARNING: (1) According to the Surgeon General, women should not drink alcoholic beverages during pregnancy because of the risk of health defects. (2) Consumption of alcoholic beverages impairs your ability to drive a car or operate machinery, and may cause health problems.",
+      "want_warning": "GOVERNMENT WARNING: (1) According to the Surgeon General, women should not drink alcoholic beverages during pregnancy because of the risk of health defects. (2) Consumption of alcoholic beverages impairs your ability to drive a car or operate machinery, and may cause health problems."
+    },
+    {
+      "model": "claude-sonnet-5",
+      "case": "word-drop",
+      "ms": 6436,
+      "stop": "tool_use",
+      "warning_verbatim_ok": true,
+      "warning_status": "found",
+      "bold_read": "bold",
+      "bold_truth": true,
+      "brand_read": "Old Tom Distillery",
+      "brand_truth": "OLD TOM DISTILLERY",
+      "got_warning": "GOVERNMENT WARNING: (1) According to the Surgeon General, women should not drink alcoholic beverages during pregnancy because of the risk of birth defects. (2) Consumption of alcoholic beverages impairs your ability to drive a car or machinery, and may cause health problems.",
+      "want_warning": "GOVERNMENT WARNING: (1) According to the Surgeon General, women should not drink alcoholic beverages during pregnancy because of the risk of birth defects. (2) Consumption of alcoholic beverages impairs your ability to drive a car or machinery, and may cause health problems."
+    },
+    {
+      "model": "claude-sonnet-5",
+      "case": "punct-drift",
+      "ms": 6075,
+      "stop": "tool_use",
+      "warning_verbatim_ok": true,
+      "warning_status": "found",
+      "bold_read": "bold",
+      "bold_truth": true,
+      "brand_read": "OLD TOM DISTILLERY",
+      "brand_truth": "OLD TOM DISTILLERY",
+      "got_warning": "GOVERNMENT WARNING: (1) According to the Surgeon General, women should not drink alcoholic beverages during pregnancy because of the risk of birth defects. (2) Consumption of alcoholic beverages impairs your ability to drive a car or operate machinery and may cause health problems.",
+      "want_warning": "GOVERNMENT WARNING: (1) According to the Surgeon General, women should not drink alcoholic beverages during pregnancy because of the risk of birth defects. (2) Consumption of alcoholic beverages impairs your ability to drive a car or operate machinery and may cause health problems."
+    },
+    {
+      "model": "claude-sonnet-5",
+      "case": "allcaps-body",
+      "ms": 6761,
+      "stop": "tool_use",
+      "warning_verbatim_ok": true,
+      "warning_status": "found",
+      "bold_read": "bold",
+      "bold_truth": true,
+      "brand_read": "OLD TOM DISTILLERY",
+      "brand_truth": "OLD TOM DISTILLERY",
+      "got_warning": "GOVERNMENT WARNING: (1) ACCORDING TO THE SURGEON GENERAL, WOMEN SHOULD NOT DRINK ALCOHOLIC BEVERAGES DURING PREGNANCY BECAUSE OF THE RISK OF BIRTH DEFECTS. (2) CONSUMPTION OF ALCOHOLIC BEVERAGES IMPAIRS YOUR ABILITY TO DRIVE A CAR OR OPERATE MACHINERY, AND MAY CAUSE HEALTH PROBLEMS.",
+      "want_warning": "GOVERNMENT WARNING: (1) ACCORDING TO THE SURGEON GENERAL, WOMEN SHOULD NOT DRINK ALCOHOLIC BEVERAGES DURING PREGNANCY BECAUSE OF THE RISK OF BIRTH DEFECTS. (2) CONSUMPTION OF ALCOHOLIC BEVERAGES IMPAIRS YOUR ABILITY TO DRIVE A CAR OR OPERATE MACHINERY, AND MAY CAUSE HEALTH PROBLEMS."
+    },
+    {
+      "model": "claude-sonnet-5",
+      "case": "non-bold-prefix",
+      "ms": 6275,
+      "stop": "tool_use",
+      "warning_verbatim_ok": true,
+      "warning_status": "found",
+      "bold_read": "not_bold",
+      "bold_truth": false,
+      "brand_read": "OLD TOM DISTILLERY",
+      "brand_truth": "OLD TOM DISTILLERY",
+      "got_warning": "GOVERNMENT WARNING: (1) According to the Surgeon General, women should not drink alcoholic beverages during pregnancy because of the risk of birth defects. (2) Consumption of alcoholic beverages impairs your ability to drive a car or operate machinery, and may cause health problems.",
+      "want_warning": "GOVERNMENT WARNING: (1) According to the Surgeon General, women should not drink alcoholic beverages during pregnancy because of the risk of birth defects. (2) Consumption of alcoholic beverages impairs your ability to drive a car or operate machinery, and may cause health problems."
+    },
+    {
+      "model": "claude-sonnet-5",
+      "case": "missing-warning",
+      "ms": 5255,
+      "stop": "tool_use",
+      "warning_verbatim_ok": true,
+      "warning_status": "absent",
+      "bold_read": "unclear",
+      "bold_truth": false,
+      "brand_read": "OLD TOM DISTILLERY",
+      "brand_truth": "OLD TOM DISTILLERY",
+      "got_warning": "",
+      "want_warning": ""
+    },
+    {
+      "model": "claude-sonnet-5",
+      "case": "case-diff",
+      "ms": 6080,
+      "stop": "tool_use",
+      "warning_verbatim_ok": true,
+      "warning_status": "found",
+      "bold_read": "bold",
+      "bold_truth": true,
+      "brand_read": "Old Tom Distillery",
+      "brand_truth": "Old Tom Distillery",
+      "got_warning": "GOVERNMENT WARNING: (1) According to the Surgeon General, women should not drink alcoholic beverages during pregnancy because of the risk of birth defects. (2) Consumption of alcoholic beverages impairs your ability to drive a car or operate machinery, and may cause health problems.",
+      "want_warning": "GOVERNMENT WARNING: (1) According to the Surgeon General, women should not drink alcoholic beverages during pregnancy because of the risk of birth defects. (2) Consumption of alcoholic beverages impairs your ability to drive a car or operate machinery, and may cause health problems."
+    },
+    {
+      "model": "claude-sonnet-5",
+      "case": "wine-label",
+      "ms": 7241,
+      "stop": "tool_use",
+      "warning_verbatim_ok": true,
+      "warning_status": "found",
+      "bold_read": "bold",
+      "bold_truth": true,
+      "brand_read": "CHATEAU MERIDIAN",
+      "brand_truth": "CHATEAU MERIDIAN",
+      "got_warning": "GOVERNMENT WARNING: (1) According to the Surgeon General, women should not drink alcoholic beverages during pregnancy because of the risk of birth defects. (2) Consumption of alcoholic beverages impairs your ability to drive a car or operate machinery, and may cause health problems.",
+      "want_warning": "GOVERNMENT WARNING: (1) According to the Surgeon General, women should not drink alcoholic beverages during pregnancy because of the risk of birth defects. (2) Consumption of alcoholic beverages impairs your ability to drive a car or operate machinery, and may cause health problems."
+    },
+    {
+      "model": "claude-sonnet-5",
+      "case": "injection",
+      "ms": 7296,
+      "stop": "tool_use",
+      "warning_verbatim_ok": true,
+      "warning_status": "found",
+      "bold_read": "bold",
+      "bold_truth": true,
+      "brand_read": "OLD TOM DISTILLERY",
+      "brand_truth": "OLD TOM DISTILLERY",
+      "got_warning": "GOVERNMENT WARNING: (1) According to the Surgeon General, women should not drink alcoholic beverages during pregnancy because of the risk of birth defects. (2) Consumption of alcoholic beverages impairs your ability to drive a car or operate machinery, and may cause health problems.",
+      "want_warning": "GOVERNMENT WARNING: (1) According to the Surgeon General, women should not drink alcoholic beverages during pregnancy because of the risk of birth defects. (2) Consumption of alcoholic beverages impairs your ability to drive a car or operate machinery, and may cause health problems."
+    },
+    {
+      "model": "claude-sonnet-5",
+      "case": "small-warning",
+      "ms": 5587,
+      "stop": "tool_use",
+      "warning_verbatim_ok": true,
+      "warning_status": "found",
+      "bold_read": "bold",
+      "bold_truth": true,
+      "brand_read": "OLD TOM DISTILLERY",
+      "brand_truth": "OLD TOM DISTILLERY",
+      "got_warning": "GOVERNMENT WARNING: (1) According to the Surgeon General, women should not drink alcoholic beverages during pregnancy because of the risk of birth defects. (2) Consumption of alcoholic beverages impairs your ability to drive a car or operate machinery, and may cause health problems.",
+      "want_warning": "GOVERNMENT WARNING: (1) According to the Surgeon General, women should not drink alcoholic beverages during pregnancy because of the risk of birth defects. (2) Consumption of alcoholic beverages impairs your ability to drive a car or operate machinery, and may cause health problems."
+    },
+    {
+      "model": "claude-haiku-4-5",
+      "case": "clean-match",
+      "ms": 3834,
+      "stop": "tool_use",
+      "warning_verbatim_ok": true,
+      "warning_status": "found",
+      "bold_read": "bold",
+      "bold_truth": true,
+      "brand_read": "OLD TOM DISTILLERY",
+      "brand_truth": "OLD TOM DISTILLERY",
+      "got_warning": "GOVERNMENT WARNING: (1) According to the Surgeon General, women should not drink alcoholic beverages during pregnancy because of the risk of birth defects. (2) Consumption of alcoholic beverages impairs your ability to drive a car or operate machinery, and may cause health problems.",
+      "want_warning": "GOVERNMENT WARNING: (1) According to the Surgeon General, women should not drink alcoholic beverages during pregnancy because of the risk of birth defects. (2) Consumption of alcoholic beverages impairs your ability to drive a car or operate machinery, and may cause health problems."
+    },
+    {
+      "model": "claude-haiku-4-5",
+      "case": "title-case-prefix",
+      "ms": 3660,
+      "stop": "tool_use",
+      "warning_verbatim_ok": true,
+      "warning_status": "found",
+      "bold_read": "bold",
+      "bold_truth": false,
+      "brand_read": "OLD TOM DISTILLERY",
+      "brand_truth": "OLD TOM DISTILLERY",
+      "got_warning": "Government Warning: (1) According to the Surgeon General, women should not drink alcoholic beverages during pregnancy because of the risk of birth defects. (2) Consumption of alcoholic beverages impairs your ability to drive a car or operate machinery, and may cause health problems.",
+      "want_warning": "Government Warning: (1) According to the Surgeon General, women should not drink alcoholic beverages during pregnancy because of the risk of birth defects. (2) Consumption of alcoholic beverages impairs your ability to drive a car or operate machinery, and may cause health problems."
+    },
+    {
+      "model": "claude-haiku-4-5",
+      "case": "word-swap",
+      "ms": 3821,
+      "stop": "tool_use",
+      "warning_verbatim_ok": true,
+      "warning_status": "found",
+      "bold_read": "bold",
+      "bold_truth": true,
+      "brand_read": "OLD TOM DISTILLERY",
+      "brand_truth": "OLD TOM DISTILLERY",
+      "got_warning": "GOVERNMENT WARNING: (1) According to the Surgeon General, women should not drink alcoholic beverages during pregnancy because of the risk of health defects. (2) Consumption of alcoholic beverages impairs your ability to drive a car or operate machinery, and may cause health problems.",
+      "want_warning": "GOVERNMENT WARNING: (1) According to the Surgeon General, women should not drink alcoholic beverages during pregnancy because of the risk of health defects. (2) Consumption of alcoholic beverages impairs your ability to drive a car or operate machinery, and may cause health problems."
+    },
+    {
+      "model": "claude-haiku-4-5",
+      "case": "word-drop",
+      "ms": 3768,
+      "stop": "tool_use",
+      "warning_verbatim_ok": true,
+      "warning_status": "found",
+      "bold_read": "bold",
+      "bold_truth": true,
+      "brand_read": "OLD TOM DISTILLERY",
+      "brand_truth": "OLD TOM DISTILLERY",
+      "got_warning": "GOVERNMENT WARNING: (1) According to the Surgeon General, women should not drink alcoholic beverages during pregnancy because of the risk of birth defects. (2) Consumption of alcoholic beverages impairs your ability to drive a car or machinery, and may cause health problems.",
+      "want_warning": "GOVERNMENT WARNING: (1) According to the Surgeon General, women should not drink alcoholic beverages during pregnancy because of the risk of birth defects. (2) Consumption of alcoholic beverages impairs your ability to drive a car or machinery, and may cause health problems."
+    },
+    {
+      "model": "claude-haiku-4-5",
+      "case": "punct-drift",
+      "ms": 4424,
+      "stop": "tool_use",
+      "warning_verbatim_ok": true,
+      "warning_status": "found",
+      "bold_read": "bold",
+      "bold_truth": true,
+      "brand_read": "OLD TOM DISTILLERY",
+      "brand_truth": "OLD TOM DISTILLERY",
+      "got_warning": "GOVERNMENT WARNING: (1) According to the Surgeon General, women should not drink alcoholic beverages during pregnancy because of the risk of birth defects. (2) Consumption of alcoholic beverages impairs your ability to drive a car or operate machinery and may cause health problems.",
+      "want_warning": "GOVERNMENT WARNING: (1) According to the Surgeon General, women should not drink alcoholic beverages during pregnancy because of the risk of birth defects. (2) Consumption of alcoholic beverages impairs your ability to drive a car or operate machinery and may cause health problems."
+    },
+    {
+      "model": "claude-haiku-4-5",
+      "case": "allcaps-body",
+      "ms": 3917,
+      "stop": "tool_use",
+      "warning_verbatim_ok": true,
+      "warning_status": "found",
+      "bold_read": "bold",
+      "bold_truth": true,
+      "brand_read": "OLD TOM DISTILLERY",
+      "brand_truth": "OLD TOM DISTILLERY",
+      "got_warning": "GOVERNMENT WARNING: (1) ACCORDING TO THE SURGEON GENERAL, WOMEN SHOULD NOT DRINK ALCOHOLIC BEVERAGES DURING PREGNANCY BECAUSE OF THE RISK OF BIRTH DEFECTS. (2) CONSUMPTION OF ALCOHOLIC BEVERAGES IMPAIRS YOUR ABILITY TO DRIVE A CAR OR OPERATE MACHINERY, AND MAY CAUSE HEALTH PROBLEMS.",
+      "want_warning": "GOVERNMENT WARNING: (1) ACCORDING TO THE SURGEON GENERAL, WOMEN SHOULD NOT DRINK ALCOHOLIC BEVERAGES DURING PREGNANCY BECAUSE OF THE RISK OF BIRTH DEFECTS. (2) CONSUMPTION OF ALCOHOLIC BEVERAGES IMPAIRS YOUR ABILITY TO DRIVE A CAR OR OPERATE MACHINERY, AND MAY CAUSE HEALTH PROBLEMS."
+    },
+    {
+      "model": "claude-haiku-4-5",
+      "case": "non-bold-prefix",
+      "ms": 3542,
+      "stop": "tool_use",
+      "warning_verbatim_ok": true,
+      "warning_status": "found",
+      "bold_read": "bold",
+      "bold_truth": false,
+      "brand_read": "OLD TOM DISTILLERY",
+      "brand_truth": "OLD TOM DISTILLERY",
+      "got_warning": "GOVERNMENT WARNING: (1) According to the Surgeon General, women should not drink alcoholic beverages during pregnancy because of the risk of birth defects. (2) Consumption of alcoholic beverages impairs your ability to drive a car or operate machinery, and may cause health problems.",
+      "want_warning": "GOVERNMENT WARNING: (1) According to the Surgeon General, women should not drink alcoholic beverages during pregnancy because of the risk of birth defects. (2) Consumption of alcoholic beverages impairs your ability to drive a car or operate machinery, and may cause health problems."
+    },
+    {
+      "model": "claude-haiku-4-5",
+      "case": "missing-warning",
+      "ms": 3581,
+      "stop": "tool_use",
+      "warning_verbatim_ok": true,
+      "warning_status": "absent",
+      "bold_read": "unclear",
+      "bold_truth": false,
+      "brand_read": "OLD TOM DISTILLERY",
+      "brand_truth": "OLD TOM DISTILLERY",
+      "got_warning": "",
+      "want_warning": ""
+    },
+    {
+      "model": "claude-haiku-4-5",
+      "case": "case-diff",
+      "ms": 3757,
+      "stop": "tool_use",
+      "warning_verbatim_ok": true,
+      "warning_status": "found",
+      "bold_read": "bold",
+      "bold_truth": true,
+      "brand_read": "Old Tom Distillery",
+      "brand_truth": "Old Tom Distillery",
+      "got_warning": "GOVERNMENT WARNING: (1) According to the Surgeon General, women should not drink alcoholic beverages during pregnancy because of the risk of birth defects. (2) Consumption of alcoholic beverages impairs your ability to drive a car or operate machinery, and may cause health problems.",
+      "want_warning": "GOVERNMENT WARNING: (1) According to the Surgeon General, women should not drink alcoholic beverages during pregnancy because of the risk of birth defects. (2) Consumption of alcoholic beverages impairs your ability to drive a car or operate machinery, and may cause health problems."
+    },
+    {
+      "model": "claude-haiku-4-5",
+      "case": "wine-label",
+      "ms": 3541,
+      "stop": "tool_use",
+      "warning_verbatim_ok": true,
+      "warning_status": "found",
+      "bold_read": "bold",
+      "bold_truth": true,
+      "brand_read": "CHATEAU MERIDIAN",
+      "brand_truth": "CHATEAU MERIDIAN",
+      "got_warning": "GOVERNMENT WARNING: (1) According to the Surgeon General, women should not drink alcoholic beverages during pregnancy because of the risk of birth defects. (2) Consumption of alcoholic beverages impairs your ability to drive a car or operate machinery, and may cause health problems.",
+      "want_warning": "GOVERNMENT WARNING: (1) According to the Surgeon General, women should not drink alcoholic beverages during pregnancy because of the risk of birth defects. (2) Consumption of alcoholic beverages impairs your ability to drive a car or operate machinery, and may cause health problems."
+    },
+    {
+      "model": "claude-haiku-4-5",
+      "case": "injection",
+      "ms": 3837,
+      "stop": "tool_use",
+      "warning_verbatim_ok": true,
+      "warning_status": "found",
+      "bold_read": "bold",
+      "bold_truth": true,
+      "brand_read": "OLD TOM DISTILLERY",
+      "brand_truth": "OLD TOM DISTILLERY",
+      "got_warning": "GOVERNMENT WARNING: (1) According to the Surgeon General, women should not drink alcoholic beverages during pregnancy because of the risk of birth defects. (2) Consumption of alcoholic beverages impairs your ability to drive a car or operate machinery, and may cause health problems.",
+      "want_warning": "GOVERNMENT WARNING: (1) According to the Surgeon General, women should not drink alcoholic beverages during pregnancy because of the risk of birth defects. (2) Consumption of alcoholic beverages impairs your ability to drive a car or operate machinery, and may cause health problems."
+    },
+    {
+      "model": "claude-haiku-4-5",
+      "case": "small-warning",
+      "ms": 3536,
+      "stop": "tool_use",
+      "warning_verbatim_ok": true,
+      "warning_status": "found",
+      "bold_read": "bold",
+      "bold_truth": true,
+      "brand_read": "OLD TOM DISTILLERY",
+      "brand_truth": "OLD TOM DISTILLERY",
+      "got_warning": "GOVERNMENT WARNING: (1) According to the Surgeon General, women should not drink alcoholic beverages during pregnancy because of the risk of birth defects. (2) Consumption of alcoholic beverages impairs your ability to drive a car or operate machinery, and may cause health problems.",
+      "want_warning": "GOVERNMENT WARNING: (1) According to the Surgeon General, women should not drink alcoholic beverages during pregnancy because of the risk of birth defects. (2) Consumption of alcoholic beverages impairs your ability to drive a car or operate machinery, and may cause health problems."
+    },
+    {
+      "model": "claude-sonnet-5",
+      "case": "bold:clean-match",
+      "bold_read": "bold",
+      "bold_truth": true,
+      "ms": 5975
+    },
+    {
+      "model": "claude-sonnet-5",
+      "case": "bold:case-diff",
+      "bold_read": "bold",
+      "bold_truth": true,
+      "ms": 5893
+    },
+    {
+      "model": "claude-sonnet-5",
+      "case": "bold:title-case-prefix",
+      "bold_read": "not_bold",
+      "bold_truth": false,
+      "ms": 6361
+    },
+    {
+      "model": "claude-sonnet-5",
+      "case": "bold:word-swap",
+      "bold_read": "bold",
+      "bold_truth": true,
+      "ms": 5933
+    },
+    {
+      "model": "claude-sonnet-5",
+      "case": "bold:word-drop",
+      "bold_read": "bold",
+      "bold_truth": true,
+      "ms": 6022
+    },
+    {
+      "model": "claude-sonnet-5",
+      "case": "bold:punct-drift",
+      "bold_read": "bold",
+      "bold_truth": true,
+      "ms": 6214
+    },
+    {
+      "model": "claude-sonnet-5",
+      "case": "bold:allcaps-body",
+      "bold_read": "bold",
+      "bold_truth": true,
+      "ms": 9881
+    },
+    {
+      "model": "claude-sonnet-5",
+      "case": "bold:non-bold-prefix",
+      "bold_read": "not_bold",
+      "bold_truth": false,
+      "ms": 7570
+    },
+    {
+      "model": "claude-sonnet-5",
+      "case": "bold:injection",
+      "bold_read": "bold",
+      "bold_truth": true,
+      "ms": 5846
+    },
+    {
+      "model": "claude-sonnet-5",
+      "case": "bold:small-warning",
+      "bold_read": "bold",
+      "bold_truth": true,
+      "ms": 6477
+    },
+    {
+      "model": "claude-sonnet-5",
+      "case": "bold:wine-label",
+      "bold_read": "bold",
+      "bold_truth": true,
+      "ms": 5621
+    },
+    {
+      "model": "claude-sonnet-5",
+      "case": "bold:stones-throw",
+      "bold_read": "bold",
+      "bold_truth": true,
+      "ms": 5496
+    },
+    {
+      "model": "claude-sonnet-5",
+      "case": "bold:harbor-gin",
+      "bold_read": "bold",
+      "bold_truth": true,
+      "ms": 6004
+    },
+    {
+      "model": "claude-sonnet-5",
+      "case": "bold:batch-rye",
+      "bold_read": "bold",
+      "bold_truth": true,
+      "ms": 6518
+    },
+    {
+      "model": "claude-sonnet-5",
+      "case": "bold:batch-vodka",
+      "bold_read": "bold",
+      "bold_truth": true,
+      "ms": 6049
+    },
+    {
+      "model": "claude-sonnet-5",
+      "case": "bold:batch-stout",
+      "bold_read": "bold",
+      "bold_truth": true,
+      "ms": 5538
+    },
+    {
+      "model": "claude-sonnet-5",
+      "case": "bold:batch-rose",
+      "bold_read": "bold",
+      "bold_truth": true,
+      "ms": 6086
+    }
+  ]
+}
