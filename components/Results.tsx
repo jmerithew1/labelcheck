@@ -32,7 +32,25 @@ export function Results({
   const showWarningDiff =
     result.warning.verdict === "fail_wording" || result.warning.verdict === "fail_prefix_case";
 
+  const attention = result.fields.filter((f) =>
+    ["possible_mismatch", "absent_on_label", "unreadable"].includes(f.verdict),
+  ).length;
+  const warningFails = result.warning.verdict.startsWith("fail");
+  const rollup = warningFails
+    ? { icon: "✕", text: "The government warning fails — details below.", cls: "border-red-300 bg-red-50 text-red-900" }
+    : attention > 0 || result.warning.verdict === "unreadable"
+      ? {
+          icon: "⚠",
+          text: `${attention > 0 ? `${attention} field${attention === 1 ? " needs" : "s need"} a look` : "The warning needs a manual look"} — everything else checks out.`,
+          cls: "border-amber-300 bg-amber-50 text-amber-900",
+        }
+      : { icon: "✓", text: "Everything checks out — provided fields match and the warning passes.", cls: "border-green-300 bg-green-50 text-green-900" };
+
   return (
+    <div className="flex flex-col gap-4">
+    <p className={`rounded-xl border-2 px-4 py-3 text-lg font-bold ${rollup.cls}`}>
+      <span aria-hidden>{rollup.icon}</span> {rollup.text}
+    </p>
     <div className="grid gap-6 lg:grid-cols-[2fr_3fr]">
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
@@ -56,6 +74,12 @@ export function Results({
               <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-stone-500">
                 Label text vs required text
               </p>
+              <p className="mb-2 text-xs text-stone-600">
+                How to read this: <del className="rounded-sm bg-red-100 px-0.5 text-red-900">struck-through</del>{" "}
+                = required text the label gets wrong or lacks ·{" "}
+                <ins className="rounded-sm bg-green-100 px-0.5 text-green-900 no-underline border-b-2 border-green-700">underlined</ins>{" "}
+                = what the label actually prints
+              </p>
               <CharDiff expected={CANONICAL_WARNING} actual={result.warning.labelText} />
             </div>
           )}
@@ -75,14 +99,17 @@ export function Results({
             <tbody>
               {result.fields.map((f) => {
                 const ui = FIELD_VERDICT_UI[f.verdict];
-                const interesting = f.verdict === "match_formatting" || f.verdict === "possible_mismatch";
                 return (
                   <tr key={f.field} className="border-t border-stone-200 align-top">
                     <td className="p-3 font-medium">{FIELD_LABELS[f.field] ?? f.field}</td>
                     <td className="p-3">{f.applicationValue || <span className="text-stone-400">—</span>}</td>
                     <td className="p-3">
-                      {interesting ? (
-                        <CharDiff expected={f.applicationValue} actual={f.labelValue} />
+                      {/* Plain values only — the two columns ARE the comparison.
+                          For skipped fields, show nothing: displaying an
+                          unchecked AI guess ("Kentucky" as a country) hands a
+                          skeptical agent a reason to distrust everything else. */}
+                      {f.verdict === "not_provided" ? (
+                        <span className="text-stone-400">—</span>
                       ) : (
                         f.labelValue || <span className="text-stone-400">—</span>
                       )}
@@ -106,6 +133,7 @@ export function Results({
           <p className="text-right text-xs text-stone-400">Checked in {(ms / 1000).toFixed(1)} s</p>
         )}
       </div>
+    </div>
     </div>
   );
 }

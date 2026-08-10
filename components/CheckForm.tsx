@@ -53,12 +53,18 @@ export function CheckForm() {
     setBusy(true);
     try {
       const res = await fetch(`/api/samples/${s.png}`);
+      if (!res.ok) {
+        setError("Could not load the sample image. Refresh the page and try again.");
+        return;
+      }
       const blob = await res.blob();
       const f = new File([blob], s.png, { type: "image/png" });
       setFields({ ...EMPTY, ...s.application });
       setImage(f);
       // Run the check immediately — the demo is "click a sample, see a verdict".
       await runCheck({ ...EMPTY, ...s.application }, f);
+    } catch {
+      setError("Could not load the sample. Check your connection and try again.");
     } finally {
       setBusy(false);
     }
@@ -103,6 +109,7 @@ export function CheckForm() {
         type="text"
         value={fields[name]}
         placeholder={placeholder}
+        aria-label={label}
         onChange={(e) => {
           reset();
           setFields((f) => ({ ...f, [name]: e.target.value }));
@@ -126,6 +133,7 @@ export function CheckForm() {
               key={s.id}
               onClick={() => loadSample(s)}
               disabled={busy}
+              aria-label={`Try sample: ${s.title} — ${s.blurb}`}
               className="rounded-lg border border-blue-300 bg-white px-4 py-2 text-left shadow-sm transition hover:bg-blue-100 disabled:opacity-50"
             >
               <span className="block font-semibold text-blue-900">{s.title}</span>
@@ -153,6 +161,7 @@ export function CheckForm() {
           <div
             role="button"
             tabIndex={0}
+            aria-label="Choose or drop a label image"
             onClick={() => fileInput.current?.click()}
             onKeyDown={(e) => e.key === "Enter" && fileInput.current?.click()}
             onDragOver={(e) => {

@@ -107,14 +107,14 @@
       "ground_truth": "samples/labels/allcaps-body.json",
       "template": "bourbon",
       "spike_case": "fidelity",
-      "summary": "Entire warning rendered in ALL CAPS (prefix bold). Body case deviates from canonical mixed case; exact check should flag it.",
+      "summary": "Entire warning rendered in ALL CAPS (prefix bold). Word-for-word exact; Part 16 constrains only the prefix casing, so this PASSES with a formatting note (27 CFR 16.22(a)(2)).",
       "fields": {
         "brand_name": "OLD TOM DISTILLERY",
         "class_type": "Kentucky Straight Bourbon Whiskey",
         "alcohol_content": "45% Alc./Vol. (90 Proof)",
         "net_contents": "750 mL"
       },
-      "warning_ok": false
+      "warning_ok": true
     },
     {
       "name": "missing-warning",

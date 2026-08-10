@@ -62,6 +62,7 @@ export function checkWarning(input: {
   status: "found" | "absent" | "unreadable";
   text: string;
   boldAdvisory: "bold" | "not_bold" | "unclear";
+  sizeAdvisory?: "normal" | "small" | "illegibly_small";
 }): WarningResult {
   const notes: string[] = [];
   const base = {
@@ -87,6 +88,15 @@ export function checkWarning(input: {
   }
 
   const text = normalizeTranscription(input.text);
+  if (!text) {
+    // "found" with empty text is a contradiction from the extractor —
+    // treat as missing (loud) rather than diffing against an empty string.
+    return {
+      ...base,
+      verdict: "fail_missing",
+      notes: ["No readable Government Health Warning Statement was returned for this label. Required on all alcohol beverages (27 CFR 16.21)."],
+    };
+  }
   const canonical = CANONICAL_WARNING; // already normalized-form
 
   // Prefix casing: the first two words as printed must be exactly ALL CAPS.
@@ -124,10 +134,22 @@ export function checkWarning(input: {
     };
   }
 
+  // Bold is the one requirement with no deterministic check, and the AI
+  // judgment's measured miss is exactly the evasion case (all-caps but not
+  // bold). Never let a green verdict imply bold was verified — hedge on
+  // EVERY outcome, including "bold" (fail-open guard, per red-team finding).
   if (input.boldAdvisory === "not_bold") {
-    notes.push('AI visual check suggests "GOVERNMENT WARNING" may not be in bold type (required by 27 CFR 16.22(a)(2)). Advisory only — verify on the label image (measured accuracy 16/17 on test labels).');
+    notes.push('AI visual check suggests "GOVERNMENT WARNING" may NOT be in bold type (required by 27 CFR 16.22(a)(2)). Verify on the label image.');
   } else if (input.boldAdvisory === "unclear") {
     notes.push("Could not determine whether the warning prefix is bold — verify on the label image.");
+  } else {
+    notes.push("Text is exact. Bold type on “GOVERNMENT WARNING” is AI-judged only (right on 16 of 17 test labels; the miss was a non-bold prefix) — glance at the image to confirm boldness.");
+  }
+
+  if (input.sizeAdvisory === "small" || input.sizeAdvisory === "illegibly_small") {
+    notes.push(
+      `The warning text appears ${input.sizeAdvisory === "illegibly_small" ? "barely legible — extremely small" : "unusually small"} relative to the rest of the label. Type-size minimums (27 CFR 16.22(b)) can't be checked from an image — verify against the physical container.`,
+    );
   }
 
   // Body casing: exact-case match to canonical = clean pass; otherwise the

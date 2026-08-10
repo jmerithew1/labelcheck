@@ -36,6 +36,62 @@ const BOLD_TOOL = {
   },
 };
 
+const WARNING_CONFIRM_TOOL = {
+  name: "record_warning_text",
+  description: "Record the government warning statement exactly as printed.",
+  input_schema: {
+    type: "object" as const,
+    properties: {
+      warning_status: { type: "string", enum: ["found", "absent", "unreadable"] },
+      warning_text: {
+        type: "string",
+        description:
+          "The complete government warning statement transcribed character-for-character AS PRINTED: exact case, exact punctuation, any typos preserved — do NOT correct or complete it. Join wrapped lines with a single space. Empty if absent/unreadable.",
+      },
+    },
+    required: ["warning_status", "warning_text"],
+  },
+};
+
+/**
+ * Second independent reading of ONLY the warning, by the other model tier.
+ * Called when the first reading FAILS the deterministic check — transcription
+ * noise can manufacture a false failure on a clean label, and a false
+ * rejection is the costliest error this tool can make. Returns null on any
+ * API problem (the confirmation is best-effort; the original verdict stands).
+ */
+export async function confirmWarningTranscription(
+  imageBase64: string,
+  mediaType: "image/png" | "image/jpeg" | "image/webp",
+): Promise<{ status: "found" | "absent" | "unreadable"; text: string } | null> {
+  try {
+    const msg = await client.messages.create({
+      model: BOLD_MODEL, // Sonnet: higher transcription ceiling, acceptable here — only failing labels pay
+      max_tokens: 500,
+      system: EXTRACTION_SYSTEM_PROMPT,
+      tools: [WARNING_CONFIRM_TOOL],
+      tool_choice: { type: "tool", name: WARNING_CONFIRM_TOOL.name },
+      messages: [
+        {
+          role: "user",
+          content: [
+            { type: "image", source: { type: "base64", media_type: mediaType, data: imageBase64 } },
+            { type: "text", text: "Record the government warning statement printed on this label." },
+          ],
+        },
+      ],
+    });
+    const tu = msg.content.find((b) => b.type === "tool_use");
+    if (!tu || tu.type !== "tool_use") return null;
+    const input = tu.input as { warning_status?: string; warning_text?: string };
+    const status = input.warning_status;
+    if (status !== "found" && status !== "absent" && status !== "unreadable") return null;
+    return { status, text: typeof input.warning_text === "string" ? input.warning_text : "" };
+  } catch {
+    return null;
+  }
+}
+
 export type ExtractionFailure =
   | { kind: "refusal" }
   | { kind: "rate_limited" }

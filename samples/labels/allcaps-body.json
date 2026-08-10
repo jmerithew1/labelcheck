@@ -6,5 +6,5 @@
   "warning_text_verbatim": "GOVERNMENT WARNING: (1) ACCORDING TO THE SURGEON GENERAL, WOMEN SHOULD NOT DRINK ALCOHOLIC BEVERAGES DURING PREGNANCY BECAUSE OF THE RISK OF BIRTH DEFECTS. (2) CONSUMPTION OF ALCOHOLIC BEVERAGES IMPAIRS YOUR ABILITY TO DRIVE A CAR OR OPERATE MACHINERY, AND MAY CAUSE HEALTH PROBLEMS.",
   "warning_prefix_all_caps": true,
   "warning_prefix_bold": true,
-  "notes": "Entire warning rendered in ALL CAPS (prefix bold). Body case deviates from canonical mixed case; exact check should flag it."
+  "notes": "Entire warning rendered in ALL CAPS (prefix bold). Word-for-word exact; an all-caps body is not prohibited by Part 16 (only the prefix casing is constrained, 27 CFR 16.22(a)(2)), so this PASSES with a formatting note."
 }

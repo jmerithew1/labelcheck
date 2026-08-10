@@ -1,5 +1,9 @@
 # Decisions — append-only, newest at top. Every entry names the rejected alternative.
 
+## 2026-08-10 — final-gate 4a notes
+
+(1) XLSX manifests cut per pre-approved degradation ladder step 1 — CSV + downloadable sample defines the format; **rejected**: adding the xlsx dependency for a format the sample CSV obviates. (2) Phase-boundary verifier passes for Phases 1–2 consolidated into the final-gate fan-out (phases completed same-day; verifiers see the same code either way); perf-verifier role folded into the requirements verifier since the measured artifact was minutes old — **rejected**: duplicate re-measurement runs for ceremony. (3) Unplanned file `.claude/launch.json` (browser-preview dev tooling) — kept, dev-only. (4) Test labels are HTML/CSS-rendered with programmatic ground truth rather than AI-image-generated (brief "encourages" AI tools) — **rejected**: AI-generated labels as the primary set, because they carry no exact ground truth for the character-level fidelity spike; a few AI-styled variants exist in the set.
+
 ## 2026-08-10 — batch orchestration is client-side, not server SSE
 
 Deviation from plan (checked against tracker BEFORE building): the browser parses the CSV, pairs images, and runs a semaphore of 8 concurrent requests to the existing /api/check route, streaming rows into the table as they land. Tracker walk: P2 intact; P3 intact (8 × ~4s → ~2.5 min for 300; 16 concurrent upstream model calls < burst-tested 25); U3 intact; S2 intact (API key stays server-side). **Rejected alternative**: server-side batch endpoint + SSE — more moving parts (job state, streaming protocol, upload-all-first latency) for zero requirement gain on a stateless prototype; progress-streaming falls out of the client loop for free.

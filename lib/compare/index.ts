@@ -62,6 +62,7 @@ export function compareLabel(app: ApplicationData, ex: LabelExtraction): CheckRe
     status: ex.warning.status,
     text: ex.warning.text,
     boldAdvisory: ex.warning_prefix_bold,
+    sizeAdvisory: ex.warning_text_size,
   });
 
   let overall: CheckResult["overall"];

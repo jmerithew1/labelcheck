@@ -14,8 +14,14 @@ const UNIT_TO_ML: Record<string, number> = {
 };
 
 export function parseVolumeMl(raw: string): number | null {
-  const s = raw.toLowerCase().replace(/\s+/g, " ").trim();
-  const m = s.match(/(\d+(?:[.,]\d+)?)\s*(fl\.? ?oz\.?|fluid ounces?|millilitres?|milliliters?|centilitres?|centiliters?|litres?|liters?|ml|cl|l|oz)\b/);
+  // Collapse US thousands separators ("1,000 ml") BEFORE unit parsing; only a
+  // comma followed by 1-2 digits is treated as a decimal comma.
+  const s = raw
+    .toLowerCase()
+    .replace(/(\d),(?=\d{3}\b)/g, "$1")
+    .replace(/\s+/g, " ")
+    .trim();
+  const m = s.match(/(\d+(?:[.,]\d{1,2})?)\s*(fl\.? ?oz\.?|fluid ounces?|millilitres?|milliliters?|centilitres?|centiliters?|litres?|liters?|ml|cl|l|oz)\b/);
   if (!m) return null;
   const value = parseFloat(m[1].replace(",", "."));
   const unitKey = m[2].replace(/\./g, "").replace(/\s+/g, " ");
@@ -41,7 +47,10 @@ export function compareNetContents(applicationValue: string, labelValue: string)
       note: "Could not parse a volume from one side — compare manually.",
     };
   }
-  if (Math.abs(app - label) > 0.5) {
+  // Relative tolerance: 25.4 fl oz (751.17 mL) is the customary printed
+  // equivalent of 750 mL — a 0.5% band accepts unit-conversion rounding
+  // while still catching real size differences (750 vs 700 = 6.7%).
+  if (Math.abs(app - label) > Math.max(0.5, app * 0.005)) {
     return {
       field,
       verdict: "possible_mismatch",

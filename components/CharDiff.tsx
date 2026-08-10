@@ -28,11 +28,13 @@ export function CharDiff({ expected, actual }: { expected: string; actual: strin
         p.kind === "same" ? (
           <span key={idx}>{p.ch}</span>
         ) : p.kind === "a" ? (
-          <del key={idx} className="bg-red-100 text-red-900 no-underline rounded-sm">
+          // Strikethrough kept: the marking must survive without color
+          // (colorblind users, printouts, copy/paste, screen readers).
+          <del key={idx} className="bg-red-100 text-red-900 line-through rounded-sm">
             {p.ch}
           </del>
         ) : (
-          <ins key={idx} className="bg-green-100 text-green-900 no-underline rounded-sm">
+          <ins key={idx} className="bg-green-100 text-green-900 no-underline border-b-2 border-green-700 rounded-sm">
             {p.ch}
           </ins>
         ),

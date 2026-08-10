@@ -26,6 +26,9 @@ export interface LabelExtraction {
   warning: ExtractedField;
   /** Visual judgment only — no deterministic check exists for bold from pixels. */
   warning_prefix_bold: "bold" | "not_bold" | "unclear";
+  /** Advisory: applicants shrink the warning; physical mm size is unknowable
+   *  from an image, but relative-size is visible. */
+  warning_text_size: "normal" | "small" | "illegibly_small";
 }
 
 /** Flat JSON schema the model fills via forced tool use. Keep flat. */
@@ -82,6 +85,12 @@ export const EXTRACTION_TOOL = {
         description:
           "Whether the first two words of the warning appear visually BOLD (heavier weight than the body text)",
       },
+      warning_text_size: {
+        type: "string",
+        enum: ["normal", "small", "illegibly_small"],
+        description:
+          "Size of the warning statement's text relative to the other text on this label: 'normal' if comparable to other body text, 'small' if noticeably smaller than everything else, 'illegibly_small' if it strains legibility",
+      },
     },
     required: [
       "is_alcohol_label",
@@ -93,6 +102,7 @@ export const EXTRACTION_TOOL = {
       "origin_status", "origin_text",
       "warning_status", "warning_text",
       "warning_prefix_bold",
+      "warning_text_size",
     ],
   },
 };
@@ -122,5 +132,7 @@ export function toLabelExtraction(flat: Record<string, unknown>): LabelExtractio
     warning: f("warning"),
     warning_prefix_bold:
       (flat.warning_prefix_bold as LabelExtraction["warning_prefix_bold"]) ?? "unclear",
+    warning_text_size:
+      (flat.warning_text_size as LabelExtraction["warning_text_size"]) ?? "normal",
   };
 }

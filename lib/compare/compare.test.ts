@@ -75,7 +75,7 @@ describe("warning check (C7, C8)", () => {
     const r = checkWarning({ status: "found", text: CANONICAL_WARNING, boldAdvisory: "not_bold" });
     expect(r.verdict).toBe("pass");
     expect(r.notes.join(" ")).toContain("bold");
-    expect(r.notes.join(" ")).toContain("Advisory");
+    expect(r.notes.join(" ")).toContain("Verify on the label image");
   });
 });
 
@@ -182,6 +182,7 @@ function extractionFromSidecar(name: string, bold?: "bold" | "not_bold"): LabelE
     country_of_origin: { status: "absent", text: "" },
     warning: sc.warning_text_verbatim ? found(sc.warning_text_verbatim) : { status: "absent", text: "" },
     warning_prefix_bold: bold ?? (sc.warning_prefix_bold ? "bold" : "not_bold"),
+    warning_text_size: "normal",
   };
 }
 const oldTomApp: ApplicationData = {

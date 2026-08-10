@@ -48,7 +48,7 @@ Verification points: spec approval (done), post-build final gate, pre-submit.
 
 ## Graded criteria (final-gate walk)
 - **E1** Correctness/completeness — all C-rows above
-- **E2** Code quality — pure tested engine (31 tests), thin UI, flat contracts
+- **E2** Code quality — pure tested engine (76 tests incl. review-regression suite), thin UI, flat contracts
 - **E3** Appropriate tech choices — decisions log with rejected alternatives ([decisions.md](decisions.md))
 - **E4** UX & error handling — U-rows
 - **E5** Attention to requirements — this file

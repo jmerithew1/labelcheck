@@ -60,6 +60,16 @@ export function BatchRunner() {
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const startedAt = useRef<number>(0);
   const [wallMs, setWallMs] = useState<number | null>(null);
+  const [autoRun, setAutoRun] = useState(false);
+
+  // Auto-start after the sample batch loads (state must land first).
+  useEffect(() => {
+    if (autoRun && rows.some((r) => r.status === "queued") && !running) {
+      setAutoRun(false);
+      void run();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoRun, rows]);
 
   // One refresh mid-triage would vaporize a multi-minute, real-money run.
   useEffect(() => {
@@ -71,6 +81,11 @@ export function BatchRunner() {
   }, [running, rows]);
 
   function buildRows(csvText: string, images: File[]): void {
+    // Free blob URLs from any previous batch before dropping its rows.
+    setRows((old) => {
+      for (const r of old) if (r.imageUrl) URL.revokeObjectURL(r.imageUrl);
+      return old;
+    });
     const parsed = parseCsv(csvText);
     if (!parsed.length) {
       setGlobalError("The CSV file is empty.");
@@ -126,30 +141,42 @@ export function BatchRunner() {
   async function loadSampleBatch() {
     setGlobalError(null);
     setRows([]);
-    const csvRes = await fetch("/api/batch-samples/batch.csv");
-    if (!csvRes.ok) {
-      setGlobalError("Could not load the sample batch.");
-      return;
+    try {
+      const csvRes = await fetch("/api/batch-samples/batch.csv");
+      if (!csvRes.ok) {
+        setGlobalError("Could not load the sample batch. Refresh and try again.");
+        return;
+      }
+      const csvText = await csvRes.text();
+      const filenames = parseCsv(csvText)
+        .slice(1)
+        .map((r) => r[0]?.trim())
+        .filter(Boolean);
+      const images = await Promise.all(
+        filenames.map(async (n) => {
+          const res = await fetch(`/api/batch-samples/${n}`);
+          if (!res.ok) throw new Error(`sample image ${n} unavailable`);
+          const blob = await res.blob();
+          return new File([blob], n, { type: "image/png" });
+        }),
+      );
+      buildRows(csvText, images);
+      // The button says "run" — run. Making the user hunt for a second
+      // button reads as "the tool is broken" (UX cold-read finding #1).
+      setAutoRun(true);
+    } catch {
+      setGlobalError("Could not load the sample batch. Check your connection and try again.");
     }
-    const csvText = await csvRes.text();
-    const filenames = parseCsv(csvText)
-      .slice(1)
-      .map((r) => r[0]?.trim())
-      .filter(Boolean);
-    const images = await Promise.all(
-      filenames.map(async (n) => {
-        const res = await fetch(`/api/batch-samples/${n}`);
-        const blob = await res.blob();
-        return new File([blob], n, { type: "image/png" });
-      }),
-    );
-    buildRows(csvText, images);
   }
 
   async function run() {
     setRunning(true);
     startedAt.current = performance.now();
-    const queue = rows.filter((r) => r.status === "queued");
+    // Error rows requeue on a re-run — a transient network blip over a
+    // 2-minute batch must be recoverable without rebuilding the batch.
+    const queue = rows.filter(
+      (r) => r.status === "queued" || (r.status === "error" && r.file),
+    );
     let next = 0;
     const update = (index: number, patch: Partial<BatchRow>) =>
       setRows((rs) => rs.map((r) => (r.index === index ? { ...r, ...patch } : r)));
@@ -194,17 +221,21 @@ export function BatchRunner() {
       "filename", "overall", "government_warning", "brand_name", "class_type",
       "alcohol_content", "net_contents", "notes",
     ];
+    // Label-transcribed text is attacker-controlled input landing in Excel:
+    // neutralize formula-leading characters (=+-@) per OWASP CSV-injection.
+    const safe = (s: string) => (/^[=+\-@]/.test(s) ? `'${s}` : s);
     const lines = [...rows]
       .sort((a, b) => a.index - b.index)
       .map((r) => {
-        if (!r.result) return [r.filename, r.status === "error" ? `ERROR: ${r.error}` : r.status];
+        if (!r.result)
+          return [safe(r.filename), r.status, "", "", "", "", "", r.error ? safe(`ERROR: ${r.error}`) : ""];
         const f = (name: string) => r.result!.fields.find((x) => x.field === name)?.verdict ?? "";
         return [
-          r.filename,
+          safe(r.filename),
           r.result.overall,
           r.result.warning.verdict,
           f("brand_name"), f("class_type"), f("alcohol_content"), f("net_contents"),
-          [...r.result.warning.notes, ...r.result.fields.map((x) => x.note).filter(Boolean)].join(" | "),
+          safe([...r.result.warning.notes, ...r.result.fields.map((x) => x.note).filter(Boolean)].join(" | ")),
         ];
       });
     const blob = new Blob([toCsv([header, ...lines])], { type: "text/csv" });
@@ -258,7 +289,9 @@ export function BatchRunner() {
       <section className="grid gap-4 md:grid-cols-[1fr_1fr_auto]">
         <button
           onClick={() => csvInput.current?.click()}
-          className="rounded-xl border-2 border-dashed border-stone-300 bg-white p-4 text-left hover:bg-stone-100"
+          disabled={running}
+          aria-label="Choose the application CSV file"
+          className="rounded-xl border-2 border-dashed border-stone-300 bg-white p-4 text-left hover:bg-stone-100 disabled:opacity-50"
         >
           <span className="block font-semibold">1. Choose the application CSV</span>
           <span className="block text-sm text-stone-500">
@@ -267,7 +300,9 @@ export function BatchRunner() {
         </button>
         <button
           onClick={() => imagesInput.current?.click()}
-          className="rounded-xl border-2 border-dashed border-stone-300 bg-white p-4 text-left hover:bg-stone-100"
+          disabled={running}
+          aria-label="Choose the label image files"
+          className="rounded-xl border-2 border-dashed border-stone-300 bg-white p-4 text-left hover:bg-stone-100 disabled:opacity-50"
         >
           <span className="block font-semibold">2. Choose the label images</span>
           <span className="block text-sm text-stone-500">
@@ -277,7 +312,7 @@ export function BatchRunner() {
         <div className="flex flex-col justify-center gap-2">
           <button
             onClick={run}
-            disabled={running || !rows.some((r) => r.status === "queued")}
+            disabled={running || !rows.some((r) => r.status === "queued" || (r.status === "error" && r.file))}
             className="rounded-xl bg-blue-700 px-6 py-3 text-lg font-bold text-white shadow hover:bg-blue-800 disabled:cursor-not-allowed disabled:bg-stone-300"
           >
             {running ? `Checking… ${done} of ${rows.length}` : "Check all labels"}
@@ -285,6 +320,7 @@ export function BatchRunner() {
           <button
             onClick={loadSampleBatch}
             disabled={running}
+            aria-label="Load and run the bundled sample batch"
             className="rounded-lg border border-blue-300 bg-blue-50 px-4 py-1.5 text-sm font-semibold text-blue-900 hover:bg-blue-100 disabled:opacity-50"
           >
             Or run the sample batch
@@ -343,8 +379,8 @@ export function BatchRunner() {
             {running ? `${done} of ${rows.length} checked` : `${rows.length} applications`}
           </span>
           <span className="rounded-full bg-green-50 px-3 py-1 text-sm font-semibold text-green-800">✓ {counts.clean} clean</span>
-          <span className="rounded-full bg-amber-50 px-3 py-1 text-sm font-semibold text-amber-900">⚠ {counts.needs_review} need a look</span>
-          <span className="rounded-full bg-red-50 px-3 py-1 text-sm font-semibold text-red-900">✕ {counts.warning_failure} warning failures</span>
+          <span className="rounded-full bg-amber-50 px-3 py-1 text-sm font-semibold text-amber-900">⚠ {counts.needs_review} {counts.needs_review === 1 ? "needs" : "need"} a look</span>
+          <span className="rounded-full bg-red-50 px-3 py-1 text-sm font-semibold text-red-900">✕ {counts.warning_failure} warning {counts.warning_failure === 1 ? "failure" : "failures"}</span>
           {counts.error > 0 && (
             <span className="rounded-full bg-red-50 px-3 py-1 text-sm font-semibold text-red-900">✕ {counts.error} errors</span>
           )}
@@ -431,23 +467,36 @@ function BatchRowView({
   onOpen: () => void;
 }) {
   const attention: string[] = [];
+  const formattingNotes: string[] = [];
   if (row.result) {
     if (row.result.warning.verdict.startsWith("fail"))
       attention.push(WARNING_VERDICT_UI[row.result.warning.verdict].label);
+    if (row.result.warning.verdict === "unreadable")
+      attention.push("warning: check manually");
     for (const f of row.result.fields) {
       if (f.verdict === "possible_mismatch" || f.verdict === "absent_on_label" || f.verdict === "unreadable")
         attention.push(`${f.field.replace(/_/g, " ")}: ${f.note ?? f.verdict}`);
+      // The table must never claim less than the detail view shows — a row
+      // with formatting differences is a match, but it is not "everything
+      // matches" (UX finding: summaries must be exactly as honest as details).
+      if (f.verdict === "match_formatting")
+        formattingNotes.push(f.field.replace(/_/g, " "));
     }
   }
   if (row.error) attention.push(row.error);
+  const summary = attention.length
+    ? attention.slice(0, 2).join(" · ")
+    : row.status === "done"
+      ? formattingNotes.length
+        ? `Matches — formatting differs on ${formattingNotes.join(", ")}.`
+        : "Everything matches."
+      : "";
   return (
     <tr className="border-t border-stone-200 align-top hover:bg-stone-50">
       <td className="p-3 font-medium">{row.filename}</td>
       <td className="p-3">{row.application.brand_name}</td>
       <td className="p-3">{statusChip(row)}</td>
-      <td className="max-w-md p-3 text-xs text-stone-600">
-        {attention.length ? attention.slice(0, 2).join(" · ") : row.status === "done" ? "Everything matches." : ""}
-      </td>
+      <td className="max-w-md p-3 text-xs text-stone-600">{summary}</td>
       <td className="p-3 text-right">
         {row.result && (
           <button onClick={onOpen} className="rounded-lg border border-stone-300 px-3 py-1 text-xs font-semibold hover:bg-stone-100">

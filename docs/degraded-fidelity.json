@@ -1,0 +1,182 @@
+{
+  "summary": {
+    "measured_at": "2026-08-10T23:13:35.806Z",
+    "model": "claude-haiku-4-5",
+    "n": 15,
+    "warning_verbatim_ok": 10,
+    "verdict_ok": 12,
+    "degraded_to_unreadable": 1
+  },
+  "rows": [
+    {
+      "file": "clean-match--blur.png",
+      "ms": 4081,
+      "warning_status": "found",
+      "verbatim_ok": true,
+      "verdict_got": "pass",
+      "verdict_want": "pass",
+      "verdict_ok": true,
+      "brand_read": "OLD TOM DISTILLERY"
+    },
+    {
+      "file": "clean-match--glare.png",
+      "ms": 3596,
+      "warning_status": "found",
+      "verbatim_ok": true,
+      "verdict_got": "pass",
+      "verdict_want": "pass",
+      "verdict_ok": true,
+      "brand_read": "OLD TOM DISTILLERY"
+    },
+    {
+      "file": "clean-match--tilt.png",
+      "ms": 3801,
+      "warning_status": "found",
+      "verbatim_ok": true,
+      "verdict_got": "pass",
+      "verdict_want": "pass",
+      "verdict_ok": true,
+      "brand_read": "OLD TOM DISTILLERY"
+    },
+    {
+      "file": "small-warning--blur.png",
+      "ms": 5832,
+      "warning_status": "unreadable",
+      "verbatim_ok": false,
+      "verdict_got": "unreadable",
+      "verdict_want": "pass",
+      "verdict_ok": true,
+      "brand_read": "OLD TOM DISTILLERY"
+    },
+    {
+      "file": "small-warning--glare.png",
+      "ms": 3610,
+      "warning_status": "found",
+      "verbatim_ok": true,
+      "verdict_got": "pass",
+      "verdict_want": "pass",
+      "verdict_ok": true,
+      "brand_read": "OLD TOM DISTILLERY"
+    },
+    {
+      "file": "small-warning--tilt.png",
+      "ms": 4482,
+      "warning_status": "found",
+      "verbatim_ok": false,
+      "verdict_got": "fail_wording",
+      "verdict_want": "pass",
+      "verdict_ok": false,
+      "brand_read": "OLD TOM DISTILLERY"
+    },
+    {
+      "file": "title-case-prefix--blur.png",
+      "ms": 3916,
+      "warning_status": "found",
+      "verbatim_ok": true,
+      "verdict_got": "fail_prefix_case",
+      "verdict_want": "fail_prefix_case",
+      "verdict_ok": true,
+      "brand_read": "OLD TOM DISTILLERY"
+    },
+    {
+      "file": "title-case-prefix--glare.png",
+      "ms": 3589,
+      "warning_status": "found",
+      "verbatim_ok": true,
+      "verdict_got": "fail_prefix_case",
+      "verdict_want": "fail_prefix_case",
+      "verdict_ok": true,
+      "brand_read": "OLD TOM DISTILLERY"
+    },
+    {
+      "file": "title-case-prefix--tilt.png",
+      "ms": 3545,
+      "warning_status": "found",
+      "verbatim_ok": true,
+      "verdict_got": "fail_prefix_case",
+      "verdict_want": "fail_prefix_case",
+      "verdict_ok": true,
+      "brand_read": "OLD TOM DISTILLERY"
+    },
+    {
+      "file": "wine-label--blur.png",
+      "ms": 4413,
+      "warning_status": "found",
+      "verbatim_ok": false,
+      "verdict_got": "fail_wording",
+      "verdict_want": "pass",
+      "verdict_ok": false,
+      "brand_read": "CHATEAU MERIDIAN"
+    },
+    {
+      "file": "wine-label--glare.png",
+      "ms": 4238,
+      "warning_status": "found",
+      "verbatim_ok": false,
+      "verdict_got": "fail_wording",
+      "verdict_want": "pass",
+      "verdict_ok": false,
+      "brand_read": "CHATEAU MERIDIAN"
+    },
+    {
+      "file": "wine-label--tilt.png",
+      "ms": 4130,
+      "warning_status": "found",
+      "verbatim_ok": true,
+      "verdict_got": "pass",
+      "verdict_want": "pass",
+      "verdict_ok": true,
+      "brand_read": "CHATEAU MERIDIAN"
+    },
+    {
+      "file": "word-swap--blur.png",
+      "ms": 3985,
+      "warning_status": "found",
+      "verbatim_ok": true,
+      "verdict_got": "fail_wording",
+      "verdict_want": "fail_wording",
+      "verdict_ok": true,
+      "brand_read": "OLD TOM DISTILLERY"
+    },
+    {
+      "file": "word-swap--glare.png",
+      "ms": 4793,
+      "warning_status": "found",
+      "verbatim_ok": true,
+      "verdict_got": "fail_wording",
+      "verdict_want": "fail_wording",
+      "verdict_ok": true,
+      "brand_read": "OLD TOM DISTILLERY"
+    },
+    {
+      "file": "word-swap--tilt.png",
+      "ms": 3839,
+      "warning_status": "found",
+      "verbatim_ok": false,
+      "verdict_got": "fail_wording",
+      "verdict_want": "fail_wording",
+      "verdict_ok": true,
+      "brand_read": "OLD TOM DISTILLERY"
+    }
+  ],
+  "confirmation_rescue": [
+    {
+      "file": "small-warning--tilt.png",
+      "second_status": "found",
+      "second_verdict": "pass",
+      "rescued": true
+    },
+    {
+      "file": "wine-label--blur.png",
+      "second_status": "found",
+      "second_verdict": "pass",
+      "rescued": true
+    },
+    {
+      "file": "wine-label--glare.png",
+      "second_status": "found",
+      "second_verdict": "pass",
+      "rescued": true
+    }
+  ]
+}
