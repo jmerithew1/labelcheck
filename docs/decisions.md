@@ -1,5 +1,9 @@
 # Decisions — append-only, newest at top. Every entry names the rejected alternative.
 
+## 2026-08-10 — batch orchestration is client-side, not server SSE
+
+Deviation from plan (checked against tracker BEFORE building): the browser parses the CSV, pairs images, and runs a semaphore of 8 concurrent requests to the existing /api/check route, streaming rows into the table as they land. Tracker walk: P2 intact; P3 intact (8 × ~4s → ~2.5 min for 300; 16 concurrent upstream model calls < burst-tested 25); U3 intact; S2 intact (API key stays server-side). **Rejected alternative**: server-side batch endpoint + SSE — more moving parts (job state, streaming protocol, upload-all-first latency) for zero requirement gain on a stateless prototype; progress-streaming falls out of the client loop for free.
+
 ## 2026-08-10 — 0b gate: hybrid extraction (Haiku full + Sonnet bold-only, parallel)
 
 Spike (docs/spike-results.md): transcription fidelity 12/12 verbatim on BOTH models incl. all adversarial mutations — the memorized-warning-reconstruction risk did not materialize; no crop-fallback. Injection label transcribed, not obeyed. Sonnet full extraction p50 6.2s FAILS the ~5s bar; Haiku p50 3.8s passes. Bold: Sonnet-full 17/17 but too slow; chosen hybrid = Haiku full extraction ∥ Sonnet dedicated stroke-weight call (16/17, p50 2.4s) → wall-clock ~3.8s, bold 16/17 surfaced as advisory with the measured number (C9 limitation). Burst 25/25 concurrent, 0 rate-limited → semaphore 20. **Rejected alternatives**: Sonnet-only (breaks the latency requirement that killed the prior vendor); Haiku-only (15/17 bold when 16/17 costs zero wall-clock); OCR hybrid / crop-fallback (unneeded at 12/12 fidelity).
