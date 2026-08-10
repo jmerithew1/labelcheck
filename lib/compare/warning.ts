@@ -1,0 +1,141 @@
+import { CANONICAL_WARNING, WARNING_PREFIX } from "./canonical.ts";
+import type { WarningResult, WordDiff } from "./types.ts";
+
+/**
+ * The government warning check. Deterministic and strict by design:
+ * wording/punctuation deviations FAIL; the only normalization applied is
+ * transcription noise that carries no compliance meaning (whitespace, line
+ * wraps, curly quotes). Load-bearing punctuation — the colon, "(1)"/"(2)",
+ * commas, periods — is never normalized away.
+ *
+ * Casing policy (27 CFR 16.22(a)(2), SME-verified):
+ * - "GOVERNMENT WARNING" must be ALL CAPS → title case is a HARD FAIL.
+ * - Body casing is NOT constrained by Part 16 → an all-caps body that is
+ *   word-for-word correct passes with a formatting note.
+ * - Bold is a separate advisory AI judgment (no deterministic pixel check).
+ */
+
+/** Normalize transcription noise ONLY. */
+export function normalizeTranscription(s: string): string {
+  return s
+    .replace(/[‘’ʼ]/g, "'") // curly/typographic apostrophes
+    .replace(/[“”]/g, '"')
+    .replace(/(\p{L})-\s+(\p{L})/gu, "$1$2") // line-wrap hyphenation: "preg- nancy"
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+/** Word-level diff vs canonical (case-insensitive on wording; casing handled separately). */
+function diffWords(canonical: string[], actual: string[]): WordDiff[] {
+  // LCS over lowercased words, then read out the edit script.
+  const a = canonical.map((w) => w.toLowerCase());
+  const b = actual.map((w) => w.toLowerCase());
+  const m = a.length, n = b.length;
+  const lcs: number[][] = Array.from({ length: m + 1 }, () => new Array(n + 1).fill(0));
+  for (let i = m - 1; i >= 0; i--)
+    for (let j = n - 1; j >= 0; j--)
+      lcs[i][j] = a[i] === b[j] ? lcs[i + 1][j + 1] + 1 : Math.max(lcs[i + 1][j], lcs[i][j + 1]);
+  const diffs: WordDiff[] = [];
+  let i = 0, j = 0;
+  while (i < m && j < n) {
+    if (a[i] === b[j]) { i++; j++; continue; }
+    // Pair a deletion+insertion at the same point into a "changed" entry
+    if (lcs[i + 1][j] >= lcs[i][j + 1]) {
+      if (j < n && lcs[i + 1][j + 1] === lcs[i + 1][j]) {
+        diffs.push({ kind: "changed", expected: canonical[i], actual: actual[j], at: i });
+        i++; j++;
+      } else {
+        diffs.push({ kind: "missing", expected: canonical[i], at: i });
+        i++;
+      }
+    } else {
+      diffs.push({ kind: "added", actual: actual[j], at: i });
+      j++;
+    }
+  }
+  while (i < m) { diffs.push({ kind: "missing", expected: canonical[i], at: i }); i++; }
+  while (j < n) { diffs.push({ kind: "added", actual: actual[j], at: i }); j++; }
+  return diffs;
+}
+
+export function checkWarning(input: {
+  status: "found" | "absent" | "unreadable";
+  text: string;
+  boldAdvisory: "bold" | "not_bold" | "unclear";
+}): WarningResult {
+  const notes: string[] = [];
+  const base = {
+    labelText: input.text,
+    boldAdvisory: input.boldAdvisory,
+    prefixAllCaps: false,
+    deviations: [] as WordDiff[],
+  };
+
+  if (input.status === "absent") {
+    return {
+      ...base,
+      verdict: "fail_missing",
+      notes: ["No Government Health Warning Statement found on the label. Required on all alcohol beverages (27 CFR 16.21)."],
+    };
+  }
+  if (input.status === "unreadable") {
+    return {
+      ...base,
+      verdict: "unreadable",
+      notes: ["A warning statement appears present but could not be read reliably (image quality). Check the label manually — do not reject on this alone."],
+    };
+  }
+
+  const text = normalizeTranscription(input.text);
+  const canonical = CANONICAL_WARNING; // already normalized-form
+
+  // Prefix casing: the first two words as printed must be exactly ALL CAPS.
+  const prefixAllCaps = text.startsWith(WARNING_PREFIX);
+  base.prefixAllCaps = prefixAllCaps;
+
+  // Wording: word-for-word, punctuation included, case-insensitive here
+  // (casing is adjudicated separately so we can tell "wrong words" apart
+  // from "right words, wrong case").
+  const wordingExact = text.toUpperCase() === canonical.toUpperCase();
+
+  if (!wordingExact) {
+    const deviations = diffWords(canonical.split(" "), text.split(" "));
+    const parts = deviations.slice(0, 5).map((d) =>
+      d.kind === "missing"
+        ? `missing "${d.expected}"`
+        : d.kind === "added"
+          ? `unexpected "${d.actual}"`
+          : `"${d.actual}" should be "${d.expected}"`,
+    );
+    return {
+      ...base,
+      deviations,
+      verdict: "fail_wording",
+      notes: [`Warning text deviates from the required statement: ${parts.join("; ")}${deviations.length > 5 ? "; …" : ""}.`],
+    };
+  }
+
+  if (!prefixAllCaps) {
+    const printedPrefix = text.slice(0, WARNING_PREFIX.length);
+    return {
+      ...base,
+      verdict: "fail_prefix_case",
+      notes: [`"${printedPrefix}" must appear as "${WARNING_PREFIX}" in capital letters (27 CFR 16.22(a)(2)).`],
+    };
+  }
+
+  if (input.boldAdvisory === "not_bold") {
+    notes.push('AI visual check suggests "GOVERNMENT WARNING" may not be in bold type (required by 27 CFR 16.22(a)(2)). Advisory only — verify on the label image (measured accuracy 16/17 on test labels).');
+  } else if (input.boldAdvisory === "unclear") {
+    notes.push("Could not determine whether the warning prefix is bold — verify on the label image.");
+  }
+
+  // Body casing: exact-case match to canonical = clean pass; otherwise the
+  // wording is right and the prefix is caps — Part 16 does not constrain
+  // body casing, so it's a pass with a formatting note.
+  if (text === canonical) {
+    return { ...base, verdict: "pass", notes };
+  }
+  notes.unshift("Warning wording is exact; body letter-casing differs from the standard rendering (permitted — Part 16 constrains only the prefix).");
+  return { ...base, verdict: "pass_formatting_note", notes };
+}
