@@ -1,0 +1,13 @@
+﻿filename,brand_name,class_type,alcohol_content,net_contents
+clean-match.png,OLD TOM DISTILLERY,Kentucky Straight Bourbon Whiskey,45% Alc./Vol. (90 Proof),750 mL
+wine-label.png,CHATEAU MERIDIAN,Cabernet Sauvignon,13.5% Alc. by Vol.,750 mL
+stones-throw.png,STONE'S THROW BREWING,India Pale Ale,6.2% Alc./Vol.,355 mL
+harbor-gin.png,HARBOR LIGHT GIN,Distilled Gin,47% Alc./Vol. (94 Proof),750 mL
+batch-rye.png,RIVER BEND RYE,Straight Rye Whiskey,46.5% Alc./Vol. (93 Proof),750 mL
+batch-vodka.png,SILVER BIRCH VODKA,Vodka,40% Alc./Vol. (80 Proof),1 L
+batch-stout.png,IRONWORKS STOUT,Imperial Stout,9.5% Alc./Vol.,473 mL
+batch-rose.png,VALLEY MIST CELLARS,Rosé Wine,12% Alc. by Vol.,750 mL
+case-diff.png,OLD TOM DISTILLERY,Kentucky Straight Bourbon Whiskey,45% Alc./Vol. (90 Proof),750 mL
+case-diff-2.png,Stone's Throw Brewing,India pale ale,6.2% alc./vol.,355 mL
+warning-fail.png,OLD TOM DISTILLERY,Kentucky Straight Bourbon Whiskey,45% Alc./Vol. (90 Proof),750 mL
+brand-mismatch.png,OLD CROW DISTILLERY,Kentucky Straight Bourbon Whiskey,45% Alc./Vol. (90 Proof),750 mL

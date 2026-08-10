@@ -1,0 +1,10 @@
+{
+  "brand_name": "OLD TOM DISTILLERY",
+  "class_type": "Kentucky Straight Bourbon Whiskey",
+  "alcohol_content": "45% Alc./Vol. (90 Proof)",
+  "net_contents": "750 mL",
+  "warning_text_verbatim": "Government Warning: (1) According to the Surgeon General, women should not drink alcoholic beverages during pregnancy because of the risk of birth defects. (2) Consumption of alcoholic beverages impairs your ability to drive a car or operate machinery, and may cause health problems.",
+  "warning_prefix_all_caps": false,
+  "warning_prefix_bold": false,
+  "notes": "Warning body canonical, but prefix is title case (\"Government Warning:\") and not bold. Must FAIL the exact-warning check (27 CFR 16.21 requires ALL CAPS bold prefix)."
+}
