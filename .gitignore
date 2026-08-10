@@ -1,0 +1,14 @@
+# deps / build
+node_modules/
+.next/
+out/
+
+# env — never commit keys
+.env
+.env.local
+.env*.local
+
+# misc
+*.tsbuildinfo
+next-env.d.ts
+samples/tools/node_modules/
