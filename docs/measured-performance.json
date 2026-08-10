@@ -1,0 +1,26 @@
+{
+  "measured_at": "2026-08-10T22:50:49.448Z",
+  "base": "https://labelcheck-production-8f22.up.railway.app",
+  "p1_single": {
+    "n": 7,
+    "p50_ms": 4022,
+    "worst_ms": 4417,
+    "all_ms": [
+      4232,
+      4022,
+      3664,
+      3880,
+      4417,
+      4173,
+      3802
+    ]
+  },
+  "p3_batch": {
+    "rows": 250,
+    "concurrency": 8,
+    "wall_ms": 121251,
+    "ok": 250,
+    "rate_limited": 0,
+    "errors": 0
+  }
+}
