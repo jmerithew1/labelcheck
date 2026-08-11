@@ -1,0 +1,578 @@
+{
+  "summary": {
+    "measured_at": "2026-08-11T20:54:15.163Z",
+    "exact_pass": 66,
+    "exact_fail": 4,
+    "exact_pass_rate": 94.3,
+    "band_fallbacks": 15,
+    "skipped_no_truth": 5,
+    "gate": "PASS (>=90%)"
+  },
+  "rows": [
+    {
+      "label": "allcaps-body",
+      "field": "brand_name",
+      "outcome": "band_fallback"
+    },
+    {
+      "label": "allcaps-body",
+      "field": "class_type",
+      "outcome": "pass",
+      "iou": 0.75,
+      "containsCenter": true
+    },
+    {
+      "label": "allcaps-body",
+      "field": "alcohol_content",
+      "outcome": "pass",
+      "iou": 0.71,
+      "containsCenter": true
+    },
+    {
+      "label": "allcaps-body",
+      "field": "net_contents",
+      "outcome": "pass",
+      "iou": 0.63,
+      "containsCenter": true
+    },
+    {
+      "label": "allcaps-body",
+      "field": "warning",
+      "outcome": "pass",
+      "iou": 0.88,
+      "containsCenter": true
+    },
+    {
+      "label": "batch-rose",
+      "field": "brand_name",
+      "outcome": "pass",
+      "iou": 0.9,
+      "containsCenter": true
+    },
+    {
+      "label": "batch-rose",
+      "field": "class_type",
+      "outcome": "pass",
+      "iou": 0.87,
+      "containsCenter": true
+    },
+    {
+      "label": "batch-rose",
+      "field": "alcohol_content",
+      "outcome": "FAIL",
+      "iou": 0.39,
+      "containsCenter": true
+    },
+    {
+      "label": "batch-rose",
+      "field": "net_contents",
+      "outcome": "FAIL",
+      "iou": 0.38,
+      "containsCenter": true
+    },
+    {
+      "label": "batch-rose",
+      "field": "warning",
+      "outcome": "pass",
+      "iou": 0.87,
+      "containsCenter": true
+    },
+    {
+      "label": "batch-rye",
+      "field": "brand_name",
+      "outcome": "band_fallback"
+    },
+    {
+      "label": "batch-rye",
+      "field": "class_type",
+      "outcome": "pass",
+      "iou": 0.74,
+      "containsCenter": true
+    },
+    {
+      "label": "batch-rye",
+      "field": "alcohol_content",
+      "outcome": "pass",
+      "iou": 0.71,
+      "containsCenter": true
+    },
+    {
+      "label": "batch-rye",
+      "field": "net_contents",
+      "outcome": "pass",
+      "iou": 0.63,
+      "containsCenter": true
+    },
+    {
+      "label": "batch-rye",
+      "field": "warning",
+      "outcome": "pass",
+      "iou": 0.83,
+      "containsCenter": true
+    },
+    {
+      "label": "batch-stout",
+      "field": "brand_name",
+      "outcome": "band_fallback"
+    },
+    {
+      "label": "batch-stout",
+      "field": "class_type",
+      "outcome": "pass",
+      "iou": 0.79,
+      "containsCenter": true
+    },
+    {
+      "label": "batch-stout",
+      "field": "warning",
+      "outcome": "pass",
+      "iou": 0.86,
+      "containsCenter": true
+    },
+    {
+      "label": "batch-vodka",
+      "field": "brand_name",
+      "outcome": "band_fallback"
+    },
+    {
+      "label": "batch-vodka",
+      "field": "class_type",
+      "outcome": "pass",
+      "iou": 0.85,
+      "containsCenter": true
+    },
+    {
+      "label": "batch-vodka",
+      "field": "alcohol_content",
+      "outcome": "pass",
+      "iou": 0.82,
+      "containsCenter": true
+    },
+    {
+      "label": "batch-vodka",
+      "field": "net_contents",
+      "outcome": "band_fallback"
+    },
+    {
+      "label": "batch-vodka",
+      "field": "warning",
+      "outcome": "pass",
+      "iou": 0.88,
+      "containsCenter": true
+    },
+    {
+      "label": "case-diff",
+      "field": "brand_name",
+      "outcome": "band_fallback"
+    },
+    {
+      "label": "case-diff",
+      "field": "class_type",
+      "outcome": "pass",
+      "iou": 0.75,
+      "containsCenter": true
+    },
+    {
+      "label": "case-diff",
+      "field": "alcohol_content",
+      "outcome": "pass",
+      "iou": 0.71,
+      "containsCenter": true
+    },
+    {
+      "label": "case-diff",
+      "field": "net_contents",
+      "outcome": "pass",
+      "iou": 0.63,
+      "containsCenter": true
+    },
+    {
+      "label": "case-diff",
+      "field": "warning",
+      "outcome": "pass",
+      "iou": 0.83,
+      "containsCenter": true
+    },
+    {
+      "label": "clean-match",
+      "field": "brand_name",
+      "outcome": "band_fallback"
+    },
+    {
+      "label": "clean-match",
+      "field": "class_type",
+      "outcome": "pass",
+      "iou": 0.75,
+      "containsCenter": true
+    },
+    {
+      "label": "clean-match",
+      "field": "alcohol_content",
+      "outcome": "pass",
+      "iou": 0.71,
+      "containsCenter": true
+    },
+    {
+      "label": "clean-match",
+      "field": "net_contents",
+      "outcome": "pass",
+      "iou": 0.63,
+      "containsCenter": true
+    },
+    {
+      "label": "clean-match",
+      "field": "warning",
+      "outcome": "pass",
+      "iou": 0.83,
+      "containsCenter": true
+    },
+    {
+      "label": "harbor-gin",
+      "field": "brand_name",
+      "outcome": "band_fallback"
+    },
+    {
+      "label": "harbor-gin",
+      "field": "class_type",
+      "outcome": "FAIL",
+      "iou": 0.05,
+      "containsCenter": false
+    },
+    {
+      "label": "harbor-gin",
+      "field": "alcohol_content",
+      "outcome": "pass",
+      "iou": 0.79,
+      "containsCenter": true
+    },
+    {
+      "label": "harbor-gin",
+      "field": "net_contents",
+      "outcome": "pass",
+      "iou": 0.75,
+      "containsCenter": true
+    },
+    {
+      "label": "harbor-gin",
+      "field": "warning",
+      "outcome": "pass",
+      "iou": 0.88,
+      "containsCenter": true
+    },
+    {
+      "label": "injection",
+      "field": "brand_name",
+      "outcome": "band_fallback"
+    },
+    {
+      "label": "injection",
+      "field": "class_type",
+      "outcome": "pass",
+      "iou": 0.75,
+      "containsCenter": true
+    },
+    {
+      "label": "injection",
+      "field": "alcohol_content",
+      "outcome": "pass",
+      "iou": 0.71,
+      "containsCenter": true
+    },
+    {
+      "label": "injection",
+      "field": "net_contents",
+      "outcome": "pass",
+      "iou": 0.63,
+      "containsCenter": true
+    },
+    {
+      "label": "injection",
+      "field": "warning",
+      "outcome": "pass",
+      "iou": 0.83,
+      "containsCenter": true
+    },
+    {
+      "label": "missing-warning",
+      "field": "brand_name",
+      "outcome": "pass",
+      "iou": 0.89,
+      "containsCenter": true
+    },
+    {
+      "label": "missing-warning",
+      "field": "class_type",
+      "outcome": "pass",
+      "iou": 0.75,
+      "containsCenter": true
+    },
+    {
+      "label": "missing-warning",
+      "field": "alcohol_content",
+      "outcome": "pass",
+      "iou": 0.71,
+      "containsCenter": true
+    },
+    {
+      "label": "missing-warning",
+      "field": "net_contents",
+      "outcome": "pass",
+      "iou": 0.63,
+      "containsCenter": true
+    },
+    {
+      "label": "non-bold-prefix",
+      "field": "brand_name",
+      "outcome": "band_fallback"
+    },
+    {
+      "label": "non-bold-prefix",
+      "field": "class_type",
+      "outcome": "pass",
+      "iou": 0.75,
+      "containsCenter": true
+    },
+    {
+      "label": "non-bold-prefix",
+      "field": "alcohol_content",
+      "outcome": "pass",
+      "iou": 0.71,
+      "containsCenter": true
+    },
+    {
+      "label": "non-bold-prefix",
+      "field": "net_contents",
+      "outcome": "pass",
+      "iou": 0.63,
+      "containsCenter": true
+    },
+    {
+      "label": "non-bold-prefix",
+      "field": "warning",
+      "outcome": "pass",
+      "iou": 0.83,
+      "containsCenter": true
+    },
+    {
+      "label": "punct-drift",
+      "field": "brand_name",
+      "outcome": "band_fallback"
+    },
+    {
+      "label": "punct-drift",
+      "field": "class_type",
+      "outcome": "pass",
+      "iou": 0.75,
+      "containsCenter": true
+    },
+    {
+      "label": "punct-drift",
+      "field": "alcohol_content",
+      "outcome": "pass",
+      "iou": 0.71,
+      "containsCenter": true
+    },
+    {
+      "label": "punct-drift",
+      "field": "net_contents",
+      "outcome": "pass",
+      "iou": 0.63,
+      "containsCenter": true
+    },
+    {
+      "label": "punct-drift",
+      "field": "warning",
+      "outcome": "pass",
+      "iou": 0.83,
+      "containsCenter": true
+    },
+    {
+      "label": "small-warning",
+      "field": "brand_name",
+      "outcome": "pass",
+      "iou": 0.89,
+      "containsCenter": true
+    },
+    {
+      "label": "small-warning",
+      "field": "class_type",
+      "outcome": "pass",
+      "iou": 0.75,
+      "containsCenter": true
+    },
+    {
+      "label": "small-warning",
+      "field": "alcohol_content",
+      "outcome": "pass",
+      "iou": 0.71,
+      "containsCenter": true
+    },
+    {
+      "label": "small-warning",
+      "field": "net_contents",
+      "outcome": "pass",
+      "iou": 0.63,
+      "containsCenter": true
+    },
+    {
+      "label": "small-warning",
+      "field": "warning",
+      "outcome": "band_fallback"
+    },
+    {
+      "label": "stones-throw",
+      "field": "brand_name",
+      "outcome": "FAIL",
+      "iou": 0.47,
+      "containsCenter": true
+    },
+    {
+      "label": "stones-throw",
+      "field": "class_type",
+      "outcome": "pass",
+      "iou": 0.79,
+      "containsCenter": true
+    },
+    {
+      "label": "stones-throw",
+      "field": "warning",
+      "outcome": "pass",
+      "iou": 0.86,
+      "containsCenter": true
+    },
+    {
+      "label": "title-case-prefix",
+      "field": "brand_name",
+      "outcome": "band_fallback"
+    },
+    {
+      "label": "title-case-prefix",
+      "field": "class_type",
+      "outcome": "pass",
+      "iou": 0.75,
+      "containsCenter": true
+    },
+    {
+      "label": "title-case-prefix",
+      "field": "alcohol_content",
+      "outcome": "pass",
+      "iou": 0.71,
+      "containsCenter": true
+    },
+    {
+      "label": "title-case-prefix",
+      "field": "net_contents",
+      "outcome": "pass",
+      "iou": 0.63,
+      "containsCenter": true
+    },
+    {
+      "label": "title-case-prefix",
+      "field": "warning",
+      "outcome": "pass",
+      "iou": 0.83,
+      "containsCenter": true
+    },
+    {
+      "label": "wine-label",
+      "field": "brand_name",
+      "outcome": "pass",
+      "iou": 0.9,
+      "containsCenter": true
+    },
+    {
+      "label": "wine-label",
+      "field": "class_type",
+      "outcome": "pass",
+      "iou": 0.78,
+      "containsCenter": true
+    },
+    {
+      "label": "wine-label",
+      "field": "alcohol_content",
+      "outcome": "pass",
+      "iou": 0.51,
+      "containsCenter": true
+    },
+    {
+      "label": "wine-label",
+      "field": "net_contents",
+      "outcome": "pass",
+      "iou": 0.6,
+      "containsCenter": true
+    },
+    {
+      "label": "wine-label",
+      "field": "warning",
+      "outcome": "pass",
+      "iou": 0.87,
+      "containsCenter": true
+    },
+    {
+      "label": "word-drop",
+      "field": "brand_name",
+      "outcome": "band_fallback"
+    },
+    {
+      "label": "word-drop",
+      "field": "class_type",
+      "outcome": "pass",
+      "iou": 0.75,
+      "containsCenter": true
+    },
+    {
+      "label": "word-drop",
+      "field": "alcohol_content",
+      "outcome": "pass",
+      "iou": 0.71,
+      "containsCenter": true
+    },
+    {
+      "label": "word-drop",
+      "field": "net_contents",
+      "outcome": "pass",
+      "iou": 0.63,
+      "containsCenter": true
+    },
+    {
+      "label": "word-drop",
+      "field": "warning",
+      "outcome": "pass",
+      "iou": 0.83,
+      "containsCenter": true
+    },
+    {
+      "label": "word-swap",
+      "field": "brand_name",
+      "outcome": "band_fallback"
+    },
+    {
+      "label": "word-swap",
+      "field": "class_type",
+      "outcome": "pass",
+      "iou": 0.75,
+      "containsCenter": true
+    },
+    {
+      "label": "word-swap",
+      "field": "alcohol_content",
+      "outcome": "pass",
+      "iou": 0.71,
+      "containsCenter": true
+    },
+    {
+      "label": "word-swap",
+      "field": "net_contents",
+      "outcome": "pass",
+      "iou": 0.63,
+      "containsCenter": true
+    },
+    {
+      "label": "word-swap",
+      "field": "warning",
+      "outcome": "pass",
+      "iou": 0.83,
+      "containsCenter": true
+    }
+  ]
+}

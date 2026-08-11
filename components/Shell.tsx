@@ -5,7 +5,13 @@ import { usePathname } from "next/navigation";
 
 /** App shell from the batch mockup: sidebar (wordmark, nav, how-it-works)
  *  + top tab bar. Reports/Settings deliberately omitted — no dead nav. */
-export function Shell({ children }: { children: React.ReactNode }) {
+export function Shell({
+  children,
+  topRight,
+}: {
+  children: React.ReactNode;
+  topRight?: React.ReactNode;
+}) {
   const path = usePathname();
   const isBatch = path.startsWith("/batch");
 
@@ -69,6 +75,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
               Single check
             </Link>
           </nav>
+          {topRight && <div className="ml-auto flex items-center gap-2 pb-2">{topRight}</div>}
         </header>
         <main className="min-w-0 flex-1 p-5 md:p-8">{children}</main>
       </div>

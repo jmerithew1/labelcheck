@@ -21,13 +21,13 @@ export interface Region {
   height: number;
 }
 
-interface OcrWord {
+export interface OcrWord {
   text: string;
   x0: number; y0: number; x1: number; y1: number;
 }
-interface OcrLine extends OcrWord {}
+export interface OcrLine extends OcrWord {}
 
-interface OcrIndex {
+export interface OcrIndex {
   words: OcrWord[];
   lines: OcrLine[];
   width: number;
@@ -36,20 +36,31 @@ interface OcrIndex {
 
 const ocrCache = new Map<string, Promise<OcrIndex | null>>();
 
+/** True pixel dimensions of the image — the coordinate space every OCR box
+ *  must be normalized against. Normalizing against text-block extents (the
+ *  original bug) shifts every box by the label's margin fraction. */
+function imageDimensions(url: string): Promise<{ width: number; height: number } | null> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => resolve({ width: img.naturalWidth, height: img.naturalHeight });
+    img.onerror = () => resolve(null);
+    img.src = url;
+  });
+}
+
 async function ocrImage(imageUrl: string): Promise<OcrIndex | null> {
   if (!ocrCache.has(imageUrl)) {
     ocrCache.set(imageUrl, (async () => {
       try {
+        const dims = await imageDimensions(imageUrl);
+        if (!dims) return null;
         const { createWorker } = await import("tesseract.js");
         const worker = await createWorker("eng");
         const { data } = await worker.recognize(imageUrl, {}, { blocks: true });
         await worker.terminate();
         const words: OcrWord[] = [];
         const lines: OcrLine[] = [];
-        let width = 0, height = 0;
         for (const b of data.blocks ?? []) {
-          width = Math.max(width, b.bbox.x1);
-          height = Math.max(height, b.bbox.y1);
           for (const p of b.paragraphs) {
             for (const l of p.lines) {
               lines.push({ text: l.text, ...l.bbox });
@@ -57,7 +68,7 @@ async function ocrImage(imageUrl: string): Promise<OcrIndex | null> {
             }
           }
         }
-        return words.length ? { words, lines, width, height } : null;
+        return words.length ? { words, lines, width: dims.width, height: dims.height } : null;
       } catch {
         return null;
       }
@@ -69,43 +80,54 @@ async function ocrImage(imageUrl: string): Promise<OcrIndex | null> {
 const tokenize = (s: string) =>
   s.toUpperCase().replace(/[^A-Z0-9%.]/g, " ").split(/\s+/).filter((t) => t.length > 1);
 
-/** Union bbox of the OCR words matching the target's token sequence. */
-function matchExact(index: OcrIndex, target: string): Region | null {
+/** Union bbox of the OCR words matching the target's tokens. Sliding-window
+ *  scoring, anchored on ANY matching token — a decorative first word that OCR
+ *  garbles ("OLD" in display serif) must not force a fallback when the rest
+ *  of the phrase ("TOM DISTILLERY") is readable. */
+export function matchExact(index: OcrIndex, target: string): Region | null {
   const tokens = tokenize(target);
   if (!tokens.length) return null;
 
   const wordTokens = index.words.map((w) => tokenize(w.text)[0] ?? "");
-  // Anchor on the first token, then greedily match following tokens nearby.
-  for (let i = 0; i < wordTokens.length; i++) {
-    if (wordTokens[i] !== tokens[0]) continue;
-    const matched = [index.words[i]];
-    let ti = 1;
-    for (let j = i + 1; j < index.words.length && ti < tokens.length && j < i + tokens.length * 2 + 4; j++) {
-      if (wordTokens[j] === tokens[ti]) {
+  const need = Math.max(1, Math.ceil(tokens.length * 0.6));
+  const windowSize = tokens.length * 2 + 4;
+
+  let best: { matched: typeof index.words; score: number } | null = null;
+  for (let start = 0; start < index.words.length; start++) {
+    const budget = new Map<string, number>();
+    for (const t of tokens) budget.set(t, (budget.get(t) ?? 0) + 1);
+    const matched: typeof index.words = [];
+    for (let j = start; j < index.words.length && j < start + windowSize; j++) {
+      const wt = wordTokens[j];
+      const left = budget.get(wt) ?? 0;
+      if (left > 0) {
+        budget.set(wt, left - 1);
         matched.push(index.words[j]);
-        ti++;
       }
     }
-    if (matched.length >= Math.max(1, Math.ceil(tokens.length * 0.6))) {
-      const x0 = Math.min(...matched.map((w) => w.x0));
-      const y0 = Math.min(...matched.map((w) => w.y0));
-      const x1 = Math.max(...matched.map((w) => w.x1));
-      const y1 = Math.max(...matched.map((w) => w.y1));
-      const padX = index.width * 0.008, padY = index.height * 0.006;
-      return {
-        kind: "exact",
-        left: Math.max(0, (x0 - padX) / index.width) * 100,
-        top: Math.max(0, (y0 - padY) / index.height) * 100,
-        width: Math.min(1, (x1 - x0 + 2 * padX) / index.width) * 100,
-        height: Math.min(1, (y1 - y0 + 2 * padY) / index.height) * 100,
-      };
+    if (matched.length >= need && (!best || matched.length > best.score)) {
+      best = { matched, score: matched.length };
+      if (matched.length === tokens.length) break;
     }
   }
-  return null;
+  if (!best) return null;
+
+  const x0 = Math.min(...best.matched.map((w) => w.x0));
+  const y0 = Math.min(...best.matched.map((w) => w.y0));
+  const x1 = Math.max(...best.matched.map((w) => w.x1));
+  const y1 = Math.max(...best.matched.map((w) => w.y1));
+  const padX = index.width * 0.008, padY = index.height * 0.006;
+  return {
+    kind: "exact",
+    left: Math.max(0, (x0 - padX) / index.width) * 100,
+    top: Math.max(0, (y0 - padY) / index.height) * 100,
+    width: Math.min(1, (x1 - x0 + 2 * padX) / index.width) * 100,
+    height: Math.min(1, (y1 - y0 + 2 * padY) / index.height) * 100,
+  };
 }
 
 /** Multi-line block (the warning): union all OCR lines whose tokens overlap the target's. */
-function matchBlock(index: OcrIndex, target: string): Region | null {
+export function matchBlock(index: OcrIndex, target: string): Region | null {
   const targetSet = new Set(tokenize(target));
   if (!targetSet.size) return null;
   const hits = index.lines.filter((l) => {

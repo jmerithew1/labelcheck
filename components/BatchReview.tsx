@@ -8,6 +8,7 @@ import { parseCsv, toCsv } from "@/lib/csv.ts";
 import { downscaleImage } from "@/lib/downscale.ts";
 import { Chip, Icon } from "./chips.tsx";
 import { ResultView } from "./ResultView.tsx";
+import { Shell as ShellFrame } from "./Shell.tsx";
 
 const CONCURRENCY = 8;
 const PAGE_SIZE = 10;
@@ -26,6 +27,7 @@ interface BatchRow {
   extraction?: LabelExtraction;
   bands?: Bands;
   ms?: number;
+  checkedAt?: Date;
   error?: string;
   imageUrl?: string;
 }
@@ -40,9 +42,10 @@ function bucketOf(r: BatchRow): Bucket {
   return "review";
 }
 
-function rowSummary(r: BatchRow): string {
-  if (r.status === "error") return r.error ?? "Error";
-  if (!r.result) return r.status === "checking" ? "Checking…" : "Waiting";
+/** Mockup: counts as color-coded words — mismatches red, review amber. */
+function rowSummary(r: BatchRow): React.ReactNode {
+  if (r.status === "error") return <span className="font-semibold text-bad">{r.error ?? "Error"}</span>;
+  if (!r.result) return <span className="text-ink-faint">{r.status === "checking" ? "Checking…" : "Waiting"}</span>;
   let matched = 0, mismatch = 0, review = 0, notRequired = 0;
   for (const f of r.result.fields) {
     if (f.verdict === "match" || f.verdict === "match_formatting") matched++;
@@ -52,14 +55,19 @@ function rowSummary(r: BatchRow): string {
   }
   if (r.result.warning.verdict.startsWith("fail")) mismatch++;
   else if (r.result.warning.verdict === "unreadable") review++;
-  const bits = [
-    `${matched} matched`,
-    mismatch ? `${mismatch} mismatch${mismatch === 1 ? "" : "es"}` : null,
-    review ? `${review} review` : null,
-    notRequired ? `${notRequired} not required` : null,
-  ].filter(Boolean);
-  return bits.join("  ·  ");
+  const sep = <span className="text-ink-faint">  ·  </span>;
+  return (
+    <>
+      <span>{matched} matched</span>
+      {mismatch > 0 && (<>{sep}<span className="font-semibold text-bad">{mismatch} mismatch{mismatch === 1 ? "" : "es"}</span></>)}
+      {review > 0 && (<>{sep}<span className="font-semibold text-warn">{review} review</span></>)}
+      {notRequired > 0 && (<>{sep}<span className="text-ink-faint">{notRequired} not required</span></>)}
+    </>
+  );
 }
+
+const fmtTime = (d: Date) =>
+  d.toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
 
 export function BatchReview() {
   const [rows, setRows] = useState<BatchRow[]>([]);
@@ -195,7 +203,7 @@ export function BatchReview() {
           const res = await fetch("/api/check", { method: "POST", body: form });
           const body = await res.json().catch(() => null);
           if (!res.ok || !body) update(row.index, { status: "error", error: body?.error ?? `HTTP ${res.status}` });
-          else update(row.index, { status: "done", result: body.result, extraction: body.extraction, ms: body.ms });
+          else update(row.index, { status: "done", result: body.result, extraction: body.extraction, ms: body.ms, checkedAt: new Date() });
         } catch {
           update(row.index, { status: "error", error: "Network problem — run again to retry this row." });
         }
@@ -302,29 +310,32 @@ export function BatchReview() {
     setTab("overview");
   };
 
+  const topRight = (
+    <>
+      <button
+        onClick={exportCsv}
+        disabled={done === 0}
+        className="flex items-center gap-2 rounded-lg border border-hairline bg-card px-3.5 py-2 text-[13.5px] font-semibold text-ink-soft hover:bg-muted-bg disabled:opacity-40"
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16" strokeLinecap="round" strokeLinejoin="round"/></svg>
+        Download report
+      </button>
+      <button
+        onClick={() => { setRows([]); setPairingIssues([]); setWallMs(null); setOpenRow(null); }}
+        disabled={running || rows.length === 0}
+        className="rounded-lg bg-navy px-3.5 py-2 text-[13.5px] font-bold text-white hover:bg-navy-hover disabled:opacity-40"
+      >
+        + New batch
+      </button>
+    </>
+  );
+
   return (
+    <ShellFrame topRight={topRight}>
     <div className="flex flex-col gap-5">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="font-display text-[28px] font-bold tracking-tight text-ink">Batch review</h1>
-          <p className="text-[14px] text-ink-soft">Upload the application CSV and the label files — results stream in, problems first.</p>
-        </div>
-        <div className="no-print flex gap-2">
-          {done > 0 && (
-            <button onClick={exportCsv} className="flex items-center gap-2 rounded-xl border border-hairline bg-card px-4 py-2.5 text-[14px] font-semibold text-ink-soft hover:bg-muted-bg">
-              Download report
-            </button>
-          )}
-          {rows.length > 0 && (
-            <button
-              onClick={() => { setRows([]); setPairingIssues([]); setWallMs(null); setOpenRow(null); }}
-              disabled={running}
-              className="rounded-xl bg-navy px-4 py-2.5 text-[14px] font-bold text-white hover:bg-navy-hover disabled:opacity-50"
-            >
-              + New batch
-            </button>
-          )}
-        </div>
+      <div>
+        <h1 className="text-[26px] font-bold tracking-tight text-ink">Batch review</h1>
+        <p className="text-[14px] text-ink-soft">Upload multiple labels to check them against their applications.</p>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-[3fr_2fr]">
@@ -338,13 +349,17 @@ export function BatchReview() {
           onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
           onDragLeave={() => setDragOver(false)}
           onDrop={(e) => { e.preventDefault(); setDragOver(false); onFiles(Array.from(e.dataTransfer.files)); }}
-          className={`flex min-h-40 cursor-pointer flex-col items-center justify-center gap-1.5 rounded-2xl border-2 border-dashed p-6 text-center transition ${dragOver ? "border-navy bg-muted-bg" : "border-hairline bg-card hover:bg-muted-bg/60"}`}
+          className={`flex min-h-44 cursor-pointer flex-col items-center justify-center gap-1.5 rounded-2xl border-2 border-dashed p-6 text-center transition ${dragOver ? "border-navy bg-muted-bg" : "border-hairline bg-card hover:bg-muted-bg/60"}`}
         >
-          <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="text-ink-faint" aria-hidden>
-            <path d="M12 16V4m0 0L7 9m5-5l5 5M4 20h16" strokeLinecap="round" strokeLinejoin="round" />
+          <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-ink-faint" aria-hidden>
+            <path d="M7 18a4.6 4.6 0 0 1-.9-9.1 6 6 0 0 1 11.7 1.6A4 4 0 0 1 17 18h-1M12 12v8m0-8l-3 3m3-3l3 3" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
-          <span className="text-[14.5px] font-semibold text-ink">Drop the application CSV + label files here</span>
-          <span className="text-[12.5px] text-ink-faint">or click to choose · PNG, JPG, WebP, PDF · images matched to CSV rows by filename</span>
+          <span className="text-[14.5px] font-semibold text-ink">Drop the CSV + PDF or image files here</span>
+          <span className="text-[12.5px] text-ink-faint">or</span>
+          <span className="rounded-lg border border-hairline bg-card px-4 py-1.5 text-[13px] font-semibold text-ink shadow-sm">
+            Choose files
+          </span>
+          <span className="mt-1 text-[12px] text-ink-faint">PNG, JPG, WebP up to 8 MB · PDF up to 10 MB · matched to CSV rows by filename</span>
           <span className="no-print mt-1 text-[12.5px]" onClick={(e) => e.stopPropagation()}>
             <button onClick={loadSampleBatch} disabled={running} className="font-semibold text-navy hover:underline disabled:opacity-50">Run the sample batch</button>
             <span className="text-ink-faint"> · </span>
@@ -378,7 +393,13 @@ export function BatchReview() {
               </div>
             ))}
           </div>
-          <p className="mt-2.5 text-[12.5px] text-ink-faint">
+          {wallMs !== null && (
+            <p className="mt-2 text-[12px] text-ink-faint">Processed on {fmtTime(new Date())}</p>
+          )}
+          <p className="mt-1.5 flex items-center gap-1.5 text-[12.5px] text-ink-faint">
+            {wallMs !== null && (
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3" strokeLinecap="round"/></svg>
+            )}
             {running ? `${done} of ${rows.length} checked…` : wallMs !== null ? `Checked in ${(wallMs / 1000).toFixed(1)}s` : rows.length ? "Ready to check." : "No batch loaded yet."}
           </p>
           {rows.some((r) => r.status === "queued" || (r.status === "error" && r.file)) && (
@@ -459,7 +480,9 @@ export function BatchReview() {
                         </span>
                       </td>
                       <td className="max-w-40 truncate px-2 py-2.5 text-ink">{r.application.brand_name}</td>
-                      <td className="whitespace-nowrap px-2 py-2.5 text-[12.5px] text-ink-faint">{r.ms ? `${(r.ms / 1000).toFixed(1)}s` : "—"}</td>
+                      <td className="whitespace-nowrap px-2 py-2.5 text-[12px] text-ink-faint">
+                        {r.checkedAt ? <>{fmtTime(r.checkedAt)}<br />{(r.ms! / 1000).toFixed(1)}s</> : "—"}
+                      </td>
                       <td className="px-2 py-2.5 text-[12.5px] text-ink-soft">{rowSummary(r)}</td>
                       <td className="px-2 py-2.5 text-ink-faint">
                         {r.result && (
@@ -477,7 +500,15 @@ export function BatchReview() {
             <div className="flex items-center justify-between text-[12.5px] text-ink-faint">
               <span>Showing {visible.length === 0 ? 0 : page * PAGE_SIZE + 1} to {Math.min((page + 1) * PAGE_SIZE, visible.length)} of {visible.length} results</span>
               {pages > 1 && (
-                <span className="flex gap-1">
+                <span className="flex items-center gap-1">
+                  <button
+                    onClick={() => setPage((p) => Math.max(0, p - 1))}
+                    disabled={page === 0}
+                    aria-label="Previous page"
+                    className="h-7 w-7 rounded-lg border border-hairline bg-card text-ink-soft hover:bg-muted-bg disabled:opacity-40"
+                  >
+                    ‹
+                  </button>
                   {Array.from({ length: pages }, (_, i) => (
                     <button
                       key={i}
@@ -487,6 +518,14 @@ export function BatchReview() {
                       {i + 1}
                     </button>
                   ))}
+                  <button
+                    onClick={() => setPage((p) => Math.min(pages - 1, p + 1))}
+                    disabled={page === pages - 1}
+                    aria-label="Next page"
+                    className="h-7 w-7 rounded-lg border border-hairline bg-card text-ink-soft hover:bg-muted-bg disabled:opacity-40"
+                  >
+                    ›
+                  </button>
                 </span>
               )}
             </div>
@@ -522,6 +561,7 @@ export function BatchReview() {
                   imageUrl={detail.imageUrl}
                   bands={detail.bands ?? {}}
                   ms={detail.ms}
+                  compact
                 />
               ) : (
                 <AuditTrail row={detail} />
@@ -540,6 +580,7 @@ export function BatchReview() {
         </div>
       )}
     </div>
+    </ShellFrame>
   );
 }
 

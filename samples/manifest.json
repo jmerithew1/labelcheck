@@ -1,5 +1,5 @@
 {
-  "generated": "2026-08-10",
+  "generated": "2026-08-11",
   "generator": "samples/tools/render.mjs (HTML/CSS rendered via Playwright Chromium)",
   "canonical_warning": "GOVERNMENT WARNING: (1) According to the Surgeon General, women should not drink alcoholic beverages during pregnancy because of the risk of birth defects. (2) Consumption of alcoholic beverages impairs your ability to drive a car or operate machinery, and may cause health problems.",
   "spike_cases": {
@@ -107,7 +107,7 @@
       "ground_truth": "samples/labels/allcaps-body.json",
       "template": "bourbon",
       "spike_case": "fidelity",
-      "summary": "Entire warning rendered in ALL CAPS (prefix bold). Word-for-word exact; Part 16 constrains only the prefix casing, so this PASSES with a formatting note (27 CFR 16.22(a)(2)).",
+      "summary": "Entire warning rendered in ALL CAPS (prefix bold). Word-for-word exact; an all-caps body is not prohibited by Part 16 (only the prefix casing is constrained, 27 CFR 16.22(a)(2)), so this PASSES with a formatting note.",
       "fields": {
         "brand_name": "OLD TOM DISTILLERY",
         "class_type": "Kentucky Straight Bourbon Whiskey",

@@ -31,7 +31,7 @@ export const DEMO_SAMPLES: DemoSample[] = [
   },
   {
     id: "case-diff",
-    title: "Formatting differences",
+    title: "Formatting difference",
     blurb: "Same brand, different capitalization — a match, surfaced not failed.",
     png: "case-diff.png",
     application: {
@@ -43,7 +43,7 @@ export const DEMO_SAMPLES: DemoSample[] = [
   },
   {
     id: "warning-fail",
-    title: "Warning failure",
+    title: "Warning issue",
     blurb: 'Warning prefix printed "Government Warning:" — title case fails the exact check.',
     png: "title-case-prefix.png",
     application: {

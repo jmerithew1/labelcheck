@@ -1,16 +1,17 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { CheckResult } from "@/lib/compare/index.ts";
 import type { LabelExtraction } from "@/lib/vision/contract.ts";
 import type { Bands, BandField } from "@/lib/vision/locate.ts";
 import { CANONICAL_WARNING } from "@/lib/compare/canonical.ts";
 import { CharDiff } from "./CharDiff.tsx";
 import { Chip, Icon, fieldChip, FIELD_LABELS } from "./chips.tsx";
-import { LabelViewer } from "./LabelViewer.tsx";
+import { LabelViewer, TONE_COLORS, type Tone } from "./LabelViewer.tsx";
 
-/** The evidence screen: banner → comparison list ↔ label viewer → warning
- *  panel. Shared by single check and the batch detail panel. */
+/** The evidence screen (mockup states 2–5): banner → comparison list ↔ label
+ *  viewer with auto-highlighted issues + connector → warning panel. Issue
+ *  regions render on the label automatically; clicking a row focuses it. */
 
 const LOCATABLE = new Set(["brand_name", "class_type", "alcohol_content", "net_contents", "warning"]);
 
@@ -21,6 +22,8 @@ export function ResultView({
   bands,
   ms,
   onPrint,
+  primaryAction,
+  compact = false,
 }: {
   result: CheckResult;
   extraction: LabelExtraction;
@@ -28,8 +31,13 @@ export function ResultView({
   bands: Bands;
   ms?: number;
   onPrint?: () => void;
+  primaryAction?: { label: string; onClick: () => void };
+  /** stacked layout for narrow containers (batch detail panel) */
+  compact?: boolean;
 }) {
-  const [activeField, setActiveField] = useState<BandField | null>(null);
+  const gridRef = useRef<HTMLDivElement>(null);
+  const overlayRef = useRef<HTMLElement | null>(null);
+  const [connector, setConnector] = useState<string | null>(null);
 
   const counts = useMemo(() => {
     let matched = 0, mismatch = 0, review = 0, notRequired = 0;
@@ -43,6 +51,65 @@ export function ResultView({
     const warningReview = result.warning.verdict === "unreadable";
     return { matched, mismatch, review, notRequired, warningFails, warningReview };
   }, [result]);
+
+  // Issue fields keep their highlight on the label at all times (mockups 3-5).
+  const issueTones = useMemo(() => {
+    const tones: Partial<Record<BandField, Tone>> = {};
+    for (const f of result.fields) {
+      if (!LOCATABLE.has(f.field)) continue;
+      if (f.verdict === "possible_mismatch") tones[f.field as BandField] = "bad";
+      else if (f.verdict === "unreadable") tones[f.field as BandField] = "warn";
+    }
+    if (counts.warningFails && result.warning.verdict !== "fail_missing") tones.warning = "bad";
+    else if (counts.warningReview) tones.warning = "warn";
+    return tones;
+  }, [result, counts]);
+
+  const firstIssue = (Object.keys(issueTones) as BandField[])[0] ?? null;
+  const [focusedField, setFocusedField] = useState<BandField | null>(firstIssue);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => setFocusedField(firstIssue), [result]);
+
+  const shownFields = useMemo(() => {
+    const shown = { ...issueTones };
+    if (focusedField && !shown[focusedField]) shown[focusedField] = "ok";
+    return shown;
+  }, [issueTones, focusedField]);
+
+  // Connector line (mockups 2-5): focused row's right edge → overlay's left
+  // edge, drawn in an SVG spanning the results grid. Redrawn on scroll/resize.
+  useEffect(() => {
+    const grid = gridRef.current;
+    if (!grid) return;
+    let raf = 0;
+    const draw = () => {
+      raf = 0;
+      const row = focusedField ? grid.querySelector(`[data-row="${focusedField}"]`) : null;
+      const overlay = overlayRef.current;
+      if (!row || !overlay) { setConnector(null); return; }
+      const g = grid.getBoundingClientRect();
+      const r = row.getBoundingClientRect();
+      const o = overlay.getBoundingClientRect();
+      if (o.width === 0 || o.bottom < g.top || o.top > g.bottom) { setConnector(null); return; }
+      const x1 = r.right - g.left - 2;
+      const y1 = r.top - g.top + r.height / 2;
+      const x2 = o.left - g.left - 3;
+      const y2 = Math.min(Math.max(o.top - g.top + o.height / 2, 8), g.height - 8);
+      const midX = x1 + (x2 - x1) / 2;
+      setConnector(`M ${x1} ${y1} H ${midX} V ${y2} H ${x2}`);
+    };
+    const schedule = () => { if (!raf) raf = requestAnimationFrame(draw); };
+    schedule();
+    const interval = setInterval(schedule, 300); // regions resolve async; keep endpoints fresh
+    window.addEventListener("resize", schedule);
+    grid.addEventListener("scroll", schedule, true);
+    return () => {
+      if (raf) cancelAnimationFrame(raf);
+      clearInterval(interval);
+      window.removeEventListener("resize", schedule);
+      grid.removeEventListener("scroll", schedule, true);
+    };
+  }, [focusedField]);
 
   const fieldTexts = useMemo(
     () => ({
@@ -69,26 +136,20 @@ export function ResultView({
   const banner =
     issueCount > 0
       ? {
-          cls: "border-bad-line bg-bad-bg",
-          iconCls: "bg-bad",
-          icon: Icon.x,
+          cls: "border-bad-line bg-bad-bg", iconCls: "bg-bad", icon: Icon.x,
           title: `${issueCount} item${issueCount === 1 ? "" : "s"} need${issueCount === 1 ? "s" : ""} review`,
           titleCls: "text-bad",
           sub: "The label does not match the application.",
         }
       : confirmCount > 0
         ? {
-            cls: "border-warn-line bg-warn-bg",
-            iconCls: "bg-warn",
-            icon: Icon.dot,
+            cls: "border-warn-line bg-warn-bg", iconCls: "bg-warn", icon: Icon.dot,
             title: `${confirmCount} item${confirmCount === 1 ? "" : "s"} need${confirmCount === 1 ? "s" : ""} confirmation`,
             titleCls: "text-warn",
             sub: "The label matches, with a visual confirmation needed.",
           }
         : {
-            cls: "border-ok-line bg-ok-bg",
-            iconCls: "bg-ok",
-            icon: Icon.check,
+            cls: "border-ok-line bg-ok-bg", iconCls: "bg-ok", icon: Icon.check,
             title: "Label matches the application",
             titleCls: "text-ok",
             sub: "All required fields match. The government warning text also passed.",
@@ -96,16 +157,11 @@ export function ResultView({
 
   const countBits = [
     `${counts.matched} matched`,
-    counts.mismatch + (counts.warningFails ? 1 : 0) > 0 ? `${counts.mismatch + (counts.warningFails ? 1 : 0)} mismatch${counts.mismatch + (counts.warningFails ? 1 : 0) === 1 ? "" : "es"}` : null,
+    issueCount > 0 ? `${issueCount} mismatch${issueCount === 1 ? "" : "es"}` : null,
     confirmCount > 0 ? `${confirmCount} review` : null,
     `${counts.notRequired} not required`,
   ].filter(Boolean);
 
-  const rowTone = (v: string) =>
-    v === "possible_mismatch" || v === "absent_on_label" ? "bad" : v === "unreadable" ? "warn" : "ok";
-
-  // Warning panel rows: Wording (deterministic text check) + Formatting
-  // (capitals + bold) + optional size advisory.
   const wv = result.warning.verdict;
   const wordingRow =
     wv === "fail_wording" || wv === "fail_missing"
@@ -128,6 +184,9 @@ export function ResultView({
   const sizeNote = result.warning.notes.find((n) => /small/i.test(n));
   const showWarningDiff = wv === "fail_wording";
 
+  const rowTone = (v: string): Tone =>
+    v === "possible_mismatch" || v === "absent_on_label" ? "bad" : v === "unreadable" ? "warn" : "ok";
+
   return (
     <div className="flex flex-col gap-5">
       {/* Banner */}
@@ -145,23 +204,39 @@ export function ResultView({
         )}
       </div>
 
-      <div className="grid gap-5 lg:grid-cols-[5fr_4fr]">
+      <div ref={gridRef} className={`relative grid gap-5 ${compact ? "" : "lg:grid-cols-[5fr_4fr]"}`}>
+        {!compact && connector && focusedField && (
+          <svg className="pointer-events-none absolute inset-0 z-10 hidden h-full w-full lg:block" aria-hidden>
+            <path
+              d={connector}
+              fill="none"
+              stroke={TONE_COLORS[shownFields[focusedField] ?? "ok"]}
+              strokeWidth="1.8"
+            />
+          </svg>
+        )}
+
         {/* Comparison list */}
         <section>
           <p className="mb-2 text-[11.5px] font-semibold uppercase tracking-wider text-ink-faint">Comparison</p>
           <div className="overflow-hidden rounded-xl border border-hairline bg-card">
             {result.fields.map((f) => {
               const locatable = LOCATABLE.has(f.field) && f.verdict !== "not_provided" && f.verdict !== "absent_on_label";
-              const isActive = activeField === f.field;
-              const highlight =
-                f.verdict === "possible_mismatch" ? "bg-bad-bg/60" : isActive ? "bg-ok-bg/60" : "";
+              const isFocused = focusedField === f.field;
+              const tone = rowTone(f.verdict);
+              const rowBg =
+                tone === "bad" ? "bg-bad-bg/70" : tone === "warn" ? "bg-warn-bg/70" : isFocused ? "bg-ok-bg/70" : "";
+              const focusRing = isFocused
+                ? tone === "bad" ? "shadow-[inset_0_0_0_1.5px_#b3261e]" : tone === "warn" ? "shadow-[inset_0_0_0_1.5px_#b25e09]" : "shadow-[inset_0_0_0_1.5px_#167c3d]"
+                : "";
               return (
                 <button
                   key={f.field}
+                  data-row={f.field}
                   disabled={!locatable}
-                  onClick={() => setActiveField(isActive ? null : (f.field as BandField))}
+                  onClick={() => setFocusedField(isFocused ? null : (f.field as BandField))}
                   aria-label={`${FIELD_LABELS[f.field]}: ${f.verdict.replace(/_/g, " ")}${locatable ? " — show on label" : ""}`}
-                  className={`flex w-full items-center gap-3 border-b border-hairline px-4 py-3 text-left last:border-0 ${highlight} ${locatable ? "cursor-pointer hover:bg-muted-bg/70" : "cursor-default"}`}
+                  className={`flex w-full items-center gap-3 border-b border-hairline px-4 py-3 text-left last:border-0 ${rowBg} ${focusRing} ${locatable ? "cursor-pointer hover:bg-muted-bg/70" : "cursor-default"}`}
                 >
                   <span className="min-w-0 flex-1">
                     <span className="block text-[12px] font-semibold text-ink-soft">{FIELD_LABELS[f.field]}</span>
@@ -169,7 +244,7 @@ export function ResultView({
                       <span className="block text-[14px]">
                         <span className="text-ink">{f.applicationValue}</span>
                         <span className="mx-2 text-ink-faint">→ label shows</span>
-                        <span className="font-medium text-bad">{f.labelValue || "—"}</span>
+                        <span className="font-semibold text-bad">{f.labelValue || "—"}</span>
                       </span>
                     ) : (
                       <span className="block truncate text-[14px] text-ink">
@@ -189,11 +264,11 @@ export function ResultView({
                 </button>
               );
             })}
-            {/* Government warning as a comparison row when it needs attention */}
             {(counts.warningFails || counts.warningReview) && (
               <button
-                onClick={() => setActiveField(activeField === "warning" ? null : "warning")}
-                className={`flex w-full items-center gap-3 px-4 py-3 text-left ${counts.warningFails ? "bg-bad-bg/60" : "bg-warn-bg/60"}`}
+                data-row="warning"
+                onClick={() => setFocusedField(focusedField === "warning" ? null : "warning")}
+                className={`flex w-full items-center gap-3 px-4 py-3 text-left ${counts.warningFails ? "bg-bad-bg/70" : "bg-warn-bg/70"} ${focusedField === "warning" ? (counts.warningFails ? "shadow-[inset_0_0_0_1.5px_#b3261e]" : "shadow-[inset_0_0_0_1.5px_#b25e09]") : ""}`}
                 aria-label="Government warning — show on label"
               >
                 <span className="min-w-0 flex-1">
@@ -213,18 +288,12 @@ export function ResultView({
             imageUrl={imageUrl}
             fieldTexts={fieldTexts}
             bands={bands}
-            activeField={activeField}
-            tone={
-              activeField
-                ? (rowTone(
-                    result.fields.find((f) => f.field === activeField)?.verdict ??
-                      (counts.warningFails ? "possible_mismatch" : "match"),
-                  ) as "ok" | "warn" | "bad")
-                : "ok"
-            }
+            shownFields={shownFields}
+            focusedField={focusedField}
+            connectorRef={overlayRef}
           />
           <p className="mt-1.5 text-[12px] text-ink-faint">
-            Click a row to show it on the label. Highlights are located automatically and may be approximate.
+            Issues are highlighted on the label automatically; click a row to focus it. Locations are found automatically and may be approximate.
           </p>
         </section>
       </div>
@@ -245,7 +314,7 @@ export function ResultView({
           <div className="flex shrink-0 items-center gap-2">
             {formattingRow.chip}
             <button
-              onClick={() => setActiveField(activeField === "warning" ? null : "warning")}
+              onClick={() => setFocusedField(focusedField === "warning" ? null : "warning")}
               className="no-print rounded-lg border border-hairline px-2.5 py-1 text-[12px] font-semibold text-ink-soft hover:bg-muted-bg"
             >
               Show on label
@@ -270,15 +339,28 @@ export function ResultView({
         )}
       </section>
 
-      {onPrint && (
-        <div className="no-print flex items-center justify-between">
-          <button
-            onClick={onPrint}
-            className="flex items-center gap-2 rounded-xl border border-hairline bg-card px-4 py-2.5 text-[14px] font-semibold text-ink-soft hover:bg-muted-bg"
-          >
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16" strokeLinecap="round" strokeLinejoin="round"/></svg>
-            Download report
-          </button>
+      {(onPrint || primaryAction) && (
+        <div className="no-print flex flex-wrap items-center justify-between gap-3">
+          {onPrint ? (
+            <button
+              onClick={onPrint}
+              className="flex items-center gap-2 rounded-xl border border-hairline bg-card px-4 py-2.5 text-[14px] font-semibold text-ink-soft hover:bg-muted-bg"
+            >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              Download report
+            </button>
+          ) : <span />}
+          {primaryAction && (
+            <button
+              onClick={primaryAction.onClick}
+              className="flex items-center gap-2 rounded-xl bg-navy px-6 py-3 text-[15px] font-bold text-white shadow-sm transition hover:bg-navy-hover"
+            >
+              {primaryAction.label}
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden>
+                <path d="M4 12h15m0 0l-6-6m6 6l-6 6" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
+          )}
         </div>
       )}
     </div>

@@ -229,7 +229,7 @@ const SPECS = [
     name: 'allcaps-body', template: 'bourbon', ...OLD_TOM,
     warning: { prefix: PREFIX, body: BODY.toUpperCase(), prefixBold: true },
     spike_case: 'fidelity',
-    notes: 'Entire warning rendered in ALL CAPS (prefix bold). Body case deviates from canonical mixed case; exact check should flag it.',
+    notes: 'Entire warning rendered in ALL CAPS (prefix bold). Word-for-word exact; an all-caps body is not prohibited by Part 16 (only the prefix casing is constrained, 27 CFR 16.22(a)(2)), so this PASSES with a formatting note.',
   },
   {
     name: 'missing-warning', template: 'bourbon', ...OLD_TOM,
@@ -350,6 +350,32 @@ for (const s of SPECS) {
   await page.setContent(html, { waitUntil: 'load' });
   await page.locator('#label').screenshot({ path: png });
   fs.writeFileSync(path.join(LABELS, `${s.name}.json`), JSON.stringify(sidecar(s), null, 2) + '\n');
+  // Ground-truth field boxes, normalized 0-1 relative to the screenshotted
+  // #label element — exact truth for the highlight-accuracy harness.
+  const boxes = await page.evaluate(() => {
+    const root = document.querySelector('#label').getBoundingClientRect();
+    const sel = { brand_name: '.brand', class_type: '.class', alcohol_content: '.abv', net_contents: '.net', warning: '.warning' };
+    const out = {};
+    for (const [field, cls] of Object.entries(sel)) {
+      const el = document.querySelector(cls);
+      if (!el) continue;
+      // Measure the rendered TEXT, not the block container — centered text in
+      // a full-width div would otherwise produce truth boxes with huge empty
+      // flanks that no honest highlight could match.
+      const range = document.createRange();
+      range.selectNodeContents(el);
+      const r = range.getBoundingClientRect();
+      if (!r.width || !r.height) continue;
+      out[field] = {
+        left: (r.left - root.left) / root.width,
+        top: (r.top - root.top) / root.height,
+        width: r.width / root.width,
+        height: r.height / root.height,
+      };
+    }
+    return out;
+  });
+  fs.writeFileSync(path.join(LABELS, `${s.name}.boxes.json`), JSON.stringify(boxes, null, 2) + '\n');
   const size = fs.statSync(png).size;
   results.push({ name: s.name, bytes: size });
   console.log(`rendered ${s.name}.png (${size} bytes)`);
@@ -382,8 +408,14 @@ const manifest = {
       alcohol_content: s.abv,
       net_contents: s.net,
     },
+    // Policy (SME-verified, 27 CFR 16.22(a)(2)): wording is word-for-word
+    // (case-insensitive on the body — an all-caps body is permitted), the
+    // prefix must be ALL CAPS and bold. Matches lib/compare/warning.ts.
     warning_ok:
-      !!s.warning && s.warning.prefix === PREFIX && s.warning.body === BODY && !!s.warning.prefixBold,
+      !!s.warning &&
+      s.warning.prefix === PREFIX &&
+      s.warning.body.toUpperCase() === BODY.toUpperCase() &&
+      !!s.warning.prefixBold,
   })),
 };
 fs.writeFileSync(path.join(SAMPLES, 'manifest.json'), JSON.stringify(manifest, null, 2) + '\n');

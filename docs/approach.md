@@ -49,7 +49,7 @@ Batch throughput comes from client-side orchestration: the browser pairs CSV row
 ## Evidence highlighting ("Show on label")
 
 Clicking a comparison row highlights where that text sits on the label image. Two layers, spike-validated (`scripts/spike-locate*.ts`):
-- **Exact**: the browser runs OCR (tesseract.js, WebAssembly) on the already-loaded image and matches each field's *known transcription* against OCR word coordinates → pixel-accurate boxes. Runs after results render; verdict latency untouched.
+- **Exact**: the browser runs OCR (tesseract.js, WebAssembly) on the already-loaded image and matches each field's *known transcription* against OCR word coordinates → pixel-accurate boxes. Runs after results render; verdict latency untouched. **Measured accuracy: 94.3%** of exact-layer matches contain the true text center with IoU ≥ 0.5, scored against generator-emitted ground-truth boxes ([highlight-accuracy.json](highlight-accuracy.json), harness in `scripts/highlight-accuracy.ts`); the misses fall back to bands.
 - **Approximate fallback**: a third parallel model call returns vertical *bands* per field (boxes were measured too imprecise to show; bands measured 20/20 usable at p50 2.0s — faster than the main extraction call, so parallel = zero added wall-clock). Bands are padded and labeled "approximate area" — the UI never claims precision the model doesn't have.
 Batch runs skip the locator call entirely (staying at 2 upstream calls/label); the detail panel fetches bands lazily via `/api/locate` only when a row is opened.
 
