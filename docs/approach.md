@@ -33,7 +33,7 @@ Everything else matches with judgment: alcohol content numerically (`45% Alc./Vo
 
 ## Measured performance (deployed app, not localhost)
 
-Measured 2026-08-10 against the production Railway deployment (raw data: [measured-performance.json](measured-performance.json)):
+Measured 2026-08-11 against the production Railway deployment (raw data: [measured-performance.json](measured-performance.json)):
 
 | Requirement | Measured | Bar |
 |---|---|---|
@@ -79,7 +79,7 @@ The prototype calls Anthropic's public API — the same architecture runs unchan
 ## Security notes
 
 - API key lives server-side only (env var; `.env.local` is gitignored; the browser talks only to the app's own API routes).
-- Upload guards: type allowlist (PNG/JPEG/WebP), empty-file rejection, 8 MB cap, refusal/timeout/429 handling with human-readable messages.
+- Upload guards: type allowlist (PNG/JPEG/WebP/PDF), empty-file rejection, 8 MB image / 10 MB PDF caps, refusal/timeout/429 handling with human-readable messages.
 - The public endpoint carries a per-IP rate limit (240 req/min — sized so a full-speed 300-label batch never trips it) so a stray crawler can't burn API credit. In-memory, appropriate to a single-container prototype.
 - CSV export neutralizes formula-leading characters (`=+-@`) — label-transcribed text is untrusted input landing in Excel.
 - Not-a-label images are detected and reported instead of producing garbage verdicts; label-borne prompt injection is neutralized by the perception/verdict split (validated day 1).

@@ -13,7 +13,7 @@ Verification points: spec approval (done), post-build final gate, pre-submit.
 - **D4 — MET** Deployed URL — https://labelcheck-production-8f22.up.railway.app (readiness probe `/api/ready`)
 
 ### Core function
-- **C1 — MET** Accepts label image + application data — single-check form ([components/CheckForm.tsx](../components/CheckForm.tsx)) and batch CSV+images ([components/BatchRunner.tsx](../components/BatchRunner.tsx)) → [app/api/check/route.ts](../app/api/check/route.ts)
+- **C1 — MET** Accepts label image + application data — single-check form ([components/SingleCheck.tsx](../components/SingleCheck.tsx)) and batch CSV+images ([components/BatchReview.tsx](../components/BatchReview.tsx)) → [app/api/check/route.ts](../app/api/check/route.ts)
 - **C2 — MET** Brand name verified — [lib/compare/fields.ts](../lib/compare/fields.ts); tests in [compare.test.ts](../lib/compare/compare.test.ts)
 - **C3 — MET** Class/type verified — same module + tests
 - **C4 — MET** Alcohol content format-tolerant: `45% Alc./Vol. (90 Proof)` vs `45%` = MATCH — [lib/compare/abv.ts](../lib/compare/abv.ts); test "matches the rubric's exact example"; verified live in browser (case-diff sample)
@@ -35,7 +35,7 @@ Verification points: spec approval (done), post-build final gate, pre-submit.
 ### UX
 - **U1 — MET** Non-technical 50+ usable — 3-click demo verified in browser: sample → rendered verdict (single) and sample batch → triage, zero downloads/instructions; UX cold-read at final gate
 - **U2 — MET** Loud human-readable errors — type/size guards, refusal/timeout/429 copy ([lib/vision/extract.ts](../lib/vision/extract.ts) `failureMessage`), not-a-label card, CSV-format and pairing errors
-- **U3 — MET** Triage 250 without drowning — summary strip, exceptions sorted top, clean collapsed, row detail, **Download results (CSV)**, refresh guard; verified in browser on sample batch
+- **U3 — MET** Triage 250 without drowning — summary tiles (Matched / Need review counts), one-click **Need review** filter chip + search, master-detail table (row click opens the evidence panel with an Audit trail tab, Next label steps through), **Download report** (CSV), refresh guard; verified in browser on sample batch
 
 ### Constraints
 - **S1 — MET** Standalone, zero COLA integration — no integration code; stated in approach doc

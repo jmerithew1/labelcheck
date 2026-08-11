@@ -152,7 +152,7 @@ export function SingleCheck() {
             </span>
           </div>
 
-          <div className="mt-7 grid gap-8 md:grid-cols-2">
+          <div className="mt-7 grid gap-8 lg:grid-cols-2">
             <section className="flex flex-col gap-4">
               <p className="text-[11.5px] font-semibold uppercase tracking-wider text-ink-faint">Application details</p>
               {input("brand_name", "Brand name", "e.g. OLD TOM DISTILLERY")}
@@ -213,7 +213,10 @@ export function SingleCheck() {
             </section>
           </div>
 
-          <div className="mt-7 flex items-center justify-end border-t border-hairline pt-5">
+          <div className="mt-7 flex flex-wrap items-center justify-end gap-4 border-t border-hairline pt-5">
+            {!canCheck && !busy && (
+              <p className="text-[13px] text-ink-faint">Add a label file and at least one application field to check.</p>
+            )}
             <button
               onClick={() => file && runCheck(fields, file)}
               disabled={!canCheck || busy}

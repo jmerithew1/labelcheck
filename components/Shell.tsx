@@ -3,8 +3,9 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-/** App shell from the batch mockup: sidebar (wordmark, nav, how-it-works)
- *  + top tab bar. Reports/Settings deliberately omitted — no dead nav. */
+/** App shell used by BOTH pages: the sidebar (wordmark, nav, how-it-works)
+ *  is the only navigation; the top bar carries mobile links and page
+ *  actions. Reports/Settings deliberately omitted — no dead nav. */
 export function Shell({
   children,
   topRight,

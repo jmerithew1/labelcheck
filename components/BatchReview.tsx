@@ -55,13 +55,15 @@ function rowSummary(r: BatchRow): React.ReactNode {
   }
   if (r.result.warning.verdict.startsWith("fail")) mismatch++;
   else if (r.result.warning.verdict === "unreadable") review++;
+  const boldConfirm = r.result.warning.verdict === "pass" || r.result.warning.verdict === "pass_formatting_note";
   const sep = <span className="text-ink-faint">  ·  </span>;
   return (
     <>
       <span>{matched} matched</span>
       {mismatch > 0 && (<>{sep}<span className="font-semibold text-bad">{mismatch} mismatch{mismatch === 1 ? "" : "es"}</span></>)}
       {review > 0 && (<>{sep}<span className="font-semibold text-warn">{review} review</span></>)}
-      {notRequired > 0 && (<>{sep}<span className="text-ink-faint">{notRequired} not required</span></>)}
+      {boldConfirm && (<>{sep}<span className="text-warn">bold: confirm visually</span></>)}
+      {notRequired > 0 && (<>{sep}<span className="text-ink-faint">{notRequired} optional skipped</span></>)}
     </>
   );
 }
@@ -264,13 +266,20 @@ export function BatchReview() {
 
   const visible = useMemo(() => {
     const q = search.trim().toLowerCase();
-    return rows.filter((r) => {
+    const filtered = rows.filter((r) => {
       const b = bucketOf(r);
       if (filter !== "all" && !(filter === b || (filter === "review" && b === "error"))) return false;
       if (q && !r.filename.toLowerCase().includes(q) && !(r.application.brand_name ?? "").toLowerCase().includes(q)) return false;
       return true;
     });
-  }, [rows, filter, search]);
+    // Problems first once the run completes (stable order while streaming so
+    // rows don't jump mid-run) — page 1 must answer "what needs me?"
+    if (!running && rows.every((r) => r.status !== "queued" && r.status !== "checking")) {
+      const rank: Record<Bucket, number> = { error: 0, review: 1, matched: 2, not_required: 3, pending: 4 };
+      return [...filtered].sort((a, b) => rank[bucketOf(a)] - rank[bucketOf(b)] || a.index - b.index);
+    }
+    return filtered;
+  }, [rows, filter, search, running]);
   const pages = Math.max(1, Math.ceil(visible.length / PAGE_SIZE));
   const pageRows = visible.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
   const detail = rows.find((r) => r.index === openRow);
@@ -280,11 +289,19 @@ export function BatchReview() {
     const cls: Record<Bucket, string> = {
       matched: "bg-ok", review: "bg-warn", error: "bg-bad", not_required: "bg-ink-faint", pending: "bg-ink-faint",
     };
+    const labels: Record<Bucket, string> = {
+      matched: "Matched", review: "Needs review", error: "Error", not_required: "Not required", pending: "Waiting",
+    };
     const isFail = r.result?.overall === "warning_failure" || r.result?.overall === "not_a_label" ||
       r.result?.fields.some((f) => f.verdict === "possible_mismatch");
+    const label = b === "review" && isFail ? "Mismatch — needs review" : labels[b];
     return (
-      <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-white ${isFail && b === "review" ? "bg-bad" : cls[b]}`}>
+      <span
+        title={label}
+        className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-white ${isFail && b === "review" ? "bg-bad" : cls[b]}`}
+      >
         {b === "matched" ? Icon.check : b === "error" || isFail ? Icon.x : Icon.dot}
+        <span className="sr-only">{label}</span>
       </span>
     );
   };
@@ -452,10 +469,10 @@ export function BatchReview() {
                     <th className="px-4 py-2.5 font-semibold">Status</th>
                     <th className="px-2 py-2.5 font-semibold">File name</th>
                     <th className="px-2 py-2.5 font-semibold">Brand</th>
-                    {/* Master-detail: with the panel open the table narrows on
-                        purpose — these columns leave rather than crumple. */}
-                    {!detail && <th className="whitespace-nowrap px-2 py-2.5 font-semibold">Checked</th>}
-                    {!detail && <th className="whitespace-nowrap px-2 py-2.5 font-semibold">Result summary</th>}
+                    {/* Master-detail + narrow screens: these columns leave on
+                        purpose rather than crumple (detail panel carries them). */}
+                    {!detail && <th className="hidden whitespace-nowrap px-2 py-2.5 font-semibold lg:table-cell">Checked</th>}
+                    {!detail && <th className="hidden whitespace-nowrap px-2 py-2.5 font-semibold lg:table-cell">Result summary</th>}
                     <th className="px-2 py-2.5" />
                   </tr>
                 </thead>
@@ -483,12 +500,12 @@ export function BatchReview() {
                       </td>
                       <td className="max-w-40 truncate px-2 py-2.5 text-ink">{r.application.brand_name}</td>
                       {!detail && (
-                        <td className="whitespace-nowrap px-2 py-2.5 text-[12px] text-ink-faint">
+                        <td className="hidden whitespace-nowrap px-2 py-2.5 text-[12px] text-ink-faint lg:table-cell">
                           {r.checkedAt ? <>{fmtTime(r.checkedAt)}<br />{(r.ms! / 1000).toFixed(1)}s</> : "—"}
                         </td>
                       )}
                       {!detail && (
-                        <td className="whitespace-nowrap px-2 py-2.5 text-[12.5px] text-ink-soft">{rowSummary(r)}</td>
+                        <td className="hidden whitespace-nowrap px-2 py-2.5 text-[12.5px] text-ink-soft lg:table-cell">{rowSummary(r)}</td>
                       )}
                       <td className="px-2 py-2.5 text-ink-faint">
                         {r.result && (

@@ -15,6 +15,8 @@ import { LabelViewer, TONE_COLORS, type Tone } from "./LabelViewer.tsx";
 
 const LOCATABLE = new Set(["brand_name", "class_type", "alcohol_content", "net_contents", "warning"]);
 
+const wvPasses = (v: string) => v === "pass" || v === "pass_formatting_note";
+
 /** One row of the warning panel; stacks cleanly in compact containers. */
 function WarningRow({
   compact,
@@ -106,7 +108,12 @@ export function ResultView({
 
   const shownFields = useMemo(() => {
     const shown = { ...issueTones };
-    if (focusedField && !shown[focusedField]) shown[focusedField] = "ok";
+    // A focused "confirm this" item (the bold check) highlights amber, not the
+    // green of a verified match — green would say "fine" about the one thing
+    // being double-checked.
+    if (focusedField && !shown[focusedField]) {
+      shown[focusedField] = focusedField === "warning" ? "warn" : "ok";
+    }
     return shown;
   }, [issueTones, focusedField]);
 
@@ -120,15 +127,19 @@ export function ResultView({
       raf = 0;
       const row = focusedField ? grid.querySelector(`[data-row="${focusedField}"]`) : null;
       const overlay = overlayRef.current;
-      if (!row || !overlay) { setConnector(null); return; }
+      const viewer = grid.querySelector("[data-viewer-card]");
+      if (!row || !overlay || !viewer) { setConnector(null); return; }
       const g = grid.getBoundingClientRect();
       const r = row.getBoundingClientRect();
       const o = overlay.getBoundingClientRect();
-      if (o.width === 0 || o.bottom < g.top || o.top > g.bottom) { setConnector(null); return; }
+      const v = viewer.getBoundingClientRect();
+      // The line may only enter the image CARD — never the captions below it.
+      // If the highlight is scrolled out of the card, draw nothing.
+      if (o.width === 0 || o.bottom < v.top + 8 || o.top > v.bottom - 8) { setConnector(null); return; }
       const x1 = r.right - g.left - 2;
       const y1 = r.top - g.top + r.height / 2;
-      const x2 = o.left - g.left - 3;
-      const y2 = Math.min(Math.max(o.top - g.top + o.height / 2, 8), g.height - 8);
+      const x2 = v.left - g.left - 3;
+      const y2 = Math.min(Math.max(o.top - g.top + o.height / 2, v.top - g.top + 8), v.bottom - g.top - 8);
       const midX = x1 + (x2 - x1) / 2;
       setConnector(`M ${x1} ${y1} H ${midX} V ${y2} H ${x2}`);
     };
@@ -186,13 +197,17 @@ export function ResultView({
             cls: "border-ok-line bg-ok-bg", iconCls: "bg-ok", icon: Icon.check,
             title: "Label matches the application",
             titleCls: "text-ok",
-            sub: "All required fields match. The government warning text also passed.",
+            // The one thing the AI can't verify never hides behind the green
+            // headline — the bold confirm is named in the verdict itself.
+            sub: "All required fields match and the warning wording is exact. One visual confirm remains: bold type on “GOVERNMENT WARNING” (AI-judged).",
           };
 
+  const boldConfirmPending = wvPasses(result.warning.verdict);
   const countBits = [
     `${counts.matched} matched`,
     issueCount > 0 ? `${issueCount} mismatch${issueCount === 1 ? "" : "es"}` : null,
     confirmCount > 0 ? `${confirmCount} review` : null,
+    boldConfirmPending ? "1 to confirm (bold)" : null,
     `${counts.notRequired} not required`,
   ].filter(Boolean);
 
@@ -240,7 +255,7 @@ export function ResultView({
 
       <div ref={gridRef} className={`relative grid gap-5 ${compact ? "" : "lg:grid-cols-[5fr_4fr]"}`}>
         {!compact && connector && focusedField && (
-          <svg className="pointer-events-none absolute inset-0 z-10 hidden h-full w-full lg:block" aria-hidden>
+          <svg className="no-print pointer-events-none absolute inset-0 z-10 hidden h-full w-full lg:block" aria-hidden>
             <path
               d={connector}
               fill="none"
@@ -307,7 +322,11 @@ export function ResultView({
               >
                 <span className="min-w-0 flex-1">
                   <span className="block text-[12px] font-semibold text-ink-soft">Government warning</span>
-                  <span className="block text-[13.5px] text-ink">{result.warning.notes[0]}</span>
+                  {/* The row states the REASON; "confirmed by second reading"
+                      is corroboration, not the explanation. */}
+                  <span className="block text-[13.5px] text-ink">
+                    {result.warning.notes.find((n) => !/second independent/i.test(n)) ?? result.warning.notes[0]}
+                  </span>
                 </span>
                 {counts.warningFails ? <Chip tone="bad">{Icon.x} Fail</Chip> : <Chip tone="warn">Review</Chip>}
               </button>

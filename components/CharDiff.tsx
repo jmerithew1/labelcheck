@@ -23,7 +23,7 @@ function lcsDiff(a: string, b: string): Array<{ ch: string; kind: "same" | "a" |
 export function CharDiff({ expected, actual }: { expected: string; actual: string }) {
   const parts = lcsDiff(expected, actual);
   return (
-    <span className="font-mono text-sm break-all">
+    <span className="whitespace-pre-wrap font-mono text-sm [overflow-wrap:break-word]">
       {parts.map((p, idx) =>
         p.kind === "same" ? (
           <span key={idx}>{p.ch}</span>

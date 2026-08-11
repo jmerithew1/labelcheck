@@ -99,7 +99,8 @@ export function LabelViewer({
       <div className="min-w-0 flex-1">
         <div
           ref={scrollRef}
-          className="max-h-[560px] overflow-auto rounded-xl border border-hairline bg-muted-bg p-3"
+          data-viewer-card
+          className="label-scroll max-h-[560px] overflow-auto rounded-xl border border-hairline bg-muted-bg p-3"
         >
           <div
             className="relative mx-auto origin-top transition-transform"

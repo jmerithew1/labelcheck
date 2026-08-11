@@ -33,4 +33,7 @@ body {
 @media print {
   body { background: #fff; }
   .no-print { display: none !important; }
+  /* The printed report must show the whole label and its highlight —
+     no scroll clipping on paper. */
+  .label-scroll { max-height: none !important; overflow: visible !important; }
 }
