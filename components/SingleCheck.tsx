@@ -111,18 +111,8 @@ export function SingleCheck() {
   );
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-6 md:py-10">
-      {/* Mockup 1: standalone card with its own header — no sidebar. */}
+    <div className="mx-auto max-w-6xl">
       <div className="rounded-2xl border border-hairline bg-card shadow-sm">
-        <div className="flex items-center justify-between border-b border-hairline px-6 py-4 md:px-8">
-          <span className="font-display text-[22px] font-bold tracking-tight text-ink">LabelCheck</span>
-          <span className="no-print flex items-center gap-4">
-            <a href="/batch" className="text-[14px] font-semibold text-ink-soft hover:text-ink">Batch review</a>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-ink-soft" aria-hidden>
-              <path d="M4 6h16M4 12h16M4 18h16" strokeLinecap="round" />
-            </svg>
-          </span>
-        </div>
         <div className="p-6 md:p-8">
       {!outcome && (
         <div>
@@ -130,6 +120,37 @@ export function SingleCheck() {
             Does the label match the application?
           </h1>
           <p className="mt-1 text-[14px] text-ink-soft">Compare the approved application with the submitted label.</p>
+
+          {/* Examples are the front door for a first-time visitor — a visible
+              callout, not footer fine print. */}
+          <div className="no-print mt-5 flex flex-wrap items-center gap-x-4 gap-y-2 rounded-xl border border-hairline bg-muted-bg/70 px-4 py-3">
+            <span className="text-[13.5px] font-semibold text-ink">New here? Try an example</span>
+            <span className="flex flex-wrap gap-2">
+              {DEMO_SAMPLES.map((s) => (
+                <button
+                  key={s.id}
+                  onClick={() => loadSample(s)}
+                  disabled={busy}
+                  aria-label={`Try example: ${s.title} — ${s.blurb}`}
+                  className="rounded-lg border border-hairline bg-card px-3.5 py-1.5 text-[13px] font-semibold text-navy shadow-sm transition hover:bg-ok-bg disabled:opacity-50"
+                >
+                  {s.title}
+                </button>
+              ))}
+            </span>
+            <span className="text-[12.5px] text-ink-faint">
+              or download a{" "}
+              {["clean-match", "case-diff", "title-case-prefix"].map((n, i) => (
+                <span key={n}>
+                  {i > 0 && " · "}
+                  <a href={`/api/samples/${n}.png`} download className="font-semibold text-navy hover:underline">
+                    test label {i + 1}
+                  </a>
+                </span>
+              ))}{" "}
+              to upload yourself
+            </span>
+          </div>
 
           <div className="mt-7 grid gap-8 md:grid-cols-2">
             <section className="flex flex-col gap-4">
@@ -192,32 +213,7 @@ export function SingleCheck() {
             </section>
           </div>
 
-          <div className="mt-7 flex flex-wrap items-center justify-between gap-4 border-t border-hairline pt-5">
-            <div className="flex flex-col gap-1.5 text-[13px]">
-              <p className="text-ink-soft">
-                Try an example:{" "}
-                {DEMO_SAMPLES.map((s, i) => (
-                  <span key={s.id}>
-                    {i > 0 && <span className="text-ink-faint"> · </span>}
-                    <button onClick={() => loadSample(s)} disabled={busy} className="font-semibold text-navy hover:underline disabled:opacity-50">
-                      {s.title}
-                    </button>
-                  </span>
-                ))}
-              </p>
-              <p className="text-ink-faint">
-                No label handy?{" "}
-                {["clean-match", "case-diff", "title-case-prefix"].map((n, i) => (
-                  <span key={n}>
-                    {i > 0 && " · "}
-                    <a href={`/api/samples/${n}.png`} download className="font-medium text-navy hover:underline">
-                      test label {i + 1}
-                    </a>
-                  </span>
-                ))}{" "}
-                — download, then upload it above.
-              </p>
-            </div>
+          <div className="mt-7 flex items-center justify-end border-t border-hairline pt-5">
             <button
               onClick={() => file && runCheck(fields, file)}
               disabled={!canCheck || busy}

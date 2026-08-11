@@ -425,7 +425,7 @@ export function BatchReview() {
       )}
 
       {rows.length > 0 && (
-        <div className={`grid items-start gap-4 ${detail ? "xl:grid-cols-[3fr_2fr]" : ""}`}>
+        <div className={`grid items-start gap-4 ${detail ? "xl:grid-cols-[minmax(0,1fr)_460px]" : ""}`}>
           <div className="flex min-w-0 flex-col gap-3">
             {/* Filters + search */}
             <div className="flex flex-wrap items-center gap-2">
@@ -452,8 +452,10 @@ export function BatchReview() {
                     <th className="px-4 py-2.5 font-semibold">Status</th>
                     <th className="px-2 py-2.5 font-semibold">File name</th>
                     <th className="px-2 py-2.5 font-semibold">Brand</th>
-                    <th className="px-2 py-2.5 font-semibold">Checked</th>
-                    <th className="px-2 py-2.5 font-semibold">Result summary</th>
+                    {/* Master-detail: with the panel open the table narrows on
+                        purpose — these columns leave rather than crumple. */}
+                    {!detail && <th className="whitespace-nowrap px-2 py-2.5 font-semibold">Checked</th>}
+                    {!detail && <th className="whitespace-nowrap px-2 py-2.5 font-semibold">Result summary</th>}
                     <th className="px-2 py-2.5" />
                   </tr>
                 </thead>
@@ -480,10 +482,14 @@ export function BatchReview() {
                         </span>
                       </td>
                       <td className="max-w-40 truncate px-2 py-2.5 text-ink">{r.application.brand_name}</td>
-                      <td className="whitespace-nowrap px-2 py-2.5 text-[12px] text-ink-faint">
-                        {r.checkedAt ? <>{fmtTime(r.checkedAt)}<br />{(r.ms! / 1000).toFixed(1)}s</> : "—"}
-                      </td>
-                      <td className="px-2 py-2.5 text-[12.5px] text-ink-soft">{rowSummary(r)}</td>
+                      {!detail && (
+                        <td className="whitespace-nowrap px-2 py-2.5 text-[12px] text-ink-faint">
+                          {r.checkedAt ? <>{fmtTime(r.checkedAt)}<br />{(r.ms! / 1000).toFixed(1)}s</> : "—"}
+                        </td>
+                      )}
+                      {!detail && (
+                        <td className="whitespace-nowrap px-2 py-2.5 text-[12.5px] text-ink-soft">{rowSummary(r)}</td>
+                      )}
                       <td className="px-2 py-2.5 text-ink-faint">
                         {r.result && (
                           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden><path d="M9 6l6 6-6 6" strokeLinecap="round" strokeLinejoin="round"/></svg>
@@ -492,7 +498,7 @@ export function BatchReview() {
                     </tr>
                   ))}
                   {pageRows.length === 0 && (
-                    <tr><td colSpan={6} className="px-4 py-6 text-center text-ink-faint">Nothing matches this filter.</td></tr>
+                    <tr><td colSpan={detail ? 4 : 6} className="px-4 py-6 text-center text-ink-faint">Nothing matches this filter.</td></tr>
                   )}
                 </tbody>
               </table>

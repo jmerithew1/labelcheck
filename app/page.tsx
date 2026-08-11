@@ -1,5 +1,10 @@
+import { Shell } from "@/components/Shell.tsx";
 import { SingleCheck } from "@/components/SingleCheck.tsx";
 
 export default function Home() {
-  return <SingleCheck />;
+  return (
+    <Shell>
+      <SingleCheck />
+    </Shell>
+  );
 }

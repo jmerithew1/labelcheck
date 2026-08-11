@@ -59,23 +59,18 @@ export function Shell({
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="no-print flex items-center gap-6 border-b border-hairline bg-card px-6 pt-3 md:px-8">
-          <Link href="/" className="pb-2 font-display text-xl font-bold text-ink md:hidden">LC</Link>
-          <nav className="flex gap-6">
-            <Link
-              href="/batch"
-              className={`border-b-2 pb-2.5 text-[15px] font-semibold transition ${isBatch ? "border-navy text-ink" : "border-transparent text-ink-faint hover:text-ink-soft"}`}
-            >
-              Batch review
-            </Link>
-            <Link
-              href="/"
-              className={`border-b-2 pb-2.5 text-[15px] font-semibold transition ${!isBatch ? "border-navy text-ink" : "border-transparent text-ink-faint hover:text-ink-soft"}`}
-            >
-              Single check
-            </Link>
+        {/* One nav: the sidebar. This bar only carries the mobile links and
+            page actions — no duplicate horizontal tabs. */}
+        <header className="no-print flex min-h-14 items-center gap-6 border-b border-hairline bg-card px-6 py-2.5 md:px-8">
+          <nav className="flex gap-5 md:hidden">
+            <Link href="/" className="font-display text-lg font-bold text-ink">LC</Link>
+            <Link href="/" className={`text-[14px] font-semibold ${!isBatch ? "text-ink" : "text-ink-faint"}`}>Single</Link>
+            <Link href="/batch" className={`text-[14px] font-semibold ${isBatch ? "text-ink" : "text-ink-faint"}`}>Batch</Link>
           </nav>
-          {topRight && <div className="ml-auto flex items-center gap-2 pb-2">{topRight}</div>}
+          <span className="hidden text-[13px] text-ink-faint md:block">
+            {isBatch ? "Batch review" : "Single check"}
+          </span>
+          {topRight && <div className="ml-auto flex items-center gap-2">{topRight}</div>}
         </header>
         <main className="min-w-0 flex-1 p-5 md:p-8">{children}</main>
       </div>

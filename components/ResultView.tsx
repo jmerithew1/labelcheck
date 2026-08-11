@@ -15,6 +15,40 @@ import { LabelViewer, TONE_COLORS, type Tone } from "./LabelViewer.tsx";
 
 const LOCATABLE = new Set(["brand_name", "class_type", "alcohol_content", "net_contents", "warning"]);
 
+/** One row of the warning panel; stacks cleanly in compact containers. */
+function WarningRow({
+  compact,
+  label,
+  chip,
+  text,
+  action,
+}: {
+  compact: boolean;
+  label: string;
+  chip: React.ReactNode;
+  text: string;
+  action?: React.ReactNode;
+}) {
+  if (compact) {
+    return (
+      <div className="flex flex-col gap-1.5 border-b border-hairline px-4 py-3 last:border-0">
+        <div className="flex items-center justify-between gap-3">
+          <span className="text-[13px] font-semibold text-ink-soft">{label}</span>
+          <span className="flex items-center gap-2">{chip}{action}</span>
+        </div>
+        <p className="text-[13.5px] leading-snug text-ink">{text}</p>
+      </div>
+    );
+  }
+  return (
+    <div className="flex items-start gap-4 border-b border-hairline px-4 py-3 last:border-0">
+      <span className="w-24 shrink-0 pt-0.5 text-[13px] font-semibold text-ink-soft">{label}</span>
+      <span className="min-w-0 flex-1 text-[13.5px] text-ink">{text}</span>
+      <span className="flex shrink-0 items-center gap-2">{chip}{action}</span>
+    </div>
+  );
+}
+
 export function ResultView({
   result,
   extraction,
@@ -298,35 +332,30 @@ export function ResultView({
         </section>
       </div>
 
-      {/* Government warning panel */}
+      {/* Government warning panel. In compact containers each row stacks —
+          label + chip on top, sentence below — instead of four columns
+          fighting over 400px. */}
       <section className="rounded-xl border border-hairline bg-card">
         <p className="border-b border-hairline px-4 py-2.5 text-[11.5px] font-semibold uppercase tracking-wider text-ink-faint">
           Government warning
         </p>
-        <div className="flex items-start gap-4 border-b border-hairline px-4 py-3">
-          <span className="w-24 shrink-0 pt-0.5 text-[13px] font-semibold text-ink-soft">Wording</span>
-          <span className="min-w-0 flex-1 text-[13.5px] text-ink">{wordingRow.text}</span>
-          {wordingRow.chip}
-        </div>
-        <div className="flex items-start gap-4 px-4 py-3">
-          <span className="w-24 shrink-0 pt-0.5 text-[13px] font-semibold text-ink-soft">Formatting</span>
-          <span className="min-w-0 flex-1 text-[13.5px] text-ink">{formattingRow.text}</span>
-          <div className="flex shrink-0 items-center gap-2">
-            {formattingRow.chip}
+        <WarningRow compact={compact} label="Wording" chip={wordingRow.chip} text={wordingRow.text} />
+        <WarningRow
+          compact={compact}
+          label="Formatting"
+          chip={formattingRow.chip}
+          text={formattingRow.text}
+          action={
             <button
               onClick={() => setFocusedField(focusedField === "warning" ? null : "warning")}
-              className="no-print rounded-lg border border-hairline px-2.5 py-1 text-[12px] font-semibold text-ink-soft hover:bg-muted-bg"
+              className="no-print whitespace-nowrap rounded-lg border border-hairline px-2.5 py-1 text-[12px] font-semibold text-ink-soft hover:bg-muted-bg"
             >
               Show on label
             </button>
-          </div>
-        </div>
+          }
+        />
         {sizeNote && (
-          <div className="flex items-start gap-4 border-t border-hairline px-4 py-3">
-            <span className="w-24 shrink-0 pt-0.5 text-[13px] font-semibold text-ink-soft">Size</span>
-            <span className="min-w-0 flex-1 text-[13.5px] text-ink">{sizeNote}</span>
-            <Chip tone="warn">Review</Chip>
-          </div>
+          <WarningRow compact={compact} label="Size" chip={<Chip tone="warn">Review</Chip>} text={sizeNote} />
         )}
         {showWarningDiff && result.warning.labelText && (
           <div className="border-t border-hairline px-4 py-3">
