@@ -1,1 +1,36 @@
 @import "tailwindcss";
+
+/* Evidence Minimal design system — from the owner's mockups.
+   Navy ink on cool paper; white evidence cards; serif reserved for the
+   wordmark and page headlines; status is always word + icon, never color alone. */
+@theme {
+  --color-paper: #eef1f4;
+  --color-card: #ffffff;
+  --color-ink: #0e1f38;
+  --color-ink-soft: #45566e;
+  --color-ink-faint: #8494a8;
+  --color-hairline: #dde3ea;
+  --color-navy: #12294a;
+  --color-navy-hover: #1b3a66;
+  --color-ok: #167c3d;
+  --color-ok-bg: #e9f5ee;
+  --color-ok-line: #bfe3cd;
+  --color-warn: #b25e09;
+  --color-warn-bg: #fdf3e4;
+  --color-warn-line: #f0d9b0;
+  --color-bad: #b3261e;
+  --color-bad-bg: #fcecea;
+  --color-bad-line: #f2c6c2;
+  --color-muted-bg: #f2f5f8;
+  --font-display: Georgia, "Times New Roman", serif;
+}
+
+body {
+  background: var(--color-paper);
+  color: var(--color-ink);
+}
+
+@media print {
+  body { background: #fff; }
+  .no-print { display: none !important; }
+}

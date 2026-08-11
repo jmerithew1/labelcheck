@@ -3,14 +3,17 @@ import {
   extractLabel,
   failureMessage,
   confirmWarningTranscription,
+  type ExtractableMedia,
 } from "@/lib/vision/extract.ts";
+import { locateBands, type LocatableMedia, type Bands } from "@/lib/vision/locate.ts";
 import { checkWarning } from "@/lib/compare/warning.ts";
 import { compareLabel, type ApplicationData } from "@/lib/compare/index.ts";
 
 export const maxDuration = 60;
 
-const MAX_IMAGE_BYTES = 8 * 1024 * 1024; // downscaled client-side; this is the loud backstop
-const MEDIA_TYPES = new Set(["image/png", "image/jpeg", "image/webp"]);
+const MAX_IMAGE_BYTES = 8 * 1024 * 1024; // images are downscaled client-side; this is the loud backstop
+const MAX_PDF_BYTES = 10 * 1024 * 1024; // PDFs can't be downscaled in-browser
+const MEDIA_TYPES = new Set(["image/png", "image/jpeg", "image/webp", "application/pdf"]);
 
 // Prototype abuse guard: the endpoint is public and each call spends real
 // API credit. Sliding-window per-IP limit sized so a full-speed 300-label
@@ -60,7 +63,7 @@ export async function POST(req: Request) {
   }
   if (!MEDIA_TYPES.has(image.type)) {
     return NextResponse.json(
-      { error: `"${image.name}" is not a supported image. Use a PNG, JPEG, or WebP file.` },
+      { error: `"${image.name}" is not a supported file. Use a PNG, JPEG, WebP, or PDF.` },
       { status: 400 },
     );
   }
@@ -70,9 +73,11 @@ export async function POST(req: Request) {
       { status: 400 },
     );
   }
-  if (image.size > MAX_IMAGE_BYTES) {
+  const isPdf = image.type === "application/pdf";
+  const maxBytes = isPdf ? MAX_PDF_BYTES : MAX_IMAGE_BYTES;
+  if (image.size > maxBytes) {
     return NextResponse.json(
-      { error: `"${image.name}" is too large (over 8 MB). Use a smaller image.` },
+      { error: `"${image.name}" is too large (over ${Math.round(maxBytes / 1024 / 1024)} MB). Use a smaller file.` },
       { status: 400 },
     );
   }
@@ -97,7 +102,17 @@ export async function POST(req: Request) {
   }
 
   const bytes = Buffer.from(await image.arrayBuffer()).toString("base64");
-  const outcome = await extractLabel(bytes, image.type as "image/png" | "image/jpeg" | "image/webp");
+  const media = image.type as ExtractableMedia;
+
+  // Evidence bands run as a THIRD parallel call (spike: p50 2.0s < the main
+  // call's 3.8s → zero added wall-clock). Batch rows send skip_locate=1 to
+  // stay at 2 upstream calls/label; their detail view fetches bands lazily
+  // via /api/locate. PDFs skip bands (locator is image-only).
+  const wantBands = form.get("skip_locate") !== "1" && !isPdf;
+  const [outcome, bands]: [Awaited<ReturnType<typeof extractLabel>>, Bands] = await Promise.all([
+    extractLabel(bytes, media),
+    wantBands ? locateBands(bytes, media as LocatableMedia) : Promise.resolve({}),
+  ]);
 
   if (!outcome.ok) {
     return NextResponse.json(

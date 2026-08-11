@@ -10,18 +10,20 @@ export async function GET(
 ) {
   const { name } = await params;
   const isCsv = name === "batch.csv";
-  if (!isCsv && !/^[a-z0-9-]+\.png$/.test(name)) {
+  const isZip = name === "sample-batch.zip";
+  if (!isCsv && !isZip && !/^[a-z0-9-]+\.png$/.test(name)) {
     return NextResponse.json({ error: "Unknown file." }, { status: 404 });
   }
-  const file = isCsv
-    ? path.join(process.cwd(), "samples", "batch", "batch.csv")
-    : path.join(process.cwd(), "samples", "batch", "images", name);
+  const file =
+    isCsv || isZip
+      ? path.join(process.cwd(), "samples", "batch", name)
+      : path.join(process.cwd(), "samples", "batch", "images", name);
   if (!fs.existsSync(file)) {
     return NextResponse.json({ error: "Unknown file." }, { status: 404 });
   }
   return new NextResponse(new Uint8Array(fs.readFileSync(file)), {
     headers: {
-      "Content-Type": isCsv ? "text/csv" : "image/png",
+      "Content-Type": isCsv ? "text/csv" : isZip ? "application/zip" : "image/png",
       "Cache-Control": "public, max-age=3600",
     },
   });

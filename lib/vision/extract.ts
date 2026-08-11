@@ -62,7 +62,7 @@ const WARNING_CONFIRM_TOOL = {
  */
 export async function confirmWarningTranscription(
   imageBase64: string,
-  mediaType: "image/png" | "image/jpeg" | "image/webp",
+  mediaType: ExtractableMedia,
 ): Promise<{ status: "found" | "absent" | "unreadable"; text: string } | null> {
   try {
     const msg = await client.messages.create({
@@ -75,7 +75,7 @@ export async function confirmWarningTranscription(
         {
           role: "user",
           content: [
-            { type: "image", source: { type: "base64", media_type: mediaType, data: imageBase64 } },
+            mediaBlock(imageBase64, mediaType),
             { type: "text", text: "Record the government warning statement printed on this label." },
           ],
         },
@@ -109,15 +109,32 @@ const client = new Anthropic({
   maxRetries: 1,
 });
 
+export type ExtractableMedia =
+  | "image/png"
+  | "image/jpeg"
+  | "image/webp"
+  | "application/pdf";
+
+/** Claude accepts PDFs natively as document blocks — same perception contract. */
+function mediaBlock(base64: string, mediaType: ExtractableMedia) {
+  if (mediaType === "application/pdf") {
+    return {
+      type: "document" as const,
+      source: { type: "base64" as const, media_type: "application/pdf" as const, data: base64 },
+    };
+  }
+  return {
+    type: "image" as const,
+    source: { type: "base64" as const, media_type: mediaType, data: base64 },
+  };
+}
+
 export async function extractLabel(
   imageBase64: string,
-  mediaType: "image/png" | "image/jpeg" | "image/webp",
+  mediaType: ExtractableMedia,
 ): Promise<ExtractionOutcome> {
   const t0 = performance.now();
-  const imageBlock = {
-    type: "image" as const,
-    source: { type: "base64" as const, media_type: mediaType, data: imageBase64 },
-  };
+  const imageBlock = mediaBlock(imageBase64, mediaType);
 
   try {
     const [mainMsg, boldMsg] = await Promise.all([
