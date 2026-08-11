@@ -161,9 +161,10 @@ export async function POST(req: Request) {
     return NextResponse.json({
       result,
       extraction: outcome.extraction,
+      bands,
       ms: outcome.ms + confirmMs,
     });
   }
 
-  return NextResponse.json({ result, extraction: outcome.extraction, ms: outcome.ms });
+  return NextResponse.json({ result, extraction: outcome.extraction, bands, ms: outcome.ms });
 }
