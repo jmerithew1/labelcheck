@@ -28,9 +28,9 @@ Verification points: spec approval (done), post-build final gate, pre-submit.
 - **C13 — MET** Country of origin optional field — same
 
 ### Performance
-- **P1 — MET** ~5s per label MEASURED on deployed URL: **p50 4.0s, worst 4.4s, n=7** — [measured-performance.json](measured-performance.json)
-- **P2 — MET** Batch 200–300 first-class — batch page, CSV+images, loud pairing, sample batch button
-- **P3 — MET** 250-label batch **121s wall-clock, 250/250 ok, 0 rate-limited** on deployed app — [measured-performance.json](measured-performance.json)
+- **P1 — MET** ~5s per label MEASURED on deployed URL (incl. evidence-band call): **p50 4.3s, worst 4.5s, n=6** — [measured-performance.json](measured-performance.json)
+- **P2 — MET** Batch 200–300 first-class — batch review page: CSV+files dropzone, loud pairing, filters/search/pagination, detail panel, sample batch
+- **P3 — MET** 250-label batch **135s wall-clock, 250/250 ok, 0 rate-limited, 0 errors** on deployed app — [measured-performance.json](measured-performance.json)
 
 ### UX
 - **U1 — MET** Non-technical 50+ usable — 3-click demo verified in browser: sample → rendered verdict (single) and sample batch → triage, zero downloads/instructions; UX cold-read at final gate

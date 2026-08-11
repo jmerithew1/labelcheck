@@ -24,18 +24,19 @@ const APP = {
   net_contents: "750 mL",
 };
 
-function formFor(pngPath: string): FormData {
+function formFor(pngPath: string, skipLocate: boolean): FormData {
   const form = new FormData();
   const bytes = fs.readFileSync(pngPath);
   form.set("image", new File([new Uint8Array(bytes)], path.basename(pngPath), { type: "image/png" }));
+  if (skipLocate) form.set("skip_locate", "1"); // matches the real batch path
   for (const [k, v] of Object.entries(APP)) form.set(k, v);
   return form;
 }
 
-async function check(pngPath: string): Promise<{ ms: number; ok: boolean; status: number }> {
+async function check(pngPath: string, skipLocate = false): Promise<{ ms: number; ok: boolean; status: number }> {
   const t0 = performance.now();
   try {
-    const res = await fetch(`${BASE}/api/check`, { method: "POST", body: formFor(pngPath) });
+    const res = await fetch(`${BASE}/api/check`, { method: "POST", body: formFor(pngPath, skipLocate) });
     await res.json().catch(() => null);
     return { ms: Math.round(performance.now() - t0), ok: res.ok, status: res.status };
   } catch {
@@ -73,10 +74,13 @@ async function main() {
     while (true) {
       const i = next++;
       if (i >= rows.length) return;
-      const r = await check(rows[i]);
+      const r = await check(rows[i], true);
       if (r.ok) ok++;
       else if (r.status === 429) rateLimited++;
-      else errors++;
+      else {
+        errors++;
+        console.log(`  batch error: HTTP ${r.status} after ${r.ms}ms (${path.basename(rows[i])})`);
+      }
       const done = ok + errors + rateLimited;
       if (done % 25 === 0) console.log(`  batch: ${done}/${rows.length} (${Math.round((performance.now() - t0) / 1000)}s)`);
     }

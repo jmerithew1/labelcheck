@@ -11,13 +11,13 @@
 
 ## For the evaluator — 3 clicks, no data needed
 
-**Single check:** open the app → click **"Warning failure"** under *Try a sample* → the check runs and renders: the label fails because its warning prefix is printed `Government Warning:` in title case, with the exact deviation and the CFR citation, while all four fields show as matches. Try the other two samples for a clean match and a formatting-differences match (`45%` vs `45% Alc./Vol. (90 Proof)` — same thing, surfaced not failed).
+**Single check:** open the app → click **"Warning failure"** under *Try an example* → the check runs and renders: a red banner, the comparison list, and the Government warning panel showing Wording PASS but Formatting FAIL — the prefix is printed `Government Warning:` in title case, cited against 27 CFR 16.22(a)(2). Click any comparison row (or "Show on label") to highlight where it sits on the label image. Try the other examples for a clean match and a formatting-differences match (`45%` vs `45% Alc./Vol. (90 Proof)` — same thing, surfaced not failed). **Download report** prints a filing-ready copy.
 
-**Batch:** click **"Check a batch →"** → **"Or run the sample batch"** → **"Check all labels"**. Twelve labels stream in over ~10 seconds; the summary strip reads the triage ("10 clean · 1 need a look · 1 warning failures"), exceptions sort to the top, clean matches collapse. Click **Open** on the warning failure to see the word-swap caught ("health" should be "birth"). **Download results (CSV)** exports the run.
+**Batch:** open **Batch review** → click **"Run the sample batch"** — it loads and runs itself. Twelve labels stream into the table (summary tiles: 10 matched · 2 need review); filter chips and search narrow the list; click a row to open the detail panel with the full evidence view and an **Audit trail** tab showing the real pipeline (including the second-reading confirmation on the warning failure — "health" should be "birth"). **Download report** exports the run as CSV.
 
-**Bring your own:** any label photo (PNG/JPEG/WebP) + typed fields works in single check; the batch page links a sample CSV defining the manifest format.
+**Bring your own:** any label file (PNG/JPEG/WebP/PDF) + typed fields works in single check — the page links downloadable test labels if you have none. The batch dropzone takes the application CSV together with the label files (sample CSV and a ready-made zip bundle are linked under it).
 
 ## Measured, on the deployed URL
 
-- Single label: **p50 4.0 s** (worst 4.4 s, n=7) — requirement ~5 s
-- 250-label batch: **2 min 01 s**, 250/250 succeeded, zero rate limits
+- Single label (with evidence highlighting): **p50 4.3 s** (worst 4.5 s, n=6) — requirement ~5 s
+- 250-label batch: **2 min 15 s**, 250/250 succeeded, zero rate limits, zero errors

@@ -37,14 +37,21 @@ Measured 2026-08-10 against the production Railway deployment (raw data: [measur
 
 | Requirement | Measured | Bar |
 |---|---|---|
-| Single label end-to-end | **p50 4.0 s, worst 4.4 s** (n=7) | ~5 s |
-| Batch of 250 labels | **121 s wall-clock (2 min 01 s)**, 250/250 succeeded, 0 rate-limited, 0 errors | usable for 200–300 dumps |
+| Single label end-to-end (incl. evidence-band call) | **p50 4.3 s, worst 4.5 s** (n=6) | ~5 s |
+| Batch of 250 labels | **135 s wall-clock (2 min 15 s)**, 250/250 succeeded, 0 rate-limited, 0 errors | usable for 200–300 dumps |
 
-The per-label p50 breaks down as ~3.8 s of model inference (the parallel Haiku+Sonnet pair; measured in the spike) plus network and image upload. The internal target was ≤3 s; the shipped p50 of 4.0 s carries visible headroom against the requirement but not against the aspiration — the remaining mechanism lever (documented, not built) is streaming the extraction call.
+The per-label p50 is three parallel model calls (Haiku transcription ~3.8 s ∥ Sonnet bold ~2.4 s ∥ Haiku locator ~2.0 s) plus network and upload — adding evidence highlighting cost ~0.2 s at p50 because the locator hides entirely inside the main call's window. The internal target was ≤3 s; the shipped p50 carries headroom against the requirement but not the aspiration — the remaining mechanism lever (documented, not built) is streaming the extraction call.
 
 **Degraded-input fidelity** (no physical bottles exist to photograph, so photo conditions are simulated: blur, perspective tilt, and glare applied to 5 ground-truthed labels — 15 images; raw data: [degraded-fidelity.json](degraded-fidelity.json)): raw single-read transcription drops to 10/15 verbatim, and 3 degraded *clean* labels produced false warning-failures — which is exactly why the two-reading confirmation pass exists. Run through the shipped pipeline, **all 3 false failures are caught and downgraded to "check manually"; every adversarial label still fails correctly under every degradation — 15/15 verdicts correct or safely degraded, zero false rejections.**
 
 Batch throughput comes from client-side orchestration: the browser pairs CSV rows to images by filename, runs 8 checks concurrently through the server API (16 concurrent model calls upstream — burst-tested at 25 with zero rate limits), and streams rows into the triage view as they land. No job infrastructure, no persistence, and progress is visible from the first seconds.
+
+## Evidence highlighting ("Show on label")
+
+Clicking a comparison row highlights where that text sits on the label image. Two layers, spike-validated (`scripts/spike-locate*.ts`):
+- **Exact**: the browser runs OCR (tesseract.js, WebAssembly) on the already-loaded image and matches each field's *known transcription* against OCR word coordinates → pixel-accurate boxes. Runs after results render; verdict latency untouched.
+- **Approximate fallback**: a third parallel model call returns vertical *bands* per field (boxes were measured too imprecise to show; bands measured 20/20 usable at p50 2.0s — faster than the main extraction call, so parallel = zero added wall-clock). Bands are padded and labeled "approximate area" — the UI never claims precision the model doesn't have.
+Batch runs skip the locator call entirely (staying at 2 upstream calls/label); the detail panel fetches bands lazily via `/api/locate` only when a row is opened.
 
 ## Prompt injection
 
