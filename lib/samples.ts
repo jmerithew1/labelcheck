@@ -6,6 +6,8 @@ export interface DemoSample {
   id: string;
   title: string;
   blurb: string;
+  /** one-line payoff shown on the example button */
+  hook: string;
   /** file under samples/labels */
   png: string;
   application: {
@@ -21,6 +23,7 @@ export const DEMO_SAMPLES: DemoSample[] = [
     id: "clean",
     title: "Clean match",
     blurb: "Label and application agree on everything.",
+    hook: "see a full check in ~4 seconds",
     png: "clean-match.png",
     application: {
       brand_name: "OLD TOM DISTILLERY",
@@ -33,6 +36,7 @@ export const DEMO_SAMPLES: DemoSample[] = [
     id: "case-diff",
     title: "Formatting difference",
     blurb: "Same brand, different capitalization — a match, surfaced not failed.",
+    hook: "see it NOT flag a case difference",
     png: "case-diff.png",
     application: {
       brand_name: "OLD TOM DISTILLERY",
@@ -45,6 +49,7 @@ export const DEMO_SAMPLES: DemoSample[] = [
     id: "warning-fail",
     title: "Warning issue",
     blurb: 'Warning prefix printed "Government Warning:" — title case fails the exact check.',
+    hook: "see it catch a formatting violation",
     png: "title-case-prefix.png",
     application: {
       brand_name: "OLD TOM DISTILLERY",

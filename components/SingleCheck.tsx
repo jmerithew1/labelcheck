@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { CheckResult } from "@/lib/compare/index.ts";
 import type { LabelExtraction } from "@/lib/vision/contract.ts";
 import type { Bands } from "@/lib/vision/locate.ts";
@@ -37,6 +37,21 @@ export function SingleCheck() {
   const [outcome, setOutcome] = useState<Outcome | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
   const [dragOver, setDragOver] = useState(false);
+  const [busyPhase, setBusyPhase] = useState(0);
+
+  // Operational transparency during the ~4s wait — what the tool is doing,
+  // not a bare spinner.
+  const BUSY_STEPS = [
+    "Reading the label word-for-word…",
+    "Checking the government warning…",
+    "Comparing every field…",
+  ];
+  useEffect(() => {
+    if (!busy) { setBusyPhase(0); return; }
+    const t = setInterval(() => setBusyPhase((p) => Math.min(p + 1, BUSY_STEPS.length - 1)), 1500);
+    return () => clearInterval(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [busy]);
 
   const reset = () => { setOutcome(null); setError(null); };
 
@@ -119,7 +134,9 @@ export function SingleCheck() {
           <h1 className="text-[26px] font-bold tracking-tight text-ink" style={{ textWrap: "balance" }}>
             Does the label match the application?
           </h1>
-          <p className="mt-1 text-[14px] text-ink-soft">Compare the approved application with the submitted label.</p>
+          <p className="mt-1 text-[14px] text-ink-soft">
+            Compare the approved application (the paperwork) with the submitted label — it catches one-word changes in the warning text that are easy to miss by eye.
+          </p>
 
           {/* Examples are the front door for a first-time visitor — a visible
               callout, not footer fine print. */}
@@ -132,9 +149,10 @@ export function SingleCheck() {
                   onClick={() => loadSample(s)}
                   disabled={busy}
                   aria-label={`Try example: ${s.title} — ${s.blurb}`}
-                  className="rounded-lg border border-hairline bg-card px-3.5 py-1.5 text-[13px] font-semibold text-navy shadow-sm transition hover:bg-ok-bg disabled:opacity-50"
+                  className="rounded-lg border border-hairline bg-card px-3.5 py-1.5 text-left shadow-sm transition hover:bg-ok-bg disabled:opacity-50"
                 >
-                  {s.title}
+                  <span className="block text-[13px] font-semibold text-navy">{s.title}</span>
+                  <span className="block text-[11.5px] text-ink-faint">{s.hook}</span>
                 </button>
               ))}
             </span>
@@ -216,6 +234,9 @@ export function SingleCheck() {
           <div className="mt-7 flex flex-wrap items-center justify-end gap-4 border-t border-hairline pt-5">
             {!canCheck && !busy && (
               <p className="text-[13px] text-ink-faint">Add a label file and at least one application field to check.</p>
+            )}
+            {busy && (
+              <p className="text-[13px] text-ink-soft" role="status">{BUSY_STEPS[busyPhase]} <span className="text-ink-faint">usually under 5 seconds</span></p>
             )}
             <button
               onClick={() => file && runCheck(fields, file)}

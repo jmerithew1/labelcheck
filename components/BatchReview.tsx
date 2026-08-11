@@ -14,6 +14,19 @@ const CONCURRENCY = 8;
 const PAGE_SIZE = 10;
 const REQUIRED_HEADERS = ["filename", "brand_name", "class_type", "alcohol_content", "net_contents"];
 
+/** Real-world CSVs won't use our exact header names — accept the obvious
+ *  synonyms so the format is forgiving, not a gate (Margaret finding #1). */
+const HEADER_SYNONYMS: Record<string, string> = {
+  filename: "filename", file: "filename", "file name": "filename", image: "filename", label: "filename",
+  brand_name: "brand_name", brand: "brand_name", "brand name": "brand_name",
+  class_type: "class_type", class: "class_type", type: "class_type", "class type": "class_type", "class/type": "class_type",
+  alcohol_content: "alcohol_content", alcohol: "alcohol_content", "alcohol content": "alcohol_content", abv: "alcohol_content",
+  net_contents: "net_contents", net: "net_contents", "net contents": "net_contents", volume: "net_contents",
+  bottler_name_address: "bottler_name_address", bottler: "bottler_name_address", "bottler name & address": "bottler_name_address",
+  country_of_origin: "country_of_origin", country: "country_of_origin", origin: "country_of_origin", "country of origin": "country_of_origin",
+};
+const canonicalHeader = (h: string) => HEADER_SYNONYMS[h.trim().toLowerCase()] ?? h.trim().toLowerCase();
+
 type RowStatus = "queued" | "checking" | "done" | "error";
 type Bucket = "matched" | "review" | "not_required" | "error" | "pending";
 
@@ -63,7 +76,7 @@ function rowSummary(r: BatchRow): React.ReactNode {
       {mismatch > 0 && (<>{sep}<span className="font-semibold text-bad">{mismatch} mismatch{mismatch === 1 ? "" : "es"}</span></>)}
       {review > 0 && (<>{sep}<span className="font-semibold text-warn">{review} review</span></>)}
       {boldConfirm && (<>{sep}<span className="text-warn">bold: confirm visually</span></>)}
-      {notRequired > 0 && (<>{sep}<span className="text-ink-faint">{notRequired} optional skipped</span></>)}
+      {notRequired > 0 && (<>{sep}<span className="text-ink-faint">{notRequired} optional</span></>)}
     </>
   );
 }
@@ -83,6 +96,7 @@ export function BatchReview() {
   const [tab, setTab] = useState<"overview" | "audit">("overview");
   const [wallMs, setWallMs] = useState<number | null>(null);
   const [autoRun, setAutoRun] = useState(false);
+  const [savedToast, setSavedToast] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const filesInput = useRef<HTMLInputElement>(null);
   const startedAt = useRef(0);
@@ -109,12 +123,12 @@ export function BatchReview() {
       return old;
     });
     const parsed = parseCsv(csvText);
-    if (!parsed.length) { setGlobalError("The CSV file is empty."); return; }
-    const headers = parsed[0].map((h) => h.trim().toLowerCase());
+    if (!parsed.length) { setGlobalError("The spreadsheet file is empty."); return false; }
+    const headers = parsed[0].map(canonicalHeader);
     const missing = REQUIRED_HEADERS.filter((h) => !headers.includes(h));
     if (missing.length) {
-      setGlobalError(`The CSV is missing required column${missing.length > 1 ? "s" : ""}: ${missing.join(", ")}. Download the sample CSV to see the format.`);
-      return;
+      setGlobalError(`The spreadsheet is missing required column${missing.length > 1 ? "s" : ""}: ${missing.join(", ").replace(/_/g, " ")}. Download the sample CSV below to see the expected format.`);
+      return false;
     }
     setGlobalError(null);
     const issues: string[] = [];
@@ -147,16 +161,20 @@ export function BatchReview() {
     setWallMs(null);
     setPage(0);
     setOpenRow(null);
+    return issues.length === 0 && newRows.length > 0;
   }
 
   async function onFiles(list: File[]) {
     const csv = list.find((f) => f.name.toLowerCase().endsWith(".csv"));
     const media = list.filter((f) => /^image\/|application\/pdf/.test(f.type));
     if (!csv) {
-      setGlobalError("Include the application CSV along with the label files (one row per application; images matched by filename).");
+      setGlobalError("Include the spreadsheet (CSV) along with the label files — one row per application; labels are matched to rows by file name.");
       return;
     }
-    buildRows(await csv.text(), media);
+    // A cleanly paired batch starts checking immediately — the click the app
+    // can make for the user, it makes. Pairing issues pause for attention.
+    const clean = buildRows(await csv.text(), media);
+    if (clean) setAutoRun(true);
   }
 
   async function loadSampleBatch() {
@@ -255,6 +273,9 @@ export function BatchReview() {
     a.download = "labelcheck-batch-results.csv";
     a.click();
     URL.revokeObjectURL(a.href);
+    // A silent download reads as a broken button — say it worked.
+    setSavedToast(true);
+    setTimeout(() => setSavedToast(false), 4000);
   }
 
   const counts = useMemo(() => {
@@ -318,12 +339,17 @@ export function BatchReview() {
     </button>
   );
 
+  const order = visible.map((r) => r.index);
+  const atLastVisible = openRow !== null && order.indexOf(openRow) === order.length - 1;
   const nextReviewable = () => {
     if (openRow === null) return;
-    const order = visible.map((r) => r.index);
     const at = order.indexOf(openRow);
-    const nxt = order[(at + 1) % order.length];
-    setOpenRow(nxt);
+    if (at === order.length - 1) {
+      // The batch has an ending, not an infinite loop.
+      setOpenRow(null);
+      return;
+    }
+    setOpenRow(order[at + 1]);
     setTab("overview");
   };
 
@@ -349,6 +375,11 @@ export function BatchReview() {
 
   return (
     <ShellFrame topRight={topRight}>
+    {savedToast && (
+      <div className="no-print fixed bottom-6 right-6 z-50 rounded-xl border border-ok-line bg-ok-bg px-4 py-3 text-[13.5px] font-semibold text-ok shadow-lg" role="status">
+        Report saved to your Downloads folder.
+      </div>
+    )}
     <div className="flex flex-col gap-5">
       <div>
         <h1 className="text-[26px] font-bold tracking-tight text-ink">Batch review</h1>
@@ -376,7 +407,9 @@ export function BatchReview() {
           <span className="rounded-lg border border-hairline bg-card px-4 py-1.5 text-[13px] font-semibold text-ink shadow-sm">
             Choose files
           </span>
-          <span className="mt-1 text-[12px] text-ink-faint">PNG, JPG, WebP up to 8 MB · PDF up to 10 MB · matched to CSV rows by filename</span>
+          <span className="mt-1 max-w-md text-[12px] text-ink-faint">
+            The CSV is a spreadsheet listing each label&apos;s application details (one row per label, matched by file name) — download the sample below to see the format. Label files: PNG, JPG, WebP up to 8 MB · PDF up to 10 MB.
+          </span>
           <span className="no-print mt-1 text-[12.5px]" onClick={(e) => e.stopPropagation()}>
             <button onClick={loadSampleBatch} disabled={running} className="font-semibold text-navy hover:underline disabled:opacity-50">Run the sample batch</button>
             <span className="text-ink-faint"> · </span>
@@ -591,11 +624,11 @@ export function BatchReview() {
               )}
               <div className="mt-4 flex items-center justify-between">
                 <button onClick={() => window.print()} className="no-print rounded-xl border border-hairline px-4 py-2 text-[13px] font-semibold text-ink-soft hover:bg-muted-bg">
-                  Download result
+                  Print result
                 </button>
                 <button onClick={nextReviewable} className="no-print flex items-center gap-2 rounded-xl bg-navy px-5 py-2.5 text-[14px] font-bold text-white hover:bg-navy-hover">
-                  Next label
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden><path d="M4 12h15m0 0l-6-6m6 6l-6 6" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  {atLastVisible ? "Done — back to summary" : "Next label"}
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden><path d={atLastVisible ? "M4 12l5 5L20 6" : "M4 12h15m0 0l-6-6m6 6l-6 6"} strokeLinecap="round" strokeLinejoin="round"/></svg>
                 </button>
               </div>
             </aside>

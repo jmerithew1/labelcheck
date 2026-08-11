@@ -199,7 +199,7 @@ export function ResultView({
             titleCls: "text-ok",
             // The one thing the AI can't verify never hides behind the green
             // headline — the bold confirm is named in the verdict itself.
-            sub: "All required fields match and the warning wording is exact. One visual confirm remains: bold type on “GOVERNMENT WARNING” (AI-judged).",
+            sub: "All required fields match and the warning wording is exact. One last step: glance at the label to confirm “GOVERNMENT WARNING” is in bold type — the computer can't be sure of bold.",
           };
 
   const boldConfirmPending = wvPasses(result.warning.verdict);
@@ -225,10 +225,10 @@ export function ResultView({
           chip: <Chip tone="warn">Review</Chip>,
           text:
             extraction.warning_prefix_bold === "bold"
-              ? "Confirm “GOVERNMENT WARNING:” is bold — AI-judged only (right on 16 of 17 test labels)."
+              ? "The computer can't reliably judge bold type (right on 16 of 17 test labels) — please confirm “GOVERNMENT WARNING:” is bold on the picture."
               : extraction.warning_prefix_bold === "not_bold"
-                ? "AI check suggests the prefix may NOT be bold (required by 27 CFR 16.22(a)(2)). Verify on the label."
-                : "Could not judge bold type — verify on the label.",
+                ? "The computer suggests the prefix may NOT be bold (bold is required by 27 CFR 16.22(a)(2)) — please check the picture."
+                : "The computer could not judge bold type — please check the picture.",
         };
   const sizeNote = result.warning.notes.find((n) => /small/i.test(n));
   const showWarningDiff = wv === "fail_wording";
@@ -390,13 +390,16 @@ export function ResultView({
       {(onPrint || primaryAction) && (
         <div className="no-print flex flex-wrap items-center justify-between gap-3">
           {onPrint ? (
-            <button
-              onClick={onPrint}
-              className="flex items-center gap-2 rounded-xl border border-hairline bg-card px-4 py-2.5 text-[14px] font-semibold text-ink-soft hover:bg-muted-bg"
-            >
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16" strokeLinecap="round" strokeLinejoin="round"/></svg>
-              Download report
-            </button>
+            <span className="flex items-center gap-3">
+              <button
+                onClick={onPrint}
+                className="flex items-center gap-2 rounded-xl border border-hairline bg-card px-4 py-2.5 text-[14px] font-semibold text-ink-soft hover:bg-muted-bg"
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden><path d="M6 9V3h12v6M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2m-12-3h12v6H6z" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                Print report
+              </button>
+              <span className="text-[12px] text-ink-faint">choose “Save as PDF” in the print window for a file</span>
+            </span>
           ) : <span />}
           {primaryAction && (
             <button

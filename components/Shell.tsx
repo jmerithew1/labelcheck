@@ -54,7 +54,8 @@ export function Shell({
             </ol>
           </div>
           <p className="px-1 text-[12px] leading-snug text-ink-faint">
-            Secure. Traceable. Explainable.<br />Every result is evidence-linked. Nothing is stored.
+            Built for TTB (Alcohol and Tobacco Tax and Trade Bureau) label reviews.
+            Every result is evidence-linked. Nothing is stored.
           </p>
         </div>
       </aside>
