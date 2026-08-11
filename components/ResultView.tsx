@@ -46,7 +46,10 @@ function WarningRow({
     <div className="flex items-start gap-4 border-b border-hairline px-4 py-3 last:border-0">
       <span className="w-24 shrink-0 pt-0.5 text-[13px] font-semibold text-ink-soft">{label}</span>
       <span className="min-w-0 flex-1 text-[13.5px] text-ink">{text}</span>
-      <span className="flex shrink-0 items-center gap-2">{chip}{action}</span>
+      {/* Fixed columns so every row's chip lands on the same vertical line,
+          whether or not the row carries an action button. */}
+      <span className="flex w-16 shrink-0 justify-end pt-0.5">{chip}</span>
+      <span className="flex w-28 shrink-0 justify-end pt-0.5">{action ?? null}</span>
     </div>
   );
 }
@@ -60,6 +63,7 @@ export function ResultView({
   onPrint,
   primaryAction,
   compact = false,
+  appNumber,
 }: {
   result: CheckResult;
   extraction: LabelExtraction;
@@ -70,10 +74,12 @@ export function ResultView({
   primaryAction?: { label: string; onClick: () => void };
   /** stacked layout for narrow containers (batch detail panel) */
   compact?: boolean;
+  /** optional TTB application number — shown on the printed report */
+  appNumber?: string;
 }) {
   const gridRef = useRef<HTMLDivElement>(null);
   const overlayRef = useRef<HTMLElement | null>(null);
-  const [connector, setConnector] = useState<string | null>(null);
+  const [connector, setConnector] = useState<{ path: string; x1: number; y1: number; x2: number; y2: number } | null>(null);
 
   const counts = useMemo(() => {
     let matched = 0, mismatch = 0, review = 0, notRequired = 0;
@@ -136,12 +142,14 @@ export function ResultView({
       // The line may only enter the image CARD — never the captions below it.
       // If the highlight is scrolled out of the card, draw nothing.
       if (o.width === 0 || o.bottom < v.top + 8 || o.top > v.bottom - 8) { setConnector(null); return; }
+      // v2 connector: orthogonal path with a fixed 20px stub off the row,
+      // 3px endpoint dots at both ends (design §Result card / Connector).
       const x1 = r.right - g.left - 2;
       const y1 = r.top - g.top + r.height / 2;
       const x2 = v.left - g.left - 3;
       const y2 = Math.min(Math.max(o.top - g.top + o.height / 2, v.top - g.top + 8), v.bottom - g.top - 8);
-      const midX = x1 + (x2 - x1) / 2;
-      setConnector(`M ${x1} ${y1} H ${midX} V ${y2} H ${x2}`);
+      const stub = Math.min(20, Math.max(8, (x2 - x1) / 2));
+      setConnector({ path: `M ${x1} ${y1} L ${x1 + stub} ${y1} L ${x1 + stub} ${y2} L ${x2} ${y2}`, x1, y1, x2, y2 });
     };
     const schedule = () => { if (!raf) raf = requestAnimationFrame(draw); };
     schedule();
@@ -237,31 +245,40 @@ export function ResultView({
     v === "possible_mismatch" || v === "absent_on_label" ? "bad" : v === "unreadable" ? "warn" : "ok";
 
   return (
-    <div className="flex flex-col gap-5">
-      {/* Banner */}
-      <div className={`flex flex-wrap items-start gap-3 rounded-xl border p-4 ${banner.cls}`}>
-        <span className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-white ${banner.iconCls}`}>
+    <div className={`flex flex-col gap-5 ${compact ? "" : "rounded-xl border border-line bg-card p-6 md:px-7"}`}>
+      {appNumber?.trim() && (
+        <p className="hidden text-[12px] text-muted print:block">TTB application #{appNumber.trim()}</p>
+      )}
+      {/* Banner (v2: 30px tone circle, nowrap count chips, right-aligned time) */}
+      <div className={`flex flex-wrap items-start gap-3 rounded-[10px] border p-4 ${banner.cls}`}>
+        <span className={`mt-0.5 flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-full text-white ${banner.iconCls}`}>
           {banner.icon}
         </span>
         <div className="min-w-0 flex-1">
-          <p className={`text-[16px] font-bold ${banner.titleCls}`}>{banner.title}</p>
-          <p className="text-[13.5px] text-ink-soft">{banner.sub}</p>
-          <p className="mt-1 text-[12.5px] font-medium text-ink-soft">{countBits.join("  ·  ")}</p>
+          <p className={`text-[18px] font-bold ${banner.titleCls}`}>{banner.title}</p>
+          <p className="text-[13px] text-muted">{banner.sub}</p>
+          <p className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-[12.5px] font-medium text-muted">
+            {countBits.map((b) => (
+              <span key={b} className="whitespace-nowrap">{b}</span>
+            ))}
+          </p>
         </div>
         {ms !== undefined && (
-          <span className="text-[12.5px] text-ink-faint">Checked in {(ms / 1000).toFixed(1)}s</span>
+          <span className="whitespace-nowrap text-[12.5px] text-muted-2">Checked in {(ms / 1000).toFixed(1)}s</span>
         )}
       </div>
 
-      <div ref={gridRef} className={`relative grid gap-5 ${compact ? "" : "lg:grid-cols-[5fr_4fr]"}`}>
+      <div ref={gridRef} data-conn-root className={`relative grid ${compact ? "gap-5" : "gap-5 lg:grid-cols-2 lg:gap-11"}`}>
         {!compact && connector && focusedField && (
           <svg className="no-print pointer-events-none absolute inset-0 z-10 hidden h-full w-full lg:block" aria-hidden>
             <path
-              d={connector}
+              d={connector.path}
               fill="none"
               stroke={TONE_COLORS[shownFields[focusedField] ?? "ok"]}
-              strokeWidth="1.8"
+              strokeWidth="1.5"
             />
+            <circle cx={connector.x1} cy={connector.y1} r="3" fill={TONE_COLORS[shownFields[focusedField] ?? "ok"]} />
+            <circle cx={connector.x2} cy={connector.y2} r="3" fill={TONE_COLORS[shownFields[focusedField] ?? "ok"]} />
           </svg>
         )}
 
@@ -290,10 +307,11 @@ export function ResultView({
                   <span className="min-w-0 flex-1">
                     <span className="block text-[12px] font-semibold text-ink-soft">{FIELD_LABELS[f.field]}</span>
                     {f.verdict === "possible_mismatch" ? (
-                      <span className="block text-[14px]">
-                        <span className="text-ink">{f.applicationValue}</span>
-                        <span className="mx-2 text-ink-faint">→ label shows</span>
-                        <span className="font-semibold text-bad">{f.labelValue || "—"}</span>
+                      // v2: mismatch value STACKS "On label:" underneath —
+                      // never a second column (overlaps at narrow widths).
+                      <span className="block text-[12.5px]">
+                        <span className="block text-red">{f.applicationValue}</span>
+                        <span className="block font-semibold text-red">On label: {f.labelValue || "—"}</span>
                       </span>
                     ) : (
                       <span className="block truncate text-[14px] text-ink">
@@ -344,6 +362,7 @@ export function ResultView({
             shownFields={shownFields}
             focusedField={focusedField}
             connectorRef={overlayRef}
+            viewportHeight={compact ? 300 : 340}
           />
           <p className="mt-1.5 text-[12px] text-ink-faint">
             Issues are highlighted on the label automatically; click a row to focus it. Locations are found automatically and may be approximate.

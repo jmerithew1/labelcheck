@@ -6,16 +6,19 @@ import type { LabelExtraction } from "@/lib/vision/contract.ts";
 import type { Bands } from "@/lib/vision/locate.ts";
 import { parseCsv, toCsv } from "@/lib/csv.ts";
 import { downscaleImage } from "@/lib/downscale.ts";
-import { Chip, Icon } from "./chips.tsx";
 import { ResultView } from "./ResultView.tsx";
-import { Shell as ShellFrame } from "./Shell.tsx";
+import { Shell } from "./Shell.tsx";
+
+/** v2 batch review (design §5/§6): empty-state card → legend + filter chips
+ *  with always-tinted counts + search → table per column spec with a DOCKED
+ *  sticky detail panel (sidebar collapses while it's open). Keyboard: ↑↓
+ *  move, Enter opens, Esc closes. All rows are real checks over the CSV
+ *  pairing model; the audit trail shows the real pipeline. */
 
 const CONCURRENCY = 8;
 const PAGE_SIZE = 10;
 const REQUIRED_HEADERS = ["filename", "brand_name", "class_type", "alcohol_content", "net_contents"];
 
-/** Real-world CSVs won't use our exact header names — accept the obvious
- *  synonyms so the format is forgiving, not a gate (Margaret finding #1). */
 const HEADER_SYNONYMS: Record<string, string> = {
   filename: "filename", file: "filename", "file name": "filename", image: "filename", label: "filename",
   brand_name: "brand_name", brand: "brand_name", "brand name": "brand_name",
@@ -55,10 +58,12 @@ function bucketOf(r: BatchRow): Bucket {
   return "review";
 }
 
-/** Mockup: counts as color-coded words — mismatches red, review amber. */
+const fmtTime = (d: Date) =>
+  d.toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+
 function rowSummary(r: BatchRow): React.ReactNode {
-  if (r.status === "error") return <span className="font-semibold text-bad">{r.error ?? "Error"}</span>;
-  if (!r.result) return <span className="text-ink-faint">{r.status === "checking" ? "Checking…" : "Waiting"}</span>;
+  if (r.status === "error") return <span className="font-semibold text-red">{r.error ?? "Error"}</span>;
+  if (!r.result) return <span className="text-muted-2">{r.status === "checking" ? "Checking…" : "Waiting"}</span>;
   let matched = 0, mismatch = 0, review = 0, notRequired = 0;
   for (const f of r.result.fields) {
     if (f.verdict === "match" || f.verdict === "match_formatting") matched++;
@@ -68,21 +73,16 @@ function rowSummary(r: BatchRow): React.ReactNode {
   }
   if (r.result.warning.verdict.startsWith("fail")) mismatch++;
   else if (r.result.warning.verdict === "unreadable") review++;
-  const boldConfirm = r.result.warning.verdict === "pass" || r.result.warning.verdict === "pass_formatting_note";
-  const sep = <span className="text-ink-faint">  ·  </span>;
+  const sep = <span className="text-muted-2"> • </span>;
   return (
     <>
       <span>{matched} matched</span>
-      {mismatch > 0 && (<>{sep}<span className="font-semibold text-bad">{mismatch} mismatch{mismatch === 1 ? "" : "es"}</span></>)}
-      {review > 0 && (<>{sep}<span className="font-semibold text-warn">{review} review</span></>)}
-      {boldConfirm && (<>{sep}<span className="text-warn">bold: confirm visually</span></>)}
-      {notRequired > 0 && (<>{sep}<span className="text-ink-faint">{notRequired} optional</span></>)}
+      {mismatch > 0 && (<>{sep}<span className="font-semibold text-red">{mismatch} mismatch{mismatch === 1 ? "" : "es"}</span></>)}
+      {review > 0 && (<>{sep}<span className="font-semibold text-amber">{review} review</span></>)}
+      {notRequired > 0 && (<>{sep}<span className="text-muted-2">{notRequired} not required</span></>)}
     </>
   );
 }
-
-const fmtTime = (d: Date) =>
-  d.toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
 
 export function BatchReview() {
   const [rows, setRows] = useState<BatchRow[]>([]);
@@ -97,8 +97,8 @@ export function BatchReview() {
   const [wallMs, setWallMs] = useState<number | null>(null);
   const [autoRun, setAutoRun] = useState(false);
   const [savedToast, setSavedToast] = useState(false);
-  const [dragOver, setDragOver] = useState(false);
   const filesInput = useRef<HTMLInputElement>(null);
+  const [dragOver, setDragOver] = useState(false);
   const startedAt = useRef(0);
 
   useEffect(() => {
@@ -127,7 +127,7 @@ export function BatchReview() {
     const headers = parsed[0].map(canonicalHeader);
     const missing = REQUIRED_HEADERS.filter((h) => !headers.includes(h));
     if (missing.length) {
-      setGlobalError(`The spreadsheet is missing required column${missing.length > 1 ? "s" : ""}: ${missing.join(", ").replace(/_/g, " ")}. Download the sample CSV below to see the expected format.`);
+      setGlobalError(`The spreadsheet is missing required column${missing.length > 1 ? "s" : ""}: ${missing.join(", ").replace(/_/g, " ")}. Download the sample CSV to see the expected format.`);
       return false;
     }
     setGlobalError(null);
@@ -171,8 +171,6 @@ export function BatchReview() {
       setGlobalError("Include the spreadsheet (CSV) along with the label files — one row per application; labels are matched to rows by file name.");
       return;
     }
-    // A cleanly paired batch starts checking immediately — the click the app
-    // can make for the user, it makes. Pairing issues pause for attention.
     const clean = buildRows(await csv.text(), media);
     if (clean) setAutoRun(true);
   }
@@ -234,7 +232,7 @@ export function BatchReview() {
     setRunning(false);
   }
 
-  // Lazy bands: fetched once per row when its detail panel opens.
+  // Lazy bands for the open detail row.
   useEffect(() => {
     const row = rows.find((r) => r.index === openRow);
     if (!row || row.bands || !row.file || row.status !== "done" || row.file.type === "application/pdf") return;
@@ -273,7 +271,6 @@ export function BatchReview() {
     a.download = "labelcheck-batch-results.csv";
     a.click();
     URL.revokeObjectURL(a.href);
-    // A silent download reads as a broken button — say it worked.
     setSavedToast(true);
     setTimeout(() => setSavedToast(false), 4000);
   }
@@ -293,8 +290,6 @@ export function BatchReview() {
       if (q && !r.filename.toLowerCase().includes(q) && !(r.application.brand_name ?? "").toLowerCase().includes(q)) return false;
       return true;
     });
-    // Problems first once the run completes (stable order while streaming so
-    // rows don't jump mid-run) — page 1 must answer "what needs me?"
     if (!running && rows.every((r) => r.status !== "queued" && r.status !== "checking")) {
       const rank: Record<Bucket, number> = { error: 0, review: 1, matched: 2, not_required: 3, pending: 4 };
       return [...filtered].sort((a, b) => rank[bucketOf(a)] - rank[bucketOf(b)] || a.index - b.index);
@@ -304,366 +299,415 @@ export function BatchReview() {
   const pages = Math.max(1, Math.ceil(visible.length / PAGE_SIZE));
   const pageRows = visible.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
   const detail = rows.find((r) => r.index === openRow);
+  const order = visible.map((r) => r.index);
+  const orderPos = openRow !== null ? order.indexOf(openRow) : -1;
 
-  const statusIcon = (r: BatchRow) => {
-    const b = bucketOf(r);
-    const cls: Record<Bucket, string> = {
-      matched: "bg-ok", review: "bg-warn", error: "bg-bad", not_required: "bg-ink-faint", pending: "bg-ink-faint",
+  // Keyboard: ↑↓ move selection through filtered rows, Enter opens, Esc
+  // closes. Ignored while an input is focused.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const t = e.target as HTMLElement;
+      if (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable) return;
+      if (!rows.length) return;
+      if (e.key === "Escape") { setOpenRow(null); return; }
+      if (e.key !== "ArrowDown" && e.key !== "ArrowUp" && e.key !== "Enter") return;
+      e.preventDefault();
+      if (e.key === "Enter") {
+        if (openRow === null && order.length) setOpenRow(order[0]);
+        return;
+      }
+      const dir = e.key === "ArrowDown" ? 1 : -1;
+      const at = orderPos >= 0 ? orderPos : -1;
+      const nxt = order[Math.min(Math.max(at + dir, 0), order.length - 1)];
+      if (nxt !== undefined) { setOpenRow(nxt); setTab("overview"); setPage(Math.floor(order.indexOf(nxt) / PAGE_SIZE)); }
     };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [rows.length, order, orderPos, openRow]);
+
+  const stepPanel = (dir: 1 | -1) => {
+    if (!order.length) return;
+    const at = orderPos >= 0 ? orderPos : 0;
+    const nxt = order[(at + dir + order.length) % order.length];
+    setOpenRow(nxt);
+    setTab("overview");
+    setPage(Math.floor(order.indexOf(nxt) / PAGE_SIZE));
+  };
+
+  const statusDot = (r: BatchRow, size = 22) => {
+    const b = bucketOf(r);
+    const isFail = r.result?.overall === "warning_failure" || r.result?.overall === "not_a_label" ||
+      r.result?.fields.some((f) => f.verdict === "possible_mismatch");
+    const cls =
+      b === "matched" ? "bg-green" : b === "error" || isFail ? "bg-red" : b === "review" ? "bg-amber" : "bg-na";
     const labels: Record<Bucket, string> = {
       matched: "Matched", review: "Needs review", error: "Error", not_required: "Not required", pending: "Waiting",
     };
-    const isFail = r.result?.overall === "warning_failure" || r.result?.overall === "not_a_label" ||
-      r.result?.fields.some((f) => f.verdict === "possible_mismatch");
     const label = b === "review" && isFail ? "Mismatch — needs review" : labels[b];
+    const glyph = b === "matched" ? "✓" : b === "error" || isFail ? "✕" : b === "review" ? "!" : "–";
     return (
       <span
         title={label}
-        className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-white ${isFail && b === "review" ? "bg-bad" : cls[b]}`}
+        style={{ width: size, height: size }}
+        className={`flex shrink-0 items-center justify-center rounded-full text-[11px] font-bold text-white ${cls}`}
       >
-        {b === "matched" ? Icon.check : b === "error" || isFail ? Icon.x : Icon.dot}
+        {glyph}
         <span className="sr-only">{label}</span>
       </span>
     );
   };
 
-  const filterChip = (key: "all" | Bucket, label: string, n: number, tone: string) => (
-    <button
-      key={key}
-      onClick={() => { setFilter(key); setPage(0); }}
-      className={`rounded-lg border px-3 py-1.5 text-[13px] font-semibold transition ${
-        filter === key ? "border-navy bg-navy text-white" : `border-hairline bg-card ${tone} hover:bg-muted-bg`
-      }`}
-    >
-      {label} <span className="ml-1 rounded bg-black/10 px-1.5 text-[11.5px]">{n}</span>
-    </button>
-  );
-
-  const order = visible.map((r) => r.index);
-  const atLastVisible = openRow !== null && order.indexOf(openRow) === order.length - 1;
-  const nextReviewable = () => {
-    if (openRow === null) return;
-    const at = order.indexOf(openRow);
-    if (at === order.length - 1) {
-      // The batch has an ending, not an infinite loop.
-      setOpenRow(null);
-      return;
-    }
-    setOpenRow(order[at + 1]);
-    setTab("overview");
+  const chip = (key: "all" | Bucket, label: string, n: number, tone: string) => {
+    const active = filter === key;
+    return (
+      <button
+        key={key}
+        onClick={() => { setFilter(key); setPage(0); }}
+        className={`flex h-8 items-center gap-1.5 rounded-[7px] border px-3 text-[12.5px] font-semibold transition ${
+          active ? `${tone === "green" ? "border-green bg-green-tint text-green" : tone === "amber" ? "border-amber bg-amber-tint text-amber" : tone === "na" ? "border-na bg-na-tint text-muted" : "border-navy bg-select text-navy"}` : "border-line bg-card text-ink-2 hover:bg-line-soft"
+        }`}
+      >
+        {label}
+        <span className={`font-bold ${tone === "green" ? "text-green" : tone === "amber" ? "text-amber" : tone === "na" ? "text-muted-2" : "text-navy"}`}>{n}</span>
+      </button>
+    );
   };
 
-  const topRight = (
+  const topBar = (
     <>
-      <button
-        onClick={exportCsv}
-        disabled={done === 0}
-        className="flex items-center gap-2 rounded-lg border border-hairline bg-card px-3.5 py-2 text-[13.5px] font-semibold text-ink-soft hover:bg-muted-bg disabled:opacity-40"
-      >
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16" strokeLinecap="round" strokeLinejoin="round"/></svg>
-        Download report
-      </button>
-      <button
-        onClick={() => { setRows([]); setPairingIssues([]); setWallMs(null); setOpenRow(null); }}
-        disabled={running || rows.length === 0}
-        className="rounded-lg bg-navy px-3.5 py-2 text-[13.5px] font-bold text-white hover:bg-navy-hover disabled:opacity-40"
-      >
-        + New batch
-      </button>
+      <span className="text-[15px] font-bold text-ink">Batch review</span>
+      {rows.length > 0 && (
+        <span className={`rounded-[5px] px-2 py-0.5 text-[11.5px] font-bold ${running ? "bg-select text-navy" : done === rows.length && done > 0 ? "bg-green-tint text-green" : "bg-line-soft text-muted"}`}>
+          {running ? `${done}/${rows.length}` : done === rows.length && done > 0 ? "Complete" : "Ready"}
+        </span>
+      )}
+      <span className="ml-auto flex items-center gap-2">
+        <button
+          onClick={exportCsv}
+          disabled={done === 0}
+          className="flex h-9 items-center gap-1.5 rounded-[7px] border border-line-input bg-card px-3 text-[13px] font-semibold text-ink-2 hover:bg-line-soft disabled:opacity-40"
+        >
+          ↓ Download report
+        </button>
+        <button
+          onClick={() => { setRows([]); setPairingIssues([]); setWallMs(null); setOpenRow(null); }}
+          disabled={running || rows.length === 0}
+          className="h-9 rounded-[7px] bg-navy px-3 text-[13px] font-bold text-white hover:bg-navy-hover disabled:opacity-40"
+        >
+          + New batch
+        </button>
+      </span>
     </>
   );
 
   return (
-    <ShellFrame topRight={topRight}>
-    {savedToast && (
-      <div className="no-print fixed bottom-6 right-6 z-50 rounded-xl border border-ok-line bg-ok-bg px-4 py-3 text-[13.5px] font-semibold text-ok shadow-lg" role="status">
-        Report saved to your Downloads folder.
-      </div>
-    )}
-    <div className="flex flex-col gap-5">
-      <div>
-        <h1 className="text-[26px] font-bold tracking-tight text-ink">Batch review</h1>
-        <p className="text-[14px] text-ink-soft">Upload multiple labels to check them against their applications.</p>
-      </div>
+    <Shell topBar={topBar} collapsed={detail !== undefined && detail !== null}>
+      {savedToast && (
+        <div className="no-print fixed bottom-6 right-6 z-50 rounded-[10px] border border-ok-line bg-green-tint px-4 py-3 text-[13.5px] font-semibold text-green shadow-lg" role="status">
+          Report saved to your Downloads folder.
+        </div>
+      )}
 
-      <div className="grid gap-4 lg:grid-cols-[3fr_2fr]">
-        {/* Dropzone */}
-        <div
-          role="button"
-          tabIndex={0}
-          aria-label="Drop the application CSV and label files"
-          onClick={() => filesInput.current?.click()}
-          onKeyDown={(e) => e.key === "Enter" && filesInput.current?.click()}
-          onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
-          onDragLeave={() => setDragOver(false)}
-          onDrop={(e) => { e.preventDefault(); setDragOver(false); onFiles(Array.from(e.dataTransfer.files)); }}
-          className={`flex min-h-44 cursor-pointer flex-col items-center justify-center gap-1.5 rounded-2xl border-2 border-dashed p-6 text-center transition ${dragOver ? "border-navy bg-muted-bg" : "border-hairline bg-card hover:bg-muted-bg/60"}`}
-        >
-          <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-ink-faint" aria-hidden>
-            <path d="M7 18a4.6 4.6 0 0 1-.9-9.1 6 6 0 0 1 11.7 1.6A4 4 0 0 1 17 18h-1M12 12v8m0-8l-3 3m3-3l3 3" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-          <span className="text-[14.5px] font-semibold text-ink">Drop the CSV + PDF or image files here</span>
-          <span className="text-[12.5px] text-ink-faint">or</span>
-          <span className="rounded-lg border border-hairline bg-card px-4 py-1.5 text-[13px] font-semibold text-ink shadow-sm">
-            Choose files
-          </span>
-          <span className="mt-1 max-w-md text-[12px] text-ink-faint">
-            The CSV is a spreadsheet listing each label&apos;s application details (one row per label, matched by file name) — download the sample below to see the format. Label files: PNG, JPG, WebP up to 8 MB · PDF up to 10 MB.
-          </span>
-          <span className="no-print mt-1 text-[12.5px]" onClick={(e) => e.stopPropagation()}>
-            <button onClick={loadSampleBatch} disabled={running} className="font-semibold text-navy hover:underline disabled:opacity-50">Run the sample batch</button>
-            <span className="text-ink-faint"> · </span>
+      {rows.length === 0 ? (
+        /* Empty state (design §5) */
+        <div className="mx-auto mt-10 flex w-full max-w-[640px] flex-col items-center gap-4">
+          <div
+            role="button"
+            tabIndex={0}
+            aria-label="Choose or drop the CSV and label files"
+            onClick={() => filesInput.current?.click()}
+            onKeyDown={(e) => e.key === "Enter" && filesInput.current?.click()}
+            onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+            onDragLeave={() => setDragOver(false)}
+            onDrop={(e) => { e.preventDefault(); setDragOver(false); onFiles(Array.from(e.dataTransfer.files)); }}
+            className={`flex w-full cursor-pointer flex-col items-center gap-2 rounded-[14px] border-[1.5px] border-dashed px-8 py-12 text-center transition ${dragOver ? "border-navy bg-select" : "border-[#dfe3e8] bg-card"}`}
+          >
+            <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" className="text-muted-2" aria-hidden>
+              <path d="M7 18a4.6 4.6 0 0 1-.9-9.1 6 6 0 0 1 11.7 1.6A4 4 0 0 1 17 18h-1M12 12v8m0-8l-3 3m3-3l3 3" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            <span className="text-[16px] font-bold text-ink">Start a batch review</span>
+            <span className="max-w-md text-[13px] text-muted">
+              Drop the application spreadsheet (CSV — one row per label, matched by file name) together with the label files.
+            </span>
+            <span className="mt-1 flex h-[38px] items-center rounded-[7px] border border-line-input bg-card px-4 text-[13px] font-semibold text-ink">
+              Choose files
+            </span>
+            <span className="text-[12px] text-muted-2">PDF, PNG, JPG — images up to 8 MB, PDFs up to 10 MB each</span>
+          </div>
+          <p className="text-[13px] text-muted">
+            Just exploring?{" "}
+            <button onClick={loadSampleBatch} className="font-semibold text-navy hover:underline">Load the sample batch</button>
+            <span className="text-muted-2"> · </span>
             <a href="/api/batch-samples/batch.csv" download className="font-semibold text-navy hover:underline">sample CSV</a>
-            <span className="text-ink-faint"> · </span>
+            <span className="text-muted-2"> · </span>
             <a href="/api/batch-samples/sample-batch.zip" download className="font-semibold text-navy hover:underline">sample bundle (zip)</a>
-          </span>
+          </p>
+          {globalError && (
+            <div className="w-full rounded-[10px] border border-bad-line bg-red-tint p-4 text-[13.5px] font-semibold text-red">{globalError}</div>
+          )}
           <input
             ref={filesInput} type="file" multiple className="hidden"
             accept=".csv,text/csv,image/png,image/jpeg,image/webp,application/pdf"
             onChange={(e) => onFiles(Array.from(e.target.files ?? []))}
           />
         </div>
-
-        {/* Summary card */}
-        <div className="rounded-2xl border border-hairline bg-card p-5">
-          <div className="flex items-center gap-2.5">
-            <p className="text-[15px] font-bold text-ink">Batch summary</p>
-            {rows.length > 0 && (running ? <Chip tone="info">Running</Chip> : done === rows.length && done > 0 ? <Chip tone="ok">Complete</Chip> : <Chip tone="muted">Ready</Chip>)}
-          </div>
-          <div className="mt-3 grid grid-cols-4 gap-2">
-            {[
-              { n: rows.length, l: "Total labels", cls: "text-ink" },
-              { n: counts.matched, l: "Matched", cls: "text-ok" },
-              { n: counts.review + counts.error, l: "Need review", cls: "text-warn" },
-              { n: counts.not_required, l: "Not required", cls: "text-ink-faint" },
-            ].map((t) => (
-              <div key={t.l} className="rounded-xl border border-hairline p-2.5 text-center">
-                <p className={`text-[22px] font-bold tabular-nums ${t.cls}`}>{t.n}</p>
-                <p className="text-[11px] leading-tight text-ink-faint">{t.l}</p>
+      ) : (
+        <div className={`flex items-start gap-0 ${detail ? "" : ""}`}>
+          <div className="min-w-0 flex-1">
+            {/* HOW IT WORKS legend (design: wrapping grid, not flex+separators) */}
+            {!detail && (
+              <div className="mb-4 grid gap-4 rounded-[10px] border border-line bg-card px-[18px] py-3.5 [grid-template-columns:repeat(auto-fit,minmax(220px,1fr))]">
+                {[
+                  ["Upload labels", "PDF or images, listed in the CSV."],
+                  ["Auto check", "Each label vs its application row."],
+                  ["Review exceptions", "Only what needs attention."],
+                ].map(([t, d], i) => (
+                  <span key={t} className="flex items-start gap-2.5">
+                    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-navy text-[11px] font-bold text-white" aria-hidden>{i + 1}</span>
+                    <span className="text-[12.5px] leading-snug text-muted"><span className="font-bold text-ink">{t}</span> — {d}</span>
+                  </span>
+                ))}
               </div>
-            ))}
-          </div>
-          {wallMs !== null && (
-            <p className="mt-2 text-[12px] text-ink-faint">Processed on {fmtTime(new Date())}</p>
-          )}
-          <p className="mt-1.5 flex items-center gap-1.5 text-[12.5px] text-ink-faint">
-            {wallMs !== null && (
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3" strokeLinecap="round"/></svg>
             )}
-            {running ? `${done} of ${rows.length} checked…` : wallMs !== null ? `Checked in ${(wallMs / 1000).toFixed(1)}s` : rows.length ? "Ready to check." : "No batch loaded yet."}
-          </p>
-          {rows.some((r) => r.status === "queued" || (r.status === "error" && r.file)) && (
-            <button
-              onClick={run}
-              disabled={running}
-              className="mt-2 w-full rounded-xl bg-navy px-4 py-2.5 text-[14px] font-bold text-white hover:bg-navy-hover disabled:opacity-60"
-            >
-              {running ? `Checking… ${done}/${rows.length}` : "Check all labels"}
-            </button>
-          )}
-        </div>
-      </div>
 
-      {globalError && (
-        <div className="rounded-xl border border-bad-line bg-bad-bg p-4 text-[14px] font-semibold text-bad">{globalError}</div>
-      )}
-      {pairingIssues.length > 0 && (
-        <div className="rounded-xl border border-warn-line bg-warn-bg p-4 text-[13px] text-warn">
-          <p className="font-bold">Pairing issues — fix these before trusting results:</p>
-          <ul className="mt-1 list-inside list-disc">{pairingIssues.map((p, i) => <li key={i}>{p}</li>)}</ul>
-        </div>
-      )}
+            {globalError && (
+              <div className="mb-4 rounded-[10px] border border-bad-line bg-red-tint p-4 text-[13.5px] font-semibold text-red">{globalError}</div>
+            )}
+            {pairingIssues.length > 0 && (
+              <div className="mb-4 rounded-[10px] border border-warn-line bg-amber-tint p-4 text-[13px] text-amber">
+                <p className="font-bold">Pairing issues — fix these before trusting results:</p>
+                <ul className="mt-1 list-inside list-disc">{pairingIssues.map((p, i) => <li key={i}>{p}</li>)}</ul>
+              </div>
+            )}
 
-      {rows.length > 0 && (
-        <div className={`grid items-start gap-4 ${detail ? "xl:grid-cols-[minmax(0,1fr)_460px]" : ""}`}>
-          <div className="flex min-w-0 flex-col gap-3">
-            {/* Filters + search */}
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="text-[13px] text-ink-faint">Filter by</span>
-              {filterChip("all", "All", rows.length, "text-ink")}
-              {filterChip("matched", "Matched", counts.matched, "text-ok")}
-              {filterChip("review", "Need review", counts.review + counts.error, "text-warn")}
-              {filterChip("not_required", "Not required", counts.not_required, "text-ink-faint")}
-              <input
-                type="search"
-                value={search}
-                onChange={(e) => { setSearch(e.target.value); setPage(0); }}
-                placeholder="Search by file name or brand…"
-                aria-label="Search results"
-                className="ml-auto w-56 rounded-lg border border-hairline bg-card px-3 py-1.5 text-[13px] placeholder:text-ink-faint focus:border-navy focus:outline-none"
-              />
-            </div>
-
-            {/* Table */}
-            <div className="overflow-x-auto rounded-xl border border-hairline bg-card">
-              <table className="w-full text-left text-[13.5px]">
-                <thead className="border-b border-hairline text-[11.5px] uppercase tracking-wider text-ink-faint">
-                  <tr>
-                    <th className="px-4 py-2.5 font-semibold">Status</th>
-                    <th className="px-2 py-2.5 font-semibold">File name</th>
-                    <th className="px-2 py-2.5 font-semibold">Brand</th>
-                    {/* Master-detail + narrow screens: these columns leave on
-                        purpose rather than crumple (detail panel carries them). */}
-                    {!detail && <th className="hidden whitespace-nowrap px-2 py-2.5 font-semibold lg:table-cell">Checked</th>}
-                    {!detail && <th className="hidden whitespace-nowrap px-2 py-2.5 font-semibold lg:table-cell">Result summary</th>}
-                    <th className="px-2 py-2.5" />
-                  </tr>
-                </thead>
-                <tbody>
-                  {pageRows.map((r) => (
-                    <tr
-                      key={r.index}
-                      onClick={() => { if (r.result) { setOpenRow(r.index); setTab("overview"); } }}
-                      className={`border-b border-hairline last:border-0 ${r.result ? "cursor-pointer hover:bg-muted-bg/60" : ""} ${openRow === r.index ? "bg-muted-bg/80" : ""}`}
-                    >
-                      <td className="px-4 py-2.5">{statusIcon(r)}</td>
-                      <td className="px-2 py-2.5">
-                        <span className="flex items-center gap-2.5">
-                          {r.imageUrl ? (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img src={r.imageUrl} alt="" className="h-10 w-8 shrink-0 rounded border border-hairline object-cover" />
-                          ) : (
-                            <span className="h-10 w-8 shrink-0 rounded border border-hairline bg-muted-bg" />
-                          )}
-                          <span className="min-w-0">
-                            <span className="block max-w-44 truncate font-semibold text-ink">{r.filename}</span>
-                            {r.file && <span className="block text-[11.5px] text-ink-faint">{(r.file.size / 1024 / 1024).toFixed(1)} MB</span>}
-                          </span>
-                        </span>
-                      </td>
-                      <td className="max-w-40 truncate px-2 py-2.5 text-ink">{r.application.brand_name}</td>
-                      {!detail && (
-                        <td className="hidden whitespace-nowrap px-2 py-2.5 text-[12px] text-ink-faint lg:table-cell">
-                          {r.checkedAt ? <>{fmtTime(r.checkedAt)}<br />{(r.ms! / 1000).toFixed(1)}s</> : "—"}
-                        </td>
-                      )}
-                      {!detail && (
-                        <td className="hidden whitespace-nowrap px-2 py-2.5 text-[12.5px] text-ink-soft lg:table-cell">{rowSummary(r)}</td>
-                      )}
-                      <td className="px-2 py-2.5 text-ink-faint">
-                        {r.result && (
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden><path d="M9 6l6 6-6 6" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                  {pageRows.length === 0 && (
-                    <tr><td colSpan={detail ? 4 : 6} className="px-4 py-6 text-center text-ink-faint">Nothing matches this filter.</td></tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-            <div className="flex items-center justify-between text-[12.5px] text-ink-faint">
-              <span>Showing {visible.length === 0 ? 0 : page * PAGE_SIZE + 1} to {Math.min((page + 1) * PAGE_SIZE, visible.length)} of {visible.length} results</span>
-              {pages > 1 && (
-                <span className="flex items-center gap-1">
-                  <button
-                    onClick={() => setPage((p) => Math.max(0, p - 1))}
-                    disabled={page === 0}
-                    aria-label="Previous page"
-                    className="h-7 w-7 rounded-lg border border-hairline bg-card text-ink-soft hover:bg-muted-bg disabled:opacity-40"
-                  >
-                    ‹
-                  </button>
-                  {Array.from({ length: pages }, (_, i) => (
+            {/* Table card */}
+            <div className="rounded-xl border border-line bg-card">
+              <div className="flex flex-wrap items-center gap-2 border-b border-line-soft px-4 py-3">
+                {chip("all", "All", rows.length, "navy")}
+                {chip("matched", "Matched", counts.matched, "green")}
+                {chip("review", "Need review", counts.review + counts.error, "amber")}
+                {chip("not_required", "Not required", counts.not_required, "na")}
+                <span className="ml-auto flex items-center gap-3">
+                  {rows.some((r) => r.status === "queued" || (r.status === "error" && r.file)) && (
                     <button
-                      key={i}
-                      onClick={() => setPage(i)}
-                      className={`h-7 w-7 rounded-lg text-[12.5px] font-semibold ${i === page ? "bg-navy text-white" : "border border-hairline bg-card text-ink-soft hover:bg-muted-bg"}`}
+                      onClick={run}
+                      disabled={running}
+                      className="h-9 rounded-[7px] bg-navy px-4 text-[13px] font-bold text-white hover:bg-navy-hover disabled:opacity-60"
                     >
-                      {i + 1}
+                      {running ? `Checking… ${done}/${rows.length}` : "Check all labels"}
                     </button>
-                  ))}
-                  <button
-                    onClick={() => setPage((p) => Math.min(pages - 1, p + 1))}
-                    disabled={page === pages - 1}
-                    aria-label="Next page"
-                    className="h-7 w-7 rounded-lg border border-hairline bg-card text-ink-soft hover:bg-muted-bg disabled:opacity-40"
-                  >
-                    ›
-                  </button>
+                  )}
+                  <input
+                    type="search"
+                    value={search}
+                    onChange={(e) => { setSearch(e.target.value); setPage(0); }}
+                    placeholder="Search file name or brand…"
+                    aria-label="Search results"
+                    className="h-9 w-60 rounded-[7px] border border-line-input bg-card px-3 text-[13px] placeholder:text-muted-2 focus:border-navy focus:outline-none"
+                  />
                 </span>
-              )}
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-left">
+                  <thead className="border-b border-line-soft text-[11px] font-bold uppercase tracking-[0.06em] text-muted">
+                    <tr>
+                      <th className="w-[52px] px-4 py-2.5">Status</th>
+                      <th className="px-2 py-2.5">File name</th>
+                      {!detail && <th className="hidden px-2 py-2.5 lg:table-cell">Brand</th>}
+                      {!detail && <th className="hidden whitespace-nowrap px-2 py-2.5 lg:table-cell">Checked</th>}
+                      {!detail && <th className="hidden whitespace-nowrap px-2 py-2.5 lg:table-cell">Result summary</th>}
+                      <th className="w-7 px-2 py-2.5" />
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {pageRows.map((r) => {
+                      const selected = openRow === r.index;
+                      return (
+                        <tr
+                          key={r.index}
+                          onClick={() => {
+                            if (!r.result) return;
+                            if (selected) { setOpenRow(null); return; }
+                            setOpenRow(r.index);
+                            setTab("overview");
+                          }}
+                          className={`border-b border-line-row text-[12.5px] last:border-0 ${r.result ? "cursor-pointer" : ""} ${selected ? "bg-select shadow-[inset_3px_0_0_#10233f]" : "hover:bg-[#fafbfc]"}`}
+                        >
+                          <td className="px-4 py-2.5">{statusDot(r)}</td>
+                          <td className="px-2 py-2.5">
+                            <span className="flex items-center gap-2.5">
+                              {r.imageUrl ? (
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img src={r.imageUrl} alt="" className="h-10 w-[30px] shrink-0 rounded-[3px] border border-paper-line object-cover" />
+                              ) : (
+                                <span className="h-10 w-[30px] shrink-0 rounded-[3px] border border-line bg-line-soft" />
+                              )}
+                              <span className="min-w-0">
+                                <span className="block max-w-48 truncate text-[13px] font-bold text-ink">{r.filename}</span>
+                                {r.file && (
+                                  <span className="block text-[11.5px] text-muted-2">
+                                    {r.file.type === "application/pdf" ? "PDF" : "IMG"} • {(r.file.size / 1024 / 1024).toFixed(1)} MB
+                                  </span>
+                                )}
+                              </span>
+                            </span>
+                          </td>
+                          {!detail && <td className="hidden max-w-40 truncate px-2 py-2.5 text-[12px] font-semibold text-ink lg:table-cell">{r.application.brand_name}</td>}
+                          {!detail && (
+                            <td className="hidden whitespace-nowrap px-2 py-2.5 text-[11.5px] text-muted-2 lg:table-cell">
+                              {r.checkedAt ? <>{fmtTime(r.checkedAt)}<br />{(r.ms! / 1000).toFixed(1)}s</> : "—"}
+                            </td>
+                          )}
+                          {!detail && <td className="hidden whitespace-nowrap px-2 py-2.5 text-muted lg:table-cell">{rowSummary(r)}</td>}
+                          <td className="px-2 py-2.5 text-muted-2">
+                            {r.result && (
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden><path d="M9 6l6 6-6 6" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                    {pageRows.length === 0 && (
+                      <tr><td colSpan={detail ? 3 : 6} className="px-4 py-6 text-center text-[13px] text-muted-2">Nothing matches this filter.</td></tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="flex flex-wrap items-center justify-between gap-2 border-t border-line-soft px-4 py-2.5 text-[12px] text-muted-2">
+                <span>Showing {visible.length === 0 ? 0 : page * PAGE_SIZE + 1}–{Math.min((page + 1) * PAGE_SIZE, visible.length)} of {visible.length} labels · ↑↓ to move · Enter to open · Esc to close</span>
+                {pages > 1 && (
+                  <span className="flex items-center gap-1">
+                    <button onClick={() => setPage((p) => Math.max(0, p - 1))} disabled={page === 0} aria-label="Previous page" className="h-7 w-7 rounded-[6px] border border-line bg-card hover:bg-line-soft disabled:opacity-40">‹</button>
+                    {Array.from({ length: pages }, (_, i) => (
+                      <button key={i} onClick={() => setPage(i)} className={`h-7 w-7 rounded-[6px] text-[12px] font-semibold ${i === page ? "bg-navy text-white" : "border border-line bg-card text-ink-2 hover:bg-line-soft"}`}>{i + 1}</button>
+                    ))}
+                    <button onClick={() => setPage((p) => Math.min(pages - 1, p + 1))} disabled={page === pages - 1} aria-label="Next page" className="h-7 w-7 rounded-[6px] border border-line bg-card hover:bg-line-soft disabled:opacity-40">›</button>
+                  </span>
+                )}
+              </div>
             </div>
+
+            {wallMs !== null && !detail && (
+              <p className="mt-2 text-[12px] text-muted-2">Processed on {fmtTime(new Date())} · checked in {(wallMs / 1000).toFixed(1)}s</p>
+            )}
+
+            {/* Three-lens strip (hidden while the panel is open) */}
+            {!detail && (
+              <div className="mt-5 grid gap-8 rounded-xl bg-[#f0f2f5] px-7 py-6 md:grid-cols-3">
+                {[
+                  { c: "bg-navy", t: "Economics", d: <>Batch review saves time by automating the routine checks. <b>Review only what needs attention.</b></> },
+                  { c: "bg-green-dark", t: "Technology", d: <>Every result is traceable and evidence-linked. <b>Built for audit, compliance, and scale.</b></> },
+                  { c: "bg-amber", t: "Psychology", d: <>Clear signals and focused exceptions reduce cognitive load. <b>Confidence in every decision.</b></> },
+                ].map((l) => (
+                  <span key={l.t} className="flex items-start gap-3.5">
+                    <span className={`h-10 w-10 shrink-0 rounded-full ${l.c}`} aria-hidden />
+                    <span className="text-[12.5px] leading-snug text-muted"><span className="block text-[13.5px] font-bold text-ink">{l.t}</span>{l.d}</span>
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
 
-          {/* Detail panel */}
+          {/* Docked detail panel (design §6): sticky sibling column */}
           {detail?.result && detail.extraction && detail.imageUrl && (
-            <aside className="min-w-0 rounded-2xl border border-hairline bg-card p-5">
-              <div className="mb-3 flex items-center justify-between gap-3">
-                <p className="min-w-0 truncate text-[15px] font-bold text-ink">{detail.filename}</p>
-                <div className="flex shrink-0 items-center gap-2">
-                  {bucketOf(detail) === "matched" ? <Chip tone="ok">Matched</Chip> : bucketOf(detail) === "not_required" ? <Chip tone="muted">Not required</Chip> : <Chip tone="warn">Needs review</Chip>}
-                  <button onClick={() => setOpenRow(null)} aria-label="Close detail" className="rounded-lg border border-hairline p-1.5 text-ink-soft hover:bg-muted-bg">
-                    {Icon.x}
-                  </button>
-                </div>
+            <aside className="sticky top-0 ml-4 hidden h-screen w-[clamp(360px,34vw,480px)] flex-col overflow-hidden rounded-none border-l border-line bg-card xl:flex">
+              <div className="flex items-center gap-2.5 px-6 py-[18px]">
+                <p className="min-w-0 flex-1 truncate text-[15px] font-bold text-ink">{detail.filename}</p>
+                {statusDot(detail, 16)}
+                <button onClick={() => window.print()} aria-label="Print this result" title="Print this result" className="flex h-8 w-8 items-center justify-center rounded-[6px] border border-line text-ink-2 hover:bg-line-soft">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                </button>
+                <button onClick={() => setOpenRow(null)} aria-label="Close panel" className="flex h-8 w-8 items-center justify-center rounded-[6px] text-ink-2 hover:bg-line-soft">✕</button>
               </div>
-              <div className="mb-4 flex gap-5 border-b border-hairline">
+              <div className="flex gap-5 border-b border-line px-6">
                 {(["overview", "audit"] as const).map((t) => (
                   <button
                     key={t}
                     onClick={() => setTab(t)}
-                    className={`border-b-2 pb-2 text-[13.5px] font-semibold ${tab === t ? "border-navy text-ink" : "border-transparent text-ink-faint hover:text-ink-soft"}`}
+                    className={`pb-2 text-[13px] ${tab === t ? "border-b-2 border-navy font-bold text-ink" : "text-muted hover:text-ink-2"}`}
                   >
                     {t === "overview" ? "Overview" : "Audit trail"}
                   </button>
                 ))}
               </div>
-              {tab === "overview" ? (
-                <ResultView
-                  result={detail.result}
-                  extraction={detail.extraction}
-                  imageUrl={detail.imageUrl}
-                  bands={detail.bands ?? {}}
-                  ms={detail.ms}
-                  compact
-                />
-              ) : (
-                <AuditTrail row={detail} />
-              )}
-              <div className="mt-4 flex items-center justify-between">
-                <button onClick={() => window.print()} className="no-print rounded-xl border border-hairline px-4 py-2 text-[13px] font-semibold text-ink-soft hover:bg-muted-bg">
-                  Print result
-                </button>
-                <button onClick={nextReviewable} className="no-print flex items-center gap-2 rounded-xl bg-navy px-5 py-2.5 text-[14px] font-bold text-white hover:bg-navy-hover">
-                  {atLastVisible ? "Done — back to summary" : "Next label"}
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden><path d={atLastVisible ? "M4 12l5 5L20 6" : "M4 12h15m0 0l-6-6m6 6l-6 6"} strokeLinecap="round" strokeLinejoin="round"/></svg>
-                </button>
+              <div className="min-h-0 flex-1 overflow-auto px-6 py-4">
+                {tab === "overview" ? (
+                  <ResultView
+                    result={detail.result}
+                    extraction={detail.extraction}
+                    imageUrl={detail.imageUrl}
+                    bands={detail.bands ?? {}}
+                    ms={detail.ms}
+                    compact
+                  />
+                ) : (
+                  <AuditTrail row={detail} />
+                )}
+              </div>
+              <div className="flex items-center justify-between border-t border-line px-6 py-3">
+                <span className="text-[12px] text-muted-2">Label {orderPos + 1} of {order.length}</span>
+                <span className="flex items-center gap-2">
+                  <span className="flex overflow-hidden rounded-[7px] border border-line-input">
+                    <button onClick={() => stepPanel(-1)} aria-label="Previous label" className="flex h-[38px] w-[38px] items-center justify-center border-r border-line-input text-ink-2 hover:bg-line-soft">←</button>
+                    <button onClick={() => stepPanel(1)} aria-label="Next label" className="flex h-[38px] w-[38px] items-center justify-center text-ink-2 hover:bg-line-soft">→</button>
+                  </span>
+                  <button onClick={() => stepPanel(1)} className="h-[38px] rounded-[7px] bg-navy px-4 text-[13px] font-bold text-white hover:bg-navy-hover">
+                    Review next
+                  </button>
+                </span>
               </div>
             </aside>
           )}
         </div>
       )}
-    </div>
-    </ShellFrame>
+      {rows.length > 0 && (
+        <input
+          ref={filesInput} type="file" multiple className="hidden"
+          accept=".csv,text/csv,image/png,image/jpeg,image/webp,application/pdf"
+          onChange={(e) => onFiles(Array.from(e.target.files ?? []))}
+        />
+      )}
+    </Shell>
   );
 }
 
-/** Real pipeline evidence — no decoration. */
+/** Audit trail (design timeline style, REAL entries — no fake confidence
+ *  numbers, and an honest closing note: nothing is stored). */
 function AuditTrail({ row }: { row: BatchRow }) {
   const r = row.result!;
   const confirmed = r.warning.notes.some((n) => /second independent/i.test(n));
   const overturned = r.warning.notes.some((n) => /readings disagree/i.test(n));
+  const ts = row.checkedAt ? row.checkedAt.toLocaleTimeString() : undefined;
   const items: { t: string; d: string }[] = [
-    { t: "File received", d: `${row.filename} (${row.file ? (row.file.size / 1024 / 1024).toFixed(1) : "?"} MB), downscaled in the browser before upload.` },
-    { t: "Perception", d: `claude-haiku-4-5 transcribed the label verbatim; claude-sonnet-5 judged prefix boldness in parallel. Server time ${row.ms ? (row.ms / 1000).toFixed(1) : "?"}s.` },
-    { t: "Deterministic comparison", d: "All verdicts computed in code — exact warning check vs 27 CFR 16.21, numeric ABV/volume matching, normalized text comparison. The AI never decides pass/fail." },
+    { t: "Label uploaded", d: `${row.filename}${row.file ? ` (${(row.file.size / 1024 / 1024).toFixed(1)} MB)` : ""}, downscaled in the browser before upload.` },
+    { t: "Text extracted", d: `claude-haiku-4-5 transcribed the label verbatim; claude-sonnet-5 judged prefix boldness in parallel. Server time ${row.ms ? (row.ms / 1000).toFixed(1) : "?"}s.` },
+    { t: "Compared to application", d: "All verdicts computed deterministically in code — exact warning check vs 27 CFR 16.21, numeric ABV/volume matching, normalized text comparison. The AI never decides pass/fail." },
   ];
   if (confirmed) items.push({ t: "Second reading", d: "The warning failure was independently confirmed by a second model reading." });
   if (overturned) items.push({ t: "Second reading", d: "Two AI readings disagreed — the failure was downgraded to manual review instead of asserted." });
   items.push({
-    t: "Verdict",
+    t: "Result recorded",
     d: `${r.overall.replace(/_/g, " ")} — warning: ${r.warning.verdict.replace(/_/g, " ")}; ${r.fields.filter((f) => f.verdict === "match" || f.verdict === "match_formatting").length} field(s) matched.`,
   });
   return (
-    <ol className="flex flex-col gap-3">
-      {items.map((it, i) => (
-        <li key={i} className="rounded-xl border border-hairline p-3">
-          <p className="text-[12.5px] font-bold text-ink">{it.t}</p>
-          <p className="text-[12.5px] leading-snug text-ink-soft">{it.d}</p>
-        </li>
-      ))}
-    </ol>
+    <div className="flex flex-col">
+      <ol className="flex flex-col">
+        {items.map((it, i) => (
+          <li key={i} className="relative pb-4 pl-5 last:pb-0">
+            {i < items.length - 1 && <span className="absolute left-[4px] top-3 h-full w-[1.5px] bg-line" aria-hidden />}
+            <span className="absolute left-0 top-1.5 h-2.5 w-2.5 rounded-full bg-navy" aria-hidden />
+            <p className="text-[13px] font-bold text-ink">
+              {it.t} {ts && i === items.length - 1 && <span className="ml-1 font-normal text-[11.5px] text-muted-2">{ts}</span>}
+            </p>
+            <p className="text-[12.5px] leading-snug text-muted">{it.d}</p>
+          </li>
+        ))}
+      </ol>
+      <p className="mt-4 border-t border-line-soft pt-3 text-[12px] text-muted-2">
+        Evidence lives in this session only — nothing is stored server-side. Every verdict above links to the region on the label that produced it.
+      </p>
+    </div>
   );
 }

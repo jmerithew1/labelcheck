@@ -1,11 +1,14 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import type { CheckResult } from "@/lib/compare/index.ts";
 import type { LabelExtraction } from "@/lib/vision/contract.ts";
 import type { Bands } from "@/lib/vision/locate.ts";
 import { DEMO_SAMPLES, type DemoSample } from "@/lib/samples.ts";
 import { downscaleImage } from "@/lib/downscale.ts";
+import { Shell } from "./Shell.tsx";
+import { Stepper, type StepPhase, type Outcome } from "./Stepper.tsx";
+import { CheckingCard } from "./CheckingCard.tsx";
 import { ResultView } from "./ResultView.tsx";
 
 interface AppFields {
@@ -21,51 +24,61 @@ const EMPTY: AppFields = {
   bottler_name_address: "", country_of_origin: "",
 };
 
-interface Outcome {
+interface OutcomeData {
   result: CheckResult;
   extraction: LabelExtraction;
   bands: Bands;
   ms: number;
 }
 
+function outcomeSummary(o: OutcomeData | null): Outcome {
+  if (!o) return null;
+  const r = o.result;
+  let mismatches = r.fields.filter((f) => f.verdict === "possible_mismatch" || f.verdict === "absent_on_label").length;
+  if (r.warning.verdict.startsWith("fail")) mismatches++;
+  const reviews =
+    r.fields.filter((f) => f.verdict === "unreadable").length + (r.warning.verdict === "unreadable" ? 1 : 0);
+  if (!r.is_alcohol_label) return { tone: "warn", label: "not a label" };
+  if (mismatches > 0) return { tone: "bad", label: `${mismatches} mismatch${mismatches === 1 ? "" : "es"}` };
+  if (reviews > 0) return { tone: "warn", label: `${reviews} to confirm` };
+  return { tone: "ok", label: "matched" };
+}
+
 export function SingleCheck() {
+  const [step, setStep] = useState<StepPhase>("form");
   const [fields, setFields] = useState<AppFields>(EMPTY);
+  const [appNumber, setAppNumber] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [outcome, setOutcome] = useState<Outcome | null>(null);
+  const [outcome, setOutcome] = useState<OutcomeData | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
   const [dragOver, setDragOver] = useState(false);
-  const [busyPhase, setBusyPhase] = useState(0);
-
-  // Operational transparency during the ~4s wait — what the tool is doing,
-  // not a bare spinner.
-  const BUSY_STEPS = [
-    "Reading the label word-for-word…",
-    "Checking the government warning…",
-    "Comparing every field…",
-  ];
-  useEffect(() => {
-    if (!busy) { setBusyPhase(0); return; }
-    const t = setInterval(() => setBusyPhase((p) => Math.min(p + 1, BUSY_STEPS.length - 1)), 1500);
-    return () => clearInterval(t);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [busy]);
-
-  const reset = () => { setOutcome(null); setError(null); };
 
   function setImage(f: File) {
-    reset();
+    setError(null);
     setFile(f);
     setPreviewUrl((old) => {
       if (old) URL.revokeObjectURL(old);
       return URL.createObjectURL(f);
     });
   }
+  function removeImage() {
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
+    setFile(null);
+    setPreviewUrl(null);
+  }
+  function resetAll() {
+    removeImage();
+    setFields(EMPTY);
+    setAppNumber("");
+    setOutcome(null);
+    setError(null);
+    setStep("form");
+  }
 
   async function runCheck(f: AppFields, image: File) {
-    setBusy(true);
+    setStep("checking");
     setError(null);
     setOutcome(null);
     try {
@@ -77,31 +90,30 @@ export function SingleCheck() {
       const body = await res.json().catch(() => null);
       if (!res.ok || !body) {
         setError(body?.error ?? "Something went wrong. Please try again.");
+        setStep("form");
         return;
       }
       setOutcome({ result: body.result, extraction: body.extraction, bands: body.bands ?? {}, ms: body.ms });
+      setStep("result");
     } catch {
       setError("Could not reach the server. Check your connection and try again.");
-    } finally {
-      setBusy(false);
+      setStep("form");
     }
   }
 
   async function loadSample(s: DemoSample) {
-    reset();
-    setBusy(true);
+    setError(null);
     try {
       const res = await fetch(`/api/samples/${s.png}`);
-      if (!res.ok) { setError("Could not load the example. Refresh and try again."); return; }
+      if (!res.ok) { setError("Could not load the sample. Refresh and try again."); return; }
       const blob = await res.blob();
       const f = new File([blob], s.png, { type: "image/png" });
-      setFields({ ...EMPTY, ...s.application });
+      const filled = { ...EMPTY, ...s.application };
+      setFields(filled);
       setImage(f);
-      await runCheck({ ...EMPTY, ...s.application }, f);
+      await runCheck(filled, f);
     } catch {
-      setError("Could not load the example. Check your connection and try again.");
-    } finally {
-      setBusy(false);
+      setError("Could not load the sample. Check your connection and try again.");
     }
   }
 
@@ -111,171 +123,179 @@ export function SingleCheck() {
 
   const input = (name: keyof AppFields, label: string, placeholder: string, optional = false) => (
     <label className="flex flex-col gap-1.5">
-      <span className="text-[13px] font-semibold text-ink">
-        {label} {optional && <span className="font-normal text-ink-faint">Optional</span>}
+      <span className="text-[12px] font-semibold text-ink-2">
+        {label} {optional && <span className="font-normal text-muted-2">Optional</span>}
       </span>
       <input
         type="text"
         value={fields[name]}
-        placeholder={optional ? "Not provided" : placeholder}
+        placeholder={placeholder}
         aria-label={label}
-        onChange={(e) => { reset(); setFields((f) => ({ ...f, [name]: e.target.value })); }}
-        className="rounded-lg border border-hairline bg-card px-3.5 py-2.5 text-[14px] text-ink placeholder:text-ink-faint focus:border-navy focus:outline-none focus:ring-1 focus:ring-navy"
+        onChange={(e) => setFields((f) => ({ ...f, [name]: e.target.value }))}
+        className="h-10 rounded-[7px] border border-line-input bg-card px-3 text-[13.5px] text-ink placeholder:text-muted-2 focus:border-navy focus:outline-none"
       />
     </label>
   );
 
   return (
-    <div className="mx-auto max-w-6xl">
-      <div className="rounded-2xl border border-hairline bg-card shadow-sm">
-        <div className="p-6 md:p-8">
-      {!outcome && (
-        <div>
-          <h1 className="text-[26px] font-bold tracking-tight text-ink" style={{ textWrap: "balance" }}>
-            Does the label match the application?
-          </h1>
-          <p className="mt-1 text-[14px] text-ink-soft">
-            Compare the approved application (the paperwork) with the submitted label — it catches one-word changes in the warning text that are easy to miss by eye.
-          </p>
+    <Shell topBar={<Stepper phase={step} outcome={outcomeSummary(outcome)} />}>
+      <div className="mx-auto max-w-[1120px]">
+        {step === "form" && (
+          <>
+            <h1 className="text-[27px] font-bold tracking-[-0.5px] text-ink" style={{ textWrap: "balance" }}>
+              Does the label match the application?
+            </h1>
+            <p className="mt-1 text-[13.5px] text-muted">
+              Compare the approved application with the submitted label — it catches one-word changes in the warning text that are easy to miss by eye.
+            </p>
 
-          {/* Examples are the front door for a first-time visitor — a visible
-              callout, not footer fine print. */}
-          <div className="no-print mt-5 flex flex-wrap items-center gap-x-4 gap-y-2 rounded-xl border border-hairline bg-muted-bg/70 px-4 py-3">
-            <span className="text-[13.5px] font-semibold text-ink">New here? Try an example</span>
-            <span className="flex flex-wrap gap-2">
-              {DEMO_SAMPLES.map((s) => (
-                <button
-                  key={s.id}
-                  onClick={() => loadSample(s)}
-                  disabled={busy}
-                  aria-label={`Try example: ${s.title} — ${s.blurb}`}
-                  className="rounded-lg border border-hairline bg-card px-3.5 py-1.5 text-left shadow-sm transition hover:bg-ok-bg disabled:opacity-50"
+            {error && (
+              <div className="mt-4 rounded-[10px] border border-bad-line bg-red-tint p-4 text-[13.5px] font-semibold text-red">
+                {error}
+              </div>
+            )}
+
+            <div className="mt-5 grid rounded-xl border border-line bg-card lg:grid-cols-2 lg:divide-x lg:divide-line-soft">
+              {/* Left — application details */}
+              <section className="flex flex-col gap-[15px] px-7 py-6">
+                <div className="flex items-baseline gap-2.5">
+                  <span className="text-[11px] font-bold uppercase tracking-[0.09em] text-muted">Application details</span>
+                  <input
+                    type="text"
+                    value={appNumber}
+                    onChange={(e) => setAppNumber(e.target.value)}
+                    placeholder="TTB application # (optional)"
+                    aria-label="TTB application number (optional)"
+                    className="w-44 border-0 border-b border-line-soft bg-transparent text-[11px] text-muted-2 placeholder:text-muted-2 focus:border-navy focus:outline-none"
+                  />
+                </div>
+                {input("brand_name", "Brand name", "Enter brand name")}
+                {input("class_type", "Class / Type", "e.g. Straight Bourbon Whiskey")}
+                <div className="grid grid-cols-[1fr_140px] gap-3.5">
+                  {input("alcohol_content", "Alcohol content", "e.g. 45% Alc./Vol. (90 Proof)")}
+                  {input("net_contents", "Net contents", "e.g. 750 mL")}
+                </div>
+                {input("bottler_name_address", "Bottler name & address", "Not provided", true)}
+                {input("country_of_origin", "Country of origin", "Not provided", true)}
+              </section>
+
+              {/* Right — submitted label */}
+              <section className="flex flex-col gap-3 px-7 py-6">
+                <span className="text-[11px] font-bold uppercase tracking-[0.09em] text-muted">Submitted label</span>
+                <div
+                  role="button"
+                  tabIndex={0}
+                  aria-label="Choose or drop a label file"
+                  onClick={() => fileInput.current?.click()}
+                  onKeyDown={(e) => e.key === "Enter" && fileInput.current?.click()}
+                  onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+                  onDragLeave={() => setDragOver(false)}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    setDragOver(false);
+                    const f = e.dataTransfer.files?.[0];
+                    if (f) setImage(f);
+                  }}
+                  className={`flex flex-1 cursor-pointer flex-col rounded-[10px] border-[1.5px] border-dashed p-[18px] transition ${
+                    dragOver ? "border-navy bg-select" : "border-[#dfe3e8] bg-[#fcfcfd]"
+                  }`}
                 >
-                  <span className="block text-[13px] font-semibold text-navy">{s.title}</span>
-                  <span className="block text-[11.5px] text-ink-faint">{s.hook}</span>
-                </button>
-              ))}
-            </span>
-            <span className="text-[12.5px] text-ink-faint">
-              or download a{" "}
-              {["clean-match", "case-diff", "title-case-prefix"].map((n, i) => (
-                <span key={n}>
-                  {i > 0 && " · "}
-                  <a href={`/api/samples/${n}.png`} download className="font-semibold text-navy hover:underline">
-                    test label {i + 1}
-                  </a>
-                </span>
-              ))}{" "}
-              to upload yourself
-            </span>
-          </div>
-
-          <div className="mt-7 grid gap-8 lg:grid-cols-2">
-            <section className="flex flex-col gap-4">
-              <p className="text-[11.5px] font-semibold uppercase tracking-wider text-ink-faint">Application details</p>
-              {input("brand_name", "Brand name", "e.g. OLD TOM DISTILLERY")}
-              {input("class_type", "Class / Type", "e.g. Kentucky Straight Bourbon Whiskey")}
-              <div className="grid grid-cols-2 gap-4">
-                {input("alcohol_content", "Alcohol content", "e.g. 45% Alc./Vol.")}
-                {input("net_contents", "Net contents", "e.g. 750 mL")}
-              </div>
-              {input("bottler_name_address", "Bottler name & address", "", true)}
-              {input("country_of_origin", "Country of origin", "", true)}
-            </section>
-
-            <section className="flex flex-col gap-2">
-              <p className="text-[11.5px] font-semibold uppercase tracking-wider text-ink-faint">Submitted label</p>
-              <div
-                role="button"
-                tabIndex={0}
-                aria-label="Choose or drop a label image or PDF"
-                onClick={() => fileInput.current?.click()}
-                onKeyDown={(e) => e.key === "Enter" && fileInput.current?.click()}
-                onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
-                onDragLeave={() => setDragOver(false)}
-                onDrop={(e) => {
-                  e.preventDefault();
-                  setDragOver(false);
-                  const f = e.dataTransfer.files?.[0];
-                  if (f) setImage(f);
-                }}
-                className={`flex min-h-72 flex-1 cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed p-4 text-center transition ${dragOver ? "border-navy bg-muted-bg" : "border-hairline bg-card hover:bg-muted-bg/60"}`}
-              >
-                {previewUrl && file && file.type !== "application/pdf" ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={previewUrl} alt="Label preview" className="max-h-80 rounded-lg border border-hairline shadow-sm" />
-                ) : file ? (
-                  <p className="text-[14px] font-medium text-ink">{file.name}</p>
-                ) : (
-                  <>
-                    <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="text-ink-faint" aria-hidden>
-                      <path d="M12 16V4m0 0L7 9m5-5l5 5M4 20h16" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                    <span className="text-[14.5px] font-semibold text-ink">Drop the label here, or click to choose</span>
-                    <span className="text-[12.5px] text-ink-faint">PNG, JPG, WebP, or PDF</span>
-                  </>
+                  {file && previewUrl ? (
+                    <div className="flex flex-col items-center gap-2">
+                      {file.type !== "application/pdf" ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={previewUrl} alt="Label preview" className="max-h-72 rounded border border-line" />
+                      ) : (
+                        <span className="rounded border border-line bg-card px-6 py-10 text-[13px] font-semibold text-ink">PDF</span>
+                      )}
+                      <span className="text-[12.5px] text-muted-2">{file.name}</span>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center gap-2 py-2 text-center">
+                      <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-muted-2" aria-hidden>
+                        <path d="M7 18a4.6 4.6 0 0 1-.9-9.1 6 6 0 0 1 11.7 1.6A4 4 0 0 1 17 18h-1M12 12v8m0-8l-3 3m3-3l3 3" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                      <span className="text-[13.5px] font-semibold text-ink">Drop the label here</span>
+                      <span className="text-[12px] text-muted-2">PDF, PNG or JPG up to 20 MB</span>
+                      <span
+                        className="mt-1 flex h-[38px] items-center rounded-[7px] border border-line-input bg-card px-4 text-[13px] font-semibold text-ink"
+                      >
+                        Choose file
+                      </span>
+                      <span className="my-2 flex w-full items-center gap-3 text-[12px] text-muted-2">
+                        <span className="h-px flex-1 bg-line-soft" aria-hidden /> No label handy? <span className="h-px flex-1 bg-line-soft" aria-hidden />
+                      </span>
+                      <span className="self-start text-[12px] font-bold uppercase tracking-[0.06em] text-muted-2">Try a sample</span>
+                      <span className="grid w-full grid-cols-2 gap-2.5" onClick={(e) => e.stopPropagation()}>
+                        {DEMO_SAMPLES.map((s) => (
+                          <button
+                            key={s.id}
+                            onClick={() => loadSample(s)}
+                            className="min-h-[70px] rounded-[9px] border border-line bg-card px-[13px] py-3 text-left transition hover:border-navy hover:bg-select"
+                          >
+                            <span className="block text-[13px] font-bold text-ink">{s.title}</span>
+                            <span className="block text-[12px] text-muted">{s.blurb}</span>
+                          </button>
+                        ))}
+                      </span>
+                    </div>
+                  )}
+                </div>
+                {file && (
+                  <div className="flex gap-4 text-[13px] font-semibold">
+                    <button onClick={() => fileInput.current?.click()} className="text-navy hover:underline">Change image</button>
+                    <button onClick={removeImage} className="text-muted hover:underline">Remove</button>
+                  </div>
                 )}
-              </div>
-              {file && (
-                <button onClick={() => fileInput.current?.click()} className="self-start text-[13px] font-semibold text-navy hover:underline">
-                  Change image
+                <input
+                  ref={fileInput}
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp,application/pdf"
+                  className="hidden"
+                  onChange={(e) => { const f = e.target.files?.[0]; if (f) setImage(f); }}
+                />
+                <button
+                  onClick={() => file && runCheck(fields, file)}
+                  disabled={!canCheck}
+                  className={`h-11 w-full whitespace-nowrap rounded-[7px] text-[14px] font-semibold transition ${
+                    canCheck ? "bg-navy text-white hover:bg-navy-hover" : "cursor-not-allowed bg-disabled-bg text-disabled-text"
+                  }`}
+                >
+                  Check label
                 </button>
-              )}
-              <input
-                ref={fileInput}
-                type="file"
-                accept="image/png,image/jpeg,image/webp,application/pdf"
-                className="hidden"
-                onChange={(e) => { const f = e.target.files?.[0]; if (f) setImage(f); }}
-              />
-            </section>
-          </div>
+                {!canCheck && (
+                  <p className="text-[12px] text-muted-2">Add a label file and at least one application field to check.</p>
+                )}
+                <p className="text-[12px] text-muted-2">
+                  Need test files? Download a{" "}
+                  {["clean-match", "case-diff", "title-case-prefix"].map((n, i) => (
+                    <span key={n}>
+                      {i > 0 && " · "}
+                      <a href={`/api/samples/${n}.png`} download className="font-semibold text-navy hover:underline">label {i + 1}</a>
+                    </span>
+                  ))}{" "}
+                  to upload yourself.
+                </p>
+              </section>
+            </div>
+          </>
+        )}
 
-          <div className="mt-7 flex flex-wrap items-center justify-end gap-4 border-t border-hairline pt-5">
-            {!canCheck && !busy && (
-              <p className="text-[13px] text-ink-faint">Add a label file and at least one application field to check.</p>
-            )}
-            {busy && (
-              <p className="text-[13px] text-ink-soft" role="status">{BUSY_STEPS[busyPhase]} <span className="text-ink-faint">usually under 5 seconds</span></p>
-            )}
-            <button
-              onClick={() => file && runCheck(fields, file)}
-              disabled={!canCheck || busy}
-              className="flex items-center gap-2 rounded-xl bg-navy px-6 py-3 text-[15px] font-bold text-white shadow-sm transition hover:bg-navy-hover disabled:cursor-not-allowed disabled:bg-ink-faint"
-            >
-              {busy ? "Checking…" : "Check label"}
-              {!busy && (
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden>
-                  <path d="M4 12h15m0 0l-6-6m6 6l-6 6" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              )}
-            </button>
-          </div>
-        </div>
-      )}
+        {step === "checking" && <CheckingCard imageUrl={previewUrl} />}
 
-      {error && (
-        <div className="mt-4 rounded-xl border border-bad-line bg-bad-bg p-4 text-[14px] font-semibold text-bad">
-          {error}
-        </div>
-      )}
-
-      {outcome && previewUrl && (
-        <ResultView
-          result={outcome.result}
-          extraction={outcome.extraction}
-          imageUrl={previewUrl}
-          bands={outcome.bands}
-          ms={outcome.ms}
-          onPrint={() => window.print()}
-          primaryAction={{
-            label: "Check another label",
-            onClick: () => { setOutcome(null); setFile(null); setPreviewUrl(null); setFields(EMPTY); },
-          }}
-        />
-      )}
-        </div>
+        {step === "result" && outcome && previewUrl && (
+          <ResultView
+            result={outcome.result}
+            extraction={outcome.extraction}
+            imageUrl={previewUrl}
+            bands={outcome.bands}
+            ms={outcome.ms}
+            appNumber={appNumber}
+            onPrint={() => window.print()}
+            primaryAction={{ label: "Check another label", onClick: resetAll }}
+          />
+        )}
       </div>
-    </div>
+    </Shell>
   );
 }
