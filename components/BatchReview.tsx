@@ -46,11 +46,22 @@ interface BatchRow {
   checkedAt?: Date;
   error?: string;
   imageUrl?: string;
+  /** Human bold spot-check: confirmed = glanced and looks bold; flagged =
+   *  glanced and does NOT look bold (moves the row to Needs review). */
+  boldReview?: "confirmed" | "flagged";
 }
+
+/** Rows where the warning text passed — bold is the one element left for a
+ *  human glance (the AI advisory never decides). */
+const boldEligible = (r: BatchRow): boolean =>
+  r.status === "done" && !!r.result &&
+  (r.result.warning.verdict === "pass" || r.result.warning.verdict === "pass_formatting_note");
 
 function bucketOf(r: BatchRow): Bucket {
   if (r.status === "error") return "error";
   if (r.status !== "done" || !r.result) return "pending";
+  // An agent's flag outranks the clean verdict — a human said "not bold."
+  if (r.boldReview === "flagged") return "review";
   if (r.result.overall === "clean") {
     const anyChecked = r.result.fields.some((f) => f.verdict !== "not_provided");
     return anyChecked ? "matched" : "not_required";
@@ -75,14 +86,18 @@ function rowSummary(r: BatchRow): React.ReactNode {
   else if (r.result.warning.verdict === "unreadable") review++;
   // The bold-confirm marker stays in batch summaries — the tool's one blind
   // spot never hides behind a clean-looking row (behavioral audit finding).
-  const boldConfirm = r.result.warning.verdict === "pass" || r.result.warning.verdict === "pass_formatting_note";
+  // It resolves only when a human glances: confirmed clears it, flagged
+  // escalates it.
+  const boldState = boldEligible(r) ? (r.boldReview ?? "confirm") : null;
   const sep = <span className="text-muted-2"> • </span>;
   return (
     <>
       <span>{matched} matched</span>
       {mismatch > 0 && (<>{sep}<span className="font-semibold text-red">{mismatch} mismatch{mismatch === 1 ? "" : "es"}</span></>)}
       {review > 0 && (<>{sep}<span className="font-semibold text-amber">{review} review</span></>)}
-      {boldConfirm && (<>{sep}<span className="text-amber">bold: confirm</span></>)}
+      {boldState === "confirm" && (<>{sep}<span className="text-amber">bold: confirm</span></>)}
+      {boldState === "confirmed" && (<>{sep}<span className="text-green">bold ✓</span></>)}
+      {boldState === "flagged" && (<>{sep}<span className="font-semibold text-red">bold: flagged</span></>)}
       {notRequired > 0 && (<>{sep}<span className="text-muted-2">{notRequired} not required</span></>)}
     </>
   );
@@ -104,6 +119,8 @@ export function BatchReview() {
   const [savedToast, setSavedToast] = useState(false);
   const [exportedSince, setExportedSince] = useState(false);
   const [visited, setVisited] = useState<Set<number>>(new Set());
+  const [boldStrip, setBoldStrip] = useState(false);
+  const boldFetching = useRef<Set<number>>(new Set());
   const filesInput = useRef<HTMLInputElement>(null);
   const [dragOver, setDragOver] = useState(false);
   const startedAt = useRef(0);
@@ -168,6 +185,8 @@ export function BatchReview() {
     setWallMs(null);
     setPage(0);
     setOpenRow(null);
+    setBoldStrip(false);
+    boldFetching.current.clear();
     return issues.length === 0 && newRows.length > 0;
   }
 
@@ -241,6 +260,48 @@ export function BatchReview() {
     setVisited(new Set());
   }
 
+  // Lazy warning bands for the bold spot-check strip: fetch for every
+  // eligible row without bands, a few at a time. In-flight indexes are
+  // tracked in a ref so re-renders never duplicate a fetch.
+  useEffect(() => {
+    if (!boldStrip) return;
+    const targets = rows.filter(
+      (r) => boldEligible(r) && !r.bands && r.file && r.file.type !== "application/pdf" && !boldFetching.current.has(r.index),
+    );
+    if (!targets.length) return;
+    let alive = true;
+    let next = 0;
+    async function worker() {
+      while (alive) {
+        const t = targets[next++];
+        if (!t) return;
+        // Claim the row only when actually starting it — a worker killed by a
+        // re-render must not leave unstarted rows marked in-flight forever.
+        if (boldFetching.current.has(t.index)) continue;
+        boldFetching.current.add(t.index);
+        try {
+          const small = await downscaleImage(t.file!);
+          const form = new FormData();
+          form.set("image", small);
+          const res = await fetch("/api/locate", { method: "POST", body: form });
+          const body = await res.json().catch(() => null);
+          // {} marks "tried, nothing found" so the card can say so honestly.
+          setRows((rs) => rs.map((r) => (r.index === t.index ? { ...r, bands: body?.bands ?? {} } : r)));
+        } catch {
+          /* retryable on the next effect run */
+        } finally {
+          boldFetching.current.delete(t.index);
+        }
+      }
+    }
+    void Promise.all(Array.from({ length: Math.min(4, targets.length) }, worker));
+    return () => { alive = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [boldStrip, rows]);
+
+  const setBoldReview = (index: number, v: "confirmed" | "flagged" | undefined) =>
+    setRows((rs) => rs.map((r) => (r.index === index ? { ...r, boldReview: v } : r)));
+
   // Lazy bands for the open detail row.
   useEffect(() => {
     const row = rows.find((r) => r.index === openRow);
@@ -263,13 +324,16 @@ export function BatchReview() {
   }, [openRow]);
 
   function exportCsv() {
-    const header = ["filename", "overall", "government_warning", "brand_name", "class_type", "alcohol_content", "net_contents", "notes"];
+    const header = ["filename", "overall", "government_warning", "bold_check", "brand_name", "class_type", "alcohol_content", "net_contents", "notes"];
     const safe = (s: string) => (/^[=+\-@]/.test(s) ? `'${s}` : s);
     const lines = [...rows].sort((a, b) => a.index - b.index).map((r) => {
-      if (!r.result) return [safe(r.filename), r.status, "", "", "", "", "", r.error ? safe(`ERROR: ${r.error}`) : ""];
+      if (!r.result) return [safe(r.filename), r.status, "", "", "", "", "", "", r.error ? safe(`ERROR: ${r.error}`) : ""];
       const f = (n: string) => r.result!.fields.find((x) => x.field === n)?.verdict ?? "";
+      // The agent's bold glance is part of the record: confirmed / flagged /
+      // unconfirmed for every label whose warning text passed.
+      const bold = boldEligible(r) ? (r.boldReview ?? "unconfirmed") : "";
       return [
-        safe(r.filename), r.result.overall, r.result.warning.verdict,
+        safe(r.filename), r.result.overall, r.result.warning.verdict, bold,
         f("brand_name"), f("class_type"), f("alcohol_content"), f("net_contents"),
         safe([...r.result.warning.notes, ...r.result.fields.map((x) => x.note).filter(Boolean)].join(" | ")),
       ];
@@ -291,6 +355,8 @@ export function BatchReview() {
     return c;
   }, [rows]);
   const done = rows.length - counts.pending;
+  const boldRows = useMemo(() => rows.filter(boldEligible), [rows]);
+  const boldPending = boldRows.filter((r) => !r.boldReview).length;
 
   const visible = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -532,6 +598,35 @@ export function BatchReview() {
               </div>
             )}
 
+            {/* Bold spot-check strip: zoomed warning crops for every label
+                whose text passed — the one element left for human eyes. A
+                page of "GOVERNMENT WARNING" snippets scans in seconds; no
+                per-row clicks. Decisions land in the row (and the CSV). */}
+            {boldStrip && !detail && boldRows.length > 0 && (
+              <div className="mb-4 rounded-xl border border-line bg-card">
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-line-soft px-4 py-3">
+                  <p className="text-[13.5px] font-bold text-ink">Confirm bold type</p>
+                  <p className="text-[12px] text-muted">
+                    Bold is the one check that needs your eyes. Glance at each &ldquo;GOVERNMENT WARNING&rdquo; below — confirm the ones that look bold, flag any that don&rsquo;t.
+                  </p>
+                  <span className={`ml-auto whitespace-nowrap rounded-[5px] px-2 py-0.5 text-[11.5px] font-bold ${boldPending === 0 ? "bg-green-tint text-green" : "bg-amber-tint text-amber"}`}>
+                    {boldPending === 0 ? "All confirmed ✓" : `${boldPending} of ${boldRows.length} left`}
+                  </span>
+                  <button onClick={() => setBoldStrip(false)} aria-label="Close bold confirmation" className="flex h-7 w-7 items-center justify-center rounded-[6px] text-ink-2 hover:bg-line-soft">✕</button>
+                </div>
+                <div className="grid gap-3 p-4 [grid-template-columns:repeat(auto-fill,minmax(230px,1fr))]">
+                  {boldRows.map((r) => (
+                    <BoldCard
+                      key={r.index}
+                      row={r}
+                      onMark={setBoldReview}
+                      onOpen={(i) => { setSelectedRow(i); setOpenRow(i); setTab("overview"); }}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Table card */}
             <div className="rounded-xl border border-line bg-card">
               <div className="flex flex-wrap items-center gap-2 border-b border-line-soft px-4 py-3">
@@ -539,6 +634,22 @@ export function BatchReview() {
                 {chip("matched", "Matched", counts.matched, "green")}
                 {chip("review", "Need review", counts.review + counts.error, "amber")}
                 {chip("not_required", "Not required", counts.not_required, "na")}
+                {boldRows.length > 0 && (
+                  <button
+                    onClick={() => setBoldStrip((s) => !s)}
+                    title="The one thing the computer can't verify — glance at each warning and confirm it looks bold"
+                    className={`flex h-8 items-center gap-1.5 rounded-[7px] border px-3 text-[12.5px] font-semibold transition ${
+                      boldStrip
+                        ? boldPending === 0 ? "border-green bg-green-tint text-green" : "border-amber bg-amber-tint text-amber"
+                        : "border-line bg-card text-ink-2 hover:bg-line-soft"
+                    }`}
+                  >
+                    Confirm bold
+                    <span className={`font-bold ${boldPending === 0 ? "text-green" : "text-amber"}`}>
+                      {boldPending === 0 ? "✓" : boldPending}
+                    </span>
+                  </button>
+                )}
                 <span className="ml-auto flex items-center gap-3">
                   {rows.some((r) => r.status === "queued" || (r.status === "error" && r.file)) && (
                     <button
@@ -773,6 +884,83 @@ export function BatchReview() {
         />
       )}
     </Shell>
+  );
+}
+
+/** One card in the bold spot-check strip: the label's warning area cropped
+ *  and zoomed (via its located band), with confirm/flag actions. Clicking
+ *  the crop opens the full row. */
+function BoldCard({
+  row,
+  onMark,
+  onOpen,
+}: {
+  row: BatchRow;
+  onMark: (index: number, v: "confirmed" | "flagged" | undefined) => void;
+  onOpen: (index: number) => void;
+}) {
+  const [aspect, setAspect] = useState<number | null>(null);
+  const isPdf = row.file?.type === "application/pdf" || row.filename.toLowerCase().endsWith(".pdf");
+  const band = row.bands?.warning;
+  const tried = row.bands !== undefined;
+  const top = band ? Math.max(0, band[0] / 10 - 1.5) : 0;
+  const bh = band ? Math.max(4, Math.min(100, band[1] / 10 + 1.5) - top) : 0;
+  const state = row.boldReview;
+  const cropReady = !isPdf && !!band && aspect !== null;
+  return (
+    <div
+      className={`flex flex-col gap-2 rounded-[10px] border p-2.5 transition ${
+        state === "flagged" ? "border-bad-line bg-red-tint/40" : state === "confirmed" ? "border-ok-line bg-green-tint/30" : "border-line bg-card"
+      }`}
+    >
+      <button
+        onClick={() => onOpen(row.index)}
+        title="Open this label"
+        className="relative w-full overflow-hidden rounded-[6px] border border-paper-line bg-paper text-left"
+        style={cropReady ? { aspectRatio: `${100 / (aspect! * bh)}`, maxHeight: 120 } : { height: 64 }}
+      >
+        {isPdf ? (
+          <span className="flex h-full items-center justify-center px-2 text-center text-[11px] font-semibold text-muted">
+            PDF — open the row to view
+          </span>
+        ) : row.imageUrl ? (
+          <>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={row.imageUrl}
+              alt={`Warning area of ${row.filename}`}
+              onLoad={(e) => setAspect(e.currentTarget.naturalHeight / e.currentTarget.naturalWidth)}
+              className="absolute left-0 top-0 w-full"
+              style={{ transform: `translateY(-${top}%)`, visibility: cropReady ? "visible" : "hidden" }}
+            />
+            {!cropReady && (
+              <span className={`absolute inset-0 flex items-center justify-center px-2 text-center text-[11px] text-muted-2 ${tried && !band ? "" : "animate-pulse"}`}>
+                {tried && !band ? "couldn't locate the warning — open the row" : "finding the warning…"}
+              </span>
+            )}
+          </>
+        ) : null}
+      </button>
+      <span className="truncate text-[11.5px] font-semibold text-ink" title={row.filename}>{row.filename}</span>
+      <span className="flex gap-1.5">
+        <button
+          onClick={() => onMark(row.index, state === "confirmed" ? undefined : "confirmed")}
+          className={`h-7 flex-1 rounded-[6px] border text-[11.5px] font-bold transition ${
+            state === "confirmed" ? "border-green bg-green text-white" : "border-line bg-card text-green hover:bg-green-tint"
+          }`}
+        >
+          {state === "confirmed" ? "Bold ✓" : "Looks bold"}
+        </button>
+        <button
+          onClick={() => onMark(row.index, state === "flagged" ? undefined : "flagged")}
+          className={`h-7 flex-1 rounded-[6px] border text-[11.5px] font-bold transition ${
+            state === "flagged" ? "border-red bg-red text-white" : "border-line bg-card text-red hover:bg-red-tint"
+          }`}
+        >
+          {state === "flagged" ? "Flagged" : "Not bold — flag"}
+        </button>
+      </span>
+    </div>
   );
 }
 
