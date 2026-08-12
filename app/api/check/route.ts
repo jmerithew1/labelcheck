@@ -6,7 +6,7 @@ import {
   type ExtractableMedia,
 } from "@/lib/vision/extract.ts";
 import { locateBands, type LocatableMedia, type Bands } from "@/lib/vision/locate.ts";
-import { checkWarning } from "@/lib/compare/warning.ts";
+import { applySecondReading } from "@/lib/compare/warning.ts";
 import { compareLabel, type ApplicationData } from "@/lib/compare/index.ts";
 
 export const maxDuration = 60;
@@ -131,33 +131,28 @@ export async function POST(req: Request) {
   // pay the extra call.
   const v = result.warning.verdict;
   if (v === "fail_wording" || v === "fail_prefix_case") {
-    const t0 = performance.now();
-    const second = await confirmWarningTranscription(bytes, image.type as "image/png" | "image/jpeg" | "image/webp");
-    const confirmMs = Math.round(performance.now() - t0);
-    if (second && second.status === "found") {
-      const secondCheck = checkWarning({
-        status: "found",
-        text: second.text,
-        boldAdvisory: outcome.extraction.warning_prefix_bold,
-        sizeAdvisory: outcome.extraction.warning_text_size,
+    // Async mode (single-check UI): return the provisional verdict now so
+    // every label answers in ~5s; the client runs the confirmation through
+    // /api/confirm and updates the warning row in place. Batch rows omit the
+    // flag and keep the blocking confirmation (nobody watches a single row).
+    if (form.get("async_confirm") === "1") {
+      return NextResponse.json({
+        result,
+        extraction: outcome.extraction,
+        bands,
+        ms: outcome.ms,
+        confirm_pending: true,
       });
-      if (secondCheck.verdict === "pass" || secondCheck.verdict === "pass_formatting_note") {
-        result.warning = {
-          ...result.warning,
-          verdict: "unreadable",
-          notes: [
-            "Two independent AI readings of the warning disagree — the first found a deviation, the second reads it as exact. This is usually a transcription artifact, not a label defect. Check the warning on the image before acting.",
-            ...result.warning.notes,
-          ],
-        };
-        if (result.overall === "warning_failure") result.overall = "needs_review";
-      } else {
-        result.warning.notes = [
-          "Confirmed by a second independent AI reading.",
-          ...result.warning.notes,
-        ];
-      }
     }
+    const t0 = performance.now();
+    const second = await confirmWarningTranscription(bytes, media);
+    const confirmMs = Math.round(performance.now() - t0);
+    const applied = applySecondReading(result.warning, result.overall, second, {
+      boldAdvisory: outcome.extraction.warning_prefix_bold,
+      sizeAdvisory: outcome.extraction.warning_text_size,
+    });
+    result.warning = applied.warning;
+    result.overall = applied.overall;
     return NextResponse.json({
       result,
       extraction: outcome.extraction,

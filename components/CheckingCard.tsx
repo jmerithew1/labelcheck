@@ -4,16 +4,17 @@ import { useEffect, useState } from "react";
 
 /** v2 checking state (design §Checking): the label under an animated scan
  *  line plus a 3-phase checklist. The prototype faked 2s; ours paces to the
- *  real request (~4s typical, ~8s when a second warning reading runs) —
- *  phases advance on a timer, all complete only when the response lands. */
+ *  real request (~4s — the second warning reading no longer blocks here, it
+ *  confirms asynchronously on the result screen) — phases advance on a
+ *  timer, all complete only when the response lands. */
 export function CheckingCard({ imageUrl, complete = false }: { imageUrl: string | null; complete?: boolean }) {
   const [phase, setPhase] = useState(0);
   const [slow, setSlow] = useState(false);
   useEffect(() => {
     const t1 = setTimeout(() => setPhase(1), 1300);
     const t2 = setTimeout(() => setPhase(2), 2600);
-    // Failing labels trigger a second independent reading (~8s total) — the
-    // wait must stay truthful instead of stalling under a 5-second promise.
+    // The second warning reading now runs async on the result screen, so
+    // >5s here means a genuinely slow request — keep the copy truthful.
     const t3 = setTimeout(() => setSlow(true), 5000);
     return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
   }, []);
@@ -59,7 +60,7 @@ export function CheckingCard({ imageUrl, complete = false }: { imageUrl: string 
       </ul>
       <p className="text-[12px] text-muted-2">
         {slow && !complete
-          ? "Getting a second independent reading of the warning — a few seconds more"
+          ? "Taking a little longer than usual — almost there"
           : "usually under 5 seconds"}
       </p>
       </div>

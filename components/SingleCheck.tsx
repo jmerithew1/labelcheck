@@ -59,6 +59,11 @@ export function SingleCheck() {
   const [error, setError] = useState<string | null>(null);
   const [outcome, setOutcome] = useState<OutcomeData | null>(null);
   const [checkDone, setCheckDone] = useState(false);
+  const [confirming, setConfirming] = useState(false);
+  // Guards the async confirmation against a stale merge: bumped whenever the
+  // user starts a new check or resets, so a late /api/confirm response for a
+  // previous label can never overwrite the current result.
+  const runToken = useRef(0);
   const fileInput = useRef<HTMLInputElement>(null);
   const [dragOver, setDragOver] = useState(false);
 
@@ -76,24 +81,32 @@ export function SingleCheck() {
     setPreviewUrl(null);
   }
   function resetAll() {
+    runToken.current++;
     removeImage();
     setFields(EMPTY);
     setAppNumber("");
     setOutcome(null);
     setError(null);
+    setConfirming(false);
     setStep("form");
   }
 
   async function runCheck(f: AppFields, image: File) {
+    const token = ++runToken.current;
     setStep("checking");
     setCheckDone(false);
     setError(null);
     setOutcome(null);
+    setConfirming(false);
     try {
       const small = image.type === "application/pdf" ? image : await downscaleImage(image);
       const form = new FormData();
       form.set("image", small);
       for (const [k, v] of Object.entries(f)) form.set(k, v);
+      // Warning failures return a provisional verdict immediately; the second
+      // confirming reading runs via /api/confirm and updates the row in place
+      // (every label answers in ~5s instead of failing ones taking ~8s).
+      form.set("async_confirm", "1");
       const res = await fetch("/api/check", { method: "POST", body: form });
       const body = await res.json().catch(() => null);
       if (!res.ok || !body) {
@@ -102,6 +115,10 @@ export function SingleCheck() {
         return;
       }
       setOutcome({ result: body.result, extraction: body.extraction, bands: body.bands ?? {}, ms: body.ms });
+      if (body.confirm_pending) {
+        setConfirming(true);
+        void runConfirm(small, body.result, body.extraction, token);
+      }
       // Completion beat: let the checklist show all three ticks before the
       // swap — the labor illusion finishes instead of being interrupted.
       setCheckDone(true);
@@ -109,6 +126,55 @@ export function SingleCheck() {
     } catch {
       setError("Could not reach the server. Check your connection and try again.");
       setStep("form");
+    }
+  }
+
+  async function runConfirm(image: File, result: CheckResult, extraction: LabelExtraction, token: number) {
+    const markUnavailable = () =>
+      setOutcome((prev) =>
+        prev
+          ? {
+              ...prev,
+              result: {
+                ...prev.result,
+                warning: {
+                  ...prev.result.warning,
+                  notes: [
+                    "The second confirming reading could not run — this verdict is from a single AI reading. Check the warning on the image before acting.",
+                    ...prev.result.warning.notes,
+                  ],
+                },
+              },
+            }
+          : prev,
+      );
+    try {
+      const form = new FormData();
+      form.set("image", image);
+      form.set("warning", JSON.stringify(result.warning));
+      form.set("overall", result.overall);
+      form.set("bold_advisory", extraction.warning_prefix_bold);
+      if (extraction.warning_text_size) form.set("size_advisory", extraction.warning_text_size);
+      const res = await fetch("/api/confirm", { method: "POST", body: form });
+      const body = await res.json().catch(() => null);
+      if (token !== runToken.current) return; // user moved on — drop it
+      if (res.ok && body?.warning && body?.overall) {
+        setOutcome((prev) =>
+          prev
+            ? {
+                ...prev,
+                result: { ...prev.result, warning: body.warning, overall: body.overall },
+                ms: prev.ms + (typeof body.ms === "number" ? body.ms : 0),
+              }
+            : prev,
+        );
+      } else {
+        markUnavailable();
+      }
+    } catch {
+      if (token === runToken.current) markUnavailable();
+    } finally {
+      if (token === runToken.current) setConfirming(false);
     }
   }
 
@@ -314,6 +380,7 @@ export function SingleCheck() {
             imageUrl={previewUrl}
             bands={outcome.bands}
             ms={outcome.ms}
+            confirming={confirming}
             appNumber={appNumber}
             onPrint={() => window.print()}
             primaryAction={{ label: "Check another label", onClick: resetAll }}

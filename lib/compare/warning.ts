@@ -163,3 +163,57 @@ export function checkWarning(input: {
   notes.unshift("Warning wording is exact; body letter-casing differs from the standard rendering (permitted — Part 16 constrains only the prefix).");
   return { ...base, verdict: "pass_formatting_note", notes };
 }
+
+export type OverallVerdict = "clean" | "needs_review" | "warning_failure" | "not_a_label";
+
+/**
+ * Fold a second independent warning reading into an existing failing verdict.
+ * False-rejection guard: a transcription misread can manufacture a warning
+ * failure on a clean label — the costliest error this tool can make. If the
+ * two readings disagree on the verdict, downgrade to "check manually" instead
+ * of asserting a failure. Pure so both the blocking path (/api/check for
+ * batch rows) and the async path (/api/confirm for single checks) share it.
+ */
+export function applySecondReading(
+  warning: WarningResult,
+  overall: OverallVerdict,
+  second: { status: "found" | "absent" | "unreadable"; text: string } | null,
+  advisories: {
+    boldAdvisory: "bold" | "not_bold" | "unclear";
+    sizeAdvisory?: "normal" | "small" | "illegibly_small";
+  },
+): { warning: WarningResult; overall: OverallVerdict; outcome: "confirmed" | "downgraded" | "unavailable" } {
+  if (!second || second.status !== "found") {
+    // Best-effort confirmation: on any API problem the original single-reading
+    // verdict stands, unchanged.
+    return { warning, overall, outcome: "unavailable" };
+  }
+  const secondCheck = checkWarning({
+    status: "found",
+    text: second.text,
+    boldAdvisory: advisories.boldAdvisory,
+    sizeAdvisory: advisories.sizeAdvisory,
+  });
+  if (secondCheck.verdict === "pass" || secondCheck.verdict === "pass_formatting_note") {
+    return {
+      warning: {
+        ...warning,
+        verdict: "unreadable",
+        notes: [
+          "Two independent AI readings of the warning disagree — the first found a deviation, the second reads it as exact. This is usually a transcription artifact, not a label defect. Check the warning on the image before acting.",
+          ...warning.notes,
+        ],
+      },
+      overall: overall === "warning_failure" ? "needs_review" : overall,
+      outcome: "downgraded",
+    };
+  }
+  return {
+    warning: {
+      ...warning,
+      notes: ["Confirmed by a second independent AI reading.", ...warning.notes],
+    },
+    overall,
+    outcome: "confirmed",
+  };
+}

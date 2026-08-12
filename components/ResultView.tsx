@@ -65,6 +65,7 @@ export function ResultView({
   onPrint,
   primaryAction,
   compact = false,
+  confirming = false,
   appNumber,
 }: {
   result: CheckResult;
@@ -76,6 +77,8 @@ export function ResultView({
   primaryAction?: { label: string; onClick: () => void };
   /** stacked layout for narrow containers (batch detail panel) */
   compact?: boolean;
+  /** the second warning reading is still in flight — provisional verdict shown */
+  confirming?: boolean;
   /** optional TTB application number — shown on the printed report */
   appNumber?: string;
 }) {
@@ -264,6 +267,8 @@ export function ResultView({
                 : "The computer could not judge bold type — please check the picture.",
         };
   const sizeNote = result.warning.notes.find((n) => /small/i.test(n));
+  const confirmationNote = result.warning.notes.find((n) => n.startsWith("Confirmed by a second"));
+  const singleReadingNote = result.warning.notes.find((n) => n.includes("single AI reading"));
   const showWarningDiff = wv === "fail_wording";
 
   const rowTone = (v: string): Tone =>
@@ -427,6 +432,17 @@ export function ResultView({
         />
         {sizeNote && (
           <WarningRow compact={compact} label="Size" chip={<Chip tone="warn">Review</Chip>} text={sizeNote} />
+        )}
+        {confirming && (
+          <p className="animate-pulse border-t border-hairline px-4 py-2.5 text-[12px] font-semibold text-amber">
+            Confirming this with a second independent AI reading — a few seconds…
+          </p>
+        )}
+        {!confirming && confirmationNote && (
+          <p className="border-t border-hairline px-4 py-2.5 text-[12px] text-ink-faint">✓ {confirmationNote}</p>
+        )}
+        {!confirming && singleReadingNote && (
+          <p className="border-t border-hairline px-4 py-2.5 text-[12px] font-semibold text-amber">{singleReadingNote}</p>
         )}
         {showWarningDiff && result.warning.labelText && (
           <div className="border-t border-hairline px-4 py-3">
