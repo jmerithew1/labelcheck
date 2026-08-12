@@ -1,0 +1,93 @@
+{
+  "note": "Cause split for the remaining false rejections. LABEL = the approved COLA genuinely deviates from 27 CFR 16.21 text (tool correct to flag). TOOL = the reader transcribed the wrong region.",
+  "rows": [
+    {
+      "file": "ttb-24241001000804-Inspire-back-png.png",
+      "kind": "label text genuinely deviates (LABEL)"
+    },
+    {
+      "file": "ttb-23054001000680-Marc-Antonio-back-label.jpg",
+      "kind": "wrong block transcribed (TOOL)"
+    },
+    {
+      "file": "ttb-25015001000975-Back-png.png",
+      "kind": "wrong block transcribed (TOOL)"
+    },
+    {
+      "file": "ttb-25029001000648-BACK-PETITE-ESTONES-RED.jpg",
+      "kind": "wrong block transcribed (TOOL)"
+    },
+    {
+      "file": "ttb-25071001000209-Festa-Esmeralda-Back-Lab.png",
+      "kind": "label text genuinely deviates (LABEL)"
+    },
+    {
+      "file": "ttb-25058001000544-EF-BACK-SPICYTAMARIND-22.png",
+      "kind": "label text genuinely deviates (LABEL)"
+    },
+    {
+      "file": "ttb-25058001000553-EF-BACK-TAMARIND22-apr-2.png",
+      "kind": "label text genuinely deviates (LABEL)"
+    },
+    {
+      "file": "ttb-25191001000861-RD-1-Manhatten-Back-png.png",
+      "kind": "label text genuinely deviates (LABEL)"
+    },
+    {
+      "file": "ttb-25191001000890-FOG-MTN-CA-MER-BACK-png.png",
+      "kind": "label text genuinely deviates (LABEL)"
+    },
+    {
+      "file": "ttb-25192001000247-Fal-back-jpg.jpg",
+      "kind": "label text genuinely deviates (LABEL)"
+    },
+    {
+      "file": "ttb-25196001000197-Amended-Back-Anejo-png.png",
+      "kind": "wrong block transcribed (TOOL)"
+    },
+    {
+      "file": "ttb-25101001000203-Los-Javis-Tepeztate-Back.jpg",
+      "kind": "label text genuinely deviates (LABEL)"
+    },
+    {
+      "file": "ttb-25101001000237-Los-Javis-Tepeztate-Back.jpg",
+      "kind": "label text genuinely deviates (LABEL)"
+    },
+    {
+      "file": "ttb-25101001000260-Los-Javis-Tepeztate-Back.jpg",
+      "kind": "label text genuinely deviates (LABEL)"
+    },
+    {
+      "file": "ttb-25101001000298-Los-Javis-Tepeztate-Back.jpg",
+      "kind": "label text genuinely deviates (LABEL)"
+    },
+    {
+      "file": "ttb-25101001000307-Los-Javis-Back-CA-jpg.jpg",
+      "kind": "label text genuinely deviates (LABEL)"
+    },
+    {
+      "file": "ttb-25101001000316-Los-Javis-Back-CA-jpg.jpg",
+      "kind": "label text genuinely deviates (LABEL)"
+    },
+    {
+      "file": "ttb-25281001000065-BACK-CH-POITEVIN-2019-JP.jpg",
+      "kind": "label text genuinely deviates (LABEL)"
+    },
+    {
+      "file": "ttb-17193001000036-Kush-Anejo-Back-jpg.jpg",
+      "kind": "label text genuinely deviates (LABEL)"
+    },
+    {
+      "file": "ttb-22025001000242-JB-Hardy-Lozangere-BACK.png",
+      "kind": "label text genuinely deviates (LABEL)"
+    },
+    {
+      "file": "ttb-24067001000709-Kernsud4-9back-png.png",
+      "kind": "label text genuinely deviates (LABEL)"
+    },
+    {
+      "file": "ttb-24066001000343-2022-SiG-Cab-Sauv-Back-M.jpg",
+      "kind": "label text genuinely deviates (LABEL)"
+    }
+  ]
+}

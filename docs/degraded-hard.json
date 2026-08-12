@@ -1,0 +1,521 @@
+{
+  "summary": {
+    "measured_at": "2026-08-12T16:24:52.133Z",
+    "base": "https://labelcheck-production-8f22.up.railway.app",
+    "note": "Harder photo abuse than samples/degraded: creases, torn corner, bottle curvature, hand occlusion, low light, hard shadow, heavy defocus, JPEG q35. Images regenerable via samples/tools/degrade-hard.mjs (gitignored).",
+    "n": 40,
+    "exact": 26,
+    "safe": 35,
+    "false_rejections": 4,
+    "missed_violations": 1,
+    "errors": 0,
+    "by_condition": {
+      "crease": {
+        "n": 5,
+        "exact": 4,
+        "safe": 5,
+        "false_rejections": 0,
+        "missed_violations": 0,
+        "errors": 0
+      },
+      "torn": {
+        "n": 5,
+        "exact": 3,
+        "safe": 3,
+        "false_rejections": 2,
+        "missed_violations": 0,
+        "errors": 0
+      },
+      "curved": {
+        "n": 5,
+        "exact": 3,
+        "safe": 5,
+        "false_rejections": 0,
+        "missed_violations": 0,
+        "errors": 0
+      },
+      "occluded": {
+        "n": 5,
+        "exact": 2,
+        "safe": 4,
+        "false_rejections": 1,
+        "missed_violations": 0,
+        "errors": 0
+      },
+      "lowlight": {
+        "n": 5,
+        "exact": 5,
+        "safe": 5,
+        "false_rejections": 0,
+        "missed_violations": 0,
+        "errors": 0
+      },
+      "shadow": {
+        "n": 5,
+        "exact": 4,
+        "safe": 5,
+        "false_rejections": 0,
+        "missed_violations": 0,
+        "errors": 0
+      },
+      "heavyblur": {
+        "n": 5,
+        "exact": 1,
+        "safe": 4,
+        "false_rejections": 0,
+        "missed_violations": 1,
+        "errors": 0
+      },
+      "jpeg": {
+        "n": 5,
+        "exact": 4,
+        "safe": 4,
+        "false_rejections": 1,
+        "missed_violations": 0,
+        "errors": 0
+      }
+    }
+  },
+  "results": [
+    {
+      "label": "clean-match",
+      "cond": "crease",
+      "expected": "clean",
+      "overall": "clean",
+      "warning": "pass",
+      "exact": true,
+      "safe": true,
+      "falseRejection": false,
+      "missedViolation": false
+    },
+    {
+      "label": "clean-match",
+      "cond": "torn",
+      "expected": "clean",
+      "overall": "warning_failure",
+      "warning": "fail_wording",
+      "exact": false,
+      "safe": false,
+      "falseRejection": true,
+      "missedViolation": false
+    },
+    {
+      "label": "clean-match",
+      "cond": "occluded",
+      "expected": "clean",
+      "overall": "needs_review",
+      "warning": "unreadable",
+      "exact": false,
+      "safe": true,
+      "falseRejection": false,
+      "missedViolation": false
+    },
+    {
+      "label": "clean-match",
+      "cond": "curved",
+      "expected": "clean",
+      "overall": "needs_review",
+      "warning": "unreadable",
+      "exact": false,
+      "safe": true,
+      "falseRejection": false,
+      "missedViolation": false
+    },
+    {
+      "label": "clean-match",
+      "cond": "lowlight",
+      "expected": "clean",
+      "overall": "clean",
+      "warning": "pass",
+      "exact": true,
+      "safe": true,
+      "falseRejection": false,
+      "missedViolation": false
+    },
+    {
+      "label": "clean-match",
+      "cond": "shadow",
+      "expected": "clean",
+      "overall": "clean",
+      "warning": "pass",
+      "exact": true,
+      "safe": true,
+      "falseRejection": false,
+      "missedViolation": false
+    },
+    {
+      "label": "clean-match",
+      "cond": "heavyblur",
+      "expected": "clean",
+      "overall": "needs_review",
+      "warning": "pass",
+      "exact": false,
+      "safe": true,
+      "falseRejection": false,
+      "missedViolation": false
+    },
+    {
+      "label": "clean-match",
+      "cond": "jpeg",
+      "expected": "clean",
+      "overall": "clean",
+      "warning": "pass",
+      "exact": true,
+      "safe": true,
+      "falseRejection": false,
+      "missedViolation": false
+    },
+    {
+      "label": "wine-label",
+      "cond": "crease",
+      "expected": "clean",
+      "overall": "clean",
+      "warning": "pass",
+      "exact": true,
+      "safe": true,
+      "falseRejection": false,
+      "missedViolation": false
+    },
+    {
+      "label": "wine-label",
+      "cond": "lowlight",
+      "expected": "clean",
+      "overall": "clean",
+      "warning": "pass",
+      "exact": true,
+      "safe": true,
+      "falseRejection": false,
+      "missedViolation": false
+    },
+    {
+      "label": "wine-label",
+      "cond": "curved",
+      "expected": "clean",
+      "overall": "needs_review",
+      "warning": "unreadable",
+      "exact": false,
+      "safe": true,
+      "falseRejection": false,
+      "missedViolation": false
+    },
+    {
+      "label": "wine-label",
+      "cond": "occluded",
+      "expected": "clean",
+      "overall": "warning_failure",
+      "warning": "fail_wording",
+      "exact": false,
+      "safe": false,
+      "falseRejection": true,
+      "missedViolation": false
+    },
+    {
+      "label": "wine-label",
+      "cond": "torn",
+      "expected": "clean",
+      "overall": "warning_failure",
+      "warning": "fail_wording",
+      "exact": false,
+      "safe": false,
+      "falseRejection": true,
+      "missedViolation": false
+    },
+    {
+      "label": "wine-label",
+      "cond": "shadow",
+      "expected": "clean",
+      "overall": "needs_review",
+      "warning": "pass",
+      "exact": false,
+      "safe": true,
+      "falseRejection": false,
+      "missedViolation": false
+    },
+    {
+      "label": "wine-label",
+      "cond": "heavyblur",
+      "expected": "clean",
+      "overall": "clean",
+      "warning": "pass",
+      "exact": true,
+      "safe": true,
+      "falseRejection": false,
+      "missedViolation": false
+    },
+    {
+      "label": "wine-label",
+      "cond": "jpeg",
+      "expected": "clean",
+      "overall": "clean",
+      "warning": "pass",
+      "exact": true,
+      "safe": true,
+      "falseRejection": false,
+      "missedViolation": false
+    },
+    {
+      "label": "word-swap",
+      "cond": "crease",
+      "expected": "warning_failure",
+      "overall": "warning_failure",
+      "warning": "fail_wording",
+      "exact": true,
+      "safe": true,
+      "falseRejection": false,
+      "missedViolation": false
+    },
+    {
+      "label": "word-swap",
+      "cond": "torn",
+      "expected": "warning_failure",
+      "overall": "warning_failure",
+      "warning": "fail_wording",
+      "exact": true,
+      "safe": true,
+      "falseRejection": false,
+      "missedViolation": false
+    },
+    {
+      "label": "word-swap",
+      "cond": "occluded",
+      "expected": "warning_failure",
+      "overall": "warning_failure",
+      "warning": "fail_wording",
+      "exact": true,
+      "safe": true,
+      "falseRejection": false,
+      "missedViolation": false
+    },
+    {
+      "label": "word-swap",
+      "cond": "curved",
+      "expected": "warning_failure",
+      "overall": "warning_failure",
+      "warning": "fail_wording",
+      "exact": true,
+      "safe": true,
+      "falseRejection": false,
+      "missedViolation": false
+    },
+    {
+      "label": "word-swap",
+      "cond": "lowlight",
+      "expected": "warning_failure",
+      "overall": "warning_failure",
+      "warning": "fail_wording",
+      "exact": true,
+      "safe": true,
+      "falseRejection": false,
+      "missedViolation": false
+    },
+    {
+      "label": "word-swap",
+      "cond": "heavyblur",
+      "expected": "warning_failure",
+      "overall": "clean",
+      "warning": "pass",
+      "exact": false,
+      "safe": false,
+      "falseRejection": false,
+      "missedViolation": true
+    },
+    {
+      "label": "word-swap",
+      "cond": "shadow",
+      "expected": "warning_failure",
+      "overall": "warning_failure",
+      "warning": "fail_wording",
+      "exact": true,
+      "safe": true,
+      "falseRejection": false,
+      "missedViolation": false
+    },
+    {
+      "label": "word-swap",
+      "cond": "jpeg",
+      "expected": "warning_failure",
+      "overall": "warning_failure",
+      "warning": "fail_wording",
+      "exact": true,
+      "safe": true,
+      "falseRejection": false,
+      "missedViolation": false
+    },
+    {
+      "label": "title-case-prefix",
+      "cond": "torn",
+      "expected": "warning_failure",
+      "overall": "warning_failure",
+      "warning": "fail_wording",
+      "exact": true,
+      "safe": true,
+      "falseRejection": false,
+      "missedViolation": false
+    },
+    {
+      "label": "title-case-prefix",
+      "cond": "crease",
+      "expected": "warning_failure",
+      "overall": "warning_failure",
+      "warning": "fail_prefix_case",
+      "exact": true,
+      "safe": true,
+      "falseRejection": false,
+      "missedViolation": false
+    },
+    {
+      "label": "title-case-prefix",
+      "cond": "curved",
+      "expected": "warning_failure",
+      "overall": "warning_failure",
+      "warning": "fail_prefix_case",
+      "exact": true,
+      "safe": true,
+      "falseRejection": false,
+      "missedViolation": false
+    },
+    {
+      "label": "title-case-prefix",
+      "cond": "occluded",
+      "expected": "warning_failure",
+      "overall": "warning_failure",
+      "warning": "fail_wording",
+      "exact": true,
+      "safe": true,
+      "falseRejection": false,
+      "missedViolation": false
+    },
+    {
+      "label": "title-case-prefix",
+      "cond": "lowlight",
+      "expected": "warning_failure",
+      "overall": "warning_failure",
+      "warning": "fail_prefix_case",
+      "exact": true,
+      "safe": true,
+      "falseRejection": false,
+      "missedViolation": false
+    },
+    {
+      "label": "title-case-prefix",
+      "cond": "shadow",
+      "expected": "warning_failure",
+      "overall": "warning_failure",
+      "warning": "fail_prefix_case",
+      "exact": true,
+      "safe": true,
+      "falseRejection": false,
+      "missedViolation": false
+    },
+    {
+      "label": "title-case-prefix",
+      "cond": "jpeg",
+      "expected": "warning_failure",
+      "overall": "warning_failure",
+      "warning": "fail_prefix_case",
+      "exact": true,
+      "safe": true,
+      "falseRejection": false,
+      "missedViolation": false
+    },
+    {
+      "label": "title-case-prefix",
+      "cond": "heavyblur",
+      "expected": "warning_failure",
+      "overall": "needs_review",
+      "warning": "unreadable",
+      "exact": false,
+      "safe": true,
+      "falseRejection": false,
+      "missedViolation": false
+    },
+    {
+      "label": "small-warning",
+      "cond": "torn",
+      "expected": "clean",
+      "overall": "clean",
+      "warning": "pass",
+      "exact": true,
+      "safe": true,
+      "falseRejection": false,
+      "missedViolation": false
+    },
+    {
+      "label": "small-warning",
+      "cond": "crease",
+      "expected": "clean",
+      "overall": "needs_review",
+      "warning": "unreadable",
+      "exact": false,
+      "safe": true,
+      "falseRejection": false,
+      "missedViolation": false
+    },
+    {
+      "label": "small-warning",
+      "cond": "curved",
+      "expected": "clean",
+      "overall": "clean",
+      "warning": "pass",
+      "exact": true,
+      "safe": true,
+      "falseRejection": false,
+      "missedViolation": false
+    },
+    {
+      "label": "small-warning",
+      "cond": "lowlight",
+      "expected": "clean",
+      "overall": "clean",
+      "warning": "pass",
+      "exact": true,
+      "safe": true,
+      "falseRejection": false,
+      "missedViolation": false
+    },
+    {
+      "label": "small-warning",
+      "cond": "occluded",
+      "expected": "clean",
+      "overall": "needs_review",
+      "warning": "pass",
+      "exact": false,
+      "safe": true,
+      "falseRejection": false,
+      "missedViolation": false
+    },
+    {
+      "label": "small-warning",
+      "cond": "shadow",
+      "expected": "clean",
+      "overall": "clean",
+      "warning": "pass",
+      "exact": true,
+      "safe": true,
+      "falseRejection": false,
+      "missedViolation": false
+    },
+    {
+      "label": "small-warning",
+      "cond": "heavyblur",
+      "expected": "clean",
+      "overall": "needs_review",
+      "warning": "unreadable",
+      "exact": false,
+      "safe": true,
+      "falseRejection": false,
+      "missedViolation": false
+    },
+    {
+      "label": "small-warning",
+      "cond": "jpeg",
+      "expected": "clean",
+      "overall": "warning_failure",
+      "warning": "fail_missing",
+      "exact": false,
+      "safe": false,
+      "falseRejection": true,
+      "missedViolation": false
+    }
+  ]
+}

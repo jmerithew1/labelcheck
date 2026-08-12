@@ -1,0 +1,1177 @@
+{
+  "measured_layer": "shipped_gate (measureBoldSignals + applyBoldGate)",
+  "note": "Worst case: aiAdvisory forced to \"bold\" on every sample, so this is an UPPER BOUND on how many non-bold labels could reach a green check.",
+  "thresholds": {
+    "swHi": 1.225,
+    "swLo": 0.875,
+    "dHi": 1,
+    "dLo": 1.3,
+    "sizeMin": 0.6,
+    "sizeMax": 1.7
+  },
+  "n": 160,
+  "not_bold": 6,
+  "human": 151,
+  "green_leaks": 3,
+  "unmeasurable": 96,
+  "rows": [
+    {
+      "label": "can-non-bold",
+      "cond": "angle1",
+      "swRatio": 1.1428571428571428,
+      "densRatio": 0.7660600295261265,
+      "sizeRatio": 1.4782608695652173,
+      "measurable": true,
+      "gate": "human"
+    },
+    {
+      "label": "can-non-bold",
+      "cond": "angle2",
+      "measurable": false,
+      "gate": "human"
+    },
+    {
+      "label": "can-non-bold",
+      "cond": "angle3",
+      "measurable": false,
+      "gate": "human"
+    },
+    {
+      "label": "can-non-bold",
+      "cond": "angle4",
+      "measurable": false,
+      "gate": "human"
+    },
+    {
+      "label": "can-non-bold",
+      "cond": "blur1",
+      "measurable": false,
+      "gate": "human"
+    },
+    {
+      "label": "can-non-bold",
+      "cond": "blur2",
+      "measurable": false,
+      "gate": "human"
+    },
+    {
+      "label": "can-non-bold",
+      "cond": "blur3",
+      "measurable": false,
+      "gate": "human"
+    },
+    {
+      "label": "can-non-bold",
+      "cond": "blur4",
+      "measurable": false,
+      "gate": "human"
+    },
+    {
+      "label": "can-non-bold",
+      "cond": "bright1",
+      "swRatio": 1,
+      "densRatio": 1.3600930283001247,
+      "sizeRatio": 0.8095238095238095,
+      "measurable": true,
+      "gate": "human"
+    },
+    {
+      "label": "can-non-bold",
+      "cond": "bright2",
+      "swRatio": 1,
+      "densRatio": 1.3451070429771068,
+      "sizeRatio": 0.8048780487804879,
+      "measurable": true,
+      "gate": "human"
+    },
+    {
+      "label": "can-non-bold",
+      "cond": "cast1",
+      "swRatio": 1,
+      "densRatio": 1.4501080348973103,
+      "sizeRatio": 0.7555555555555555,
+      "measurable": true,
+      "gate": "human"
+    },
+    {
+      "label": "can-non-bold",
+      "cond": "cast2",
+      "swRatio": 1,
+      "densRatio": 1.3462122234214788,
+      "sizeRatio": 0.8,
+      "measurable": true,
+      "gate": "human"
+    },
+    {
+      "label": "can-non-bold",
+      "cond": "combo1",
+      "measurable": false,
+      "gate": "human"
+    },
+    {
+      "label": "can-non-bold",
+      "cond": "combo2",
+      "measurable": false,
+      "gate": "human"
+    },
+    {
+      "label": "can-non-bold",
+      "cond": "crease1",
+      "measurable": false,
+      "gate": "human"
+    },
+    {
+      "label": "can-non-bold",
+      "cond": "crease2",
+      "measurable": false,
+      "gate": "human"
+    },
+    {
+      "label": "can-non-bold",
+      "cond": "curved1",
+      "measurable": false,
+      "gate": "human"
+    },
+    {
+      "label": "can-non-bold",
+      "cond": "curved2",
+      "measurable": false,
+      "gate": "human"
+    },
+    {
+      "label": "can-non-bold",
+      "cond": "dark1",
+      "swRatio": 1,
+      "densRatio": 1.4477961172292992,
+      "sizeRatio": 0.7555555555555555,
+      "measurable": true,
+      "gate": "human"
+    },
+    {
+      "label": "can-non-bold",
+      "cond": "dark2",
+      "swRatio": 1,
+      "densRatio": 1.4346827619446638,
+      "sizeRatio": 0.7555555555555555,
+      "measurable": true,
+      "gate": "human"
+    },
+    {
+      "label": "can-non-bold",
+      "cond": "dark3",
+      "swRatio": 1,
+      "densRatio": 1.4357783239159307,
+      "sizeRatio": 0.7555555555555555,
+      "measurable": true,
+      "gate": "human"
+    },
+    {
+      "label": "can-non-bold",
+      "cond": "glare1",
+      "measurable": false,
+      "gate": "human"
+    },
+    {
+      "label": "can-non-bold",
+      "cond": "glare2",
+      "swRatio": 1,
+      "densRatio": 0.9383434547908232,
+      "sizeRatio": 0.9696969696969697,
+      "measurable": true,
+      "gate": "human"
+    },
+    {
+      "label": "can-non-bold",
+      "cond": "jpeg1",
+      "swRatio": 1,
+      "densRatio": 1.2608489975649646,
+      "sizeRatio": 0.8529411764705882,
+      "measurable": true,
+      "gate": "human"
+    },
+    {
+      "label": "can-non-bold",
+      "cond": "jpeg2",
+      "measurable": false,
+      "gate": "human"
+    },
+    {
+      "label": "can-non-bold",
+      "cond": "jpeg3",
+      "measurable": false,
+      "gate": "human"
+    },
+    {
+      "label": "can-non-bold",
+      "cond": "noise1",
+      "swRatio": 1,
+      "densRatio": 1.4509746866092632,
+      "sizeRatio": 0.7555555555555555,
+      "measurable": true,
+      "gate": "human"
+    },
+    {
+      "label": "can-non-bold",
+      "cond": "occl1",
+      "measurable": false,
+      "gate": "human"
+    },
+    {
+      "label": "can-non-bold",
+      "cond": "occl2",
+      "swRatio": 1,
+      "densRatio": 1.3966952506182024,
+      "sizeRatio": 0.7777777777777778,
+      "measurable": true,
+      "gate": "human"
+    },
+    {
+      "label": "can-non-bold",
+      "cond": "pristine",
+      "swRatio": 1,
+      "densRatio": 1.45378752897257,
+      "sizeRatio": 0.7555555555555555,
+      "measurable": true,
+      "gate": "human"
+    },
+    {
+      "label": "can-non-bold",
+      "cond": "rot1",
+      "swRatio": 1,
+      "densRatio": 1.1818899929322746,
+      "sizeRatio": 0.8913043478260869,
+      "measurable": true,
+      "gate": "human"
+    },
+    {
+      "label": "can-non-bold",
+      "cond": "rot2",
+      "swRatio": 1,
+      "densRatio": 0.952369369039667,
+      "sizeRatio": 1.1206896551724137,
+      "measurable": true,
+      "gate": "human"
+    },
+    {
+      "label": "can-non-bold",
+      "cond": "rot3",
+      "measurable": false,
+      "gate": "human"
+    },
+    {
+      "label": "can-non-bold",
+      "cond": "shadow1",
+      "measurable": false,
+      "gate": "human"
+    },
+    {
+      "label": "can-non-bold",
+      "cond": "shadow2",
+      "measurable": false,
+      "gate": "human"
+    },
+    {
+      "label": "can-non-bold",
+      "cond": "small1",
+      "swRatio": 1,
+      "densRatio": 1.50388247894455,
+      "sizeRatio": 0.8,
+      "measurable": true,
+      "gate": "human"
+    },
+    {
+      "label": "can-non-bold",
+      "cond": "small2",
+      "measurable": false,
+      "gate": "human"
+    },
+    {
+      "label": "can-non-bold",
+      "cond": "small3",
+      "measurable": false,
+      "gate": "human"
+    },
+    {
+      "label": "can-non-bold",
+      "cond": "torn1",
+      "swRatio": 1,
+      "densRatio": 1.4465200348710558,
+      "sizeRatio": 0.7555555555555555,
+      "measurable": true,
+      "gate": "human"
+    },
+    {
+      "label": "can-non-bold",
+      "cond": "torn2",
+      "measurable": false,
+      "gate": "human"
+    },
+    {
+      "label": "gin-non-bold",
+      "cond": "angle1",
+      "measurable": false,
+      "gate": "human"
+    },
+    {
+      "label": "gin-non-bold",
+      "cond": "angle2",
+      "measurable": false,
+      "gate": "human"
+    },
+    {
+      "label": "gin-non-bold",
+      "cond": "angle3",
+      "measurable": false,
+      "gate": "human"
+    },
+    {
+      "label": "gin-non-bold",
+      "cond": "angle4",
+      "measurable": false,
+      "gate": "human"
+    },
+    {
+      "label": "gin-non-bold",
+      "cond": "blur1",
+      "measurable": false,
+      "gate": "human"
+    },
+    {
+      "label": "gin-non-bold",
+      "cond": "blur2",
+      "measurable": false,
+      "gate": "human"
+    },
+    {
+      "label": "gin-non-bold",
+      "cond": "blur3",
+      "measurable": false,
+      "gate": "human"
+    },
+    {
+      "label": "gin-non-bold",
+      "cond": "blur4",
+      "measurable": false,
+      "gate": "human"
+    },
+    {
+      "label": "gin-non-bold",
+      "cond": "bright1",
+      "measurable": false,
+      "gate": "human"
+    },
+    {
+      "label": "gin-non-bold",
+      "cond": "bright2",
+      "measurable": false,
+      "gate": "human"
+    },
+    {
+      "label": "gin-non-bold",
+      "cond": "cast1",
+      "measurable": false,
+      "gate": "human"
+    },
+    {
+      "label": "gin-non-bold",
+      "cond": "cast2",
+      "swRatio": 1.0344827586206897,
+      "densRatio": 1.388968664990677,
+      "sizeRatio": 0.9491525423728814,
+      "measurable": true,
+      "gate": "human"
+    },
+    {
+      "label": "gin-non-bold",
+      "cond": "combo1",
+      "measurable": false,
+      "gate": "human"
+    },
+    {
+      "label": "gin-non-bold",
+      "cond": "combo2",
+      "measurable": false,
+      "gate": "human"
+    },
+    {
+      "label": "gin-non-bold",
+      "cond": "crease1",
+      "measurable": false,
+      "gate": "human"
+    },
+    {
+      "label": "gin-non-bold",
+      "cond": "crease2",
+      "measurable": false,
+      "gate": "human"
+    },
+    {
+      "label": "gin-non-bold",
+      "cond": "curved1",
+      "measurable": false,
+      "gate": "human"
+    },
+    {
+      "label": "gin-non-bold",
+      "cond": "curved2",
+      "measurable": false,
+      "gate": "human"
+    },
+    {
+      "label": "gin-non-bold",
+      "cond": "dark1",
+      "swRatio": 1,
+      "densRatio": 1.3876663243058738,
+      "sizeRatio": 0.9491525423728814,
+      "measurable": true,
+      "gate": "human"
+    },
+    {
+      "label": "gin-non-bold",
+      "cond": "dark2",
+      "swRatio": 1,
+      "densRatio": 1.3847530234632013,
+      "sizeRatio": 0.9491525423728814,
+      "measurable": true,
+      "gate": "human"
+    },
+    {
+      "label": "gin-non-bold",
+      "cond": "dark3",
+      "swRatio": 1,
+      "densRatio": 1.3829761470461541,
+      "sizeRatio": 0.9491525423728814,
+      "measurable": true,
+      "gate": "human"
+    },
+    {
+      "label": "gin-non-bold",
+      "cond": "glare1",
+      "measurable": false,
+      "gate": "human"
+    },
+    {
+      "label": "gin-non-bold",
+      "cond": "glare2",
+      "measurable": false,
+      "gate": "human"
+    },
+    {
+      "label": "gin-non-bold",
+      "cond": "jpeg1",
+      "measurable": false,
+      "gate": "human"
+    },
+    {
+      "label": "gin-non-bold",
+      "cond": "jpeg2",
+      "measurable": false,
+      "gate": "human"
+    },
+    {
+      "label": "gin-non-bold",
+      "cond": "jpeg3",
+      "measurable": false,
+      "gate": "human"
+    },
+    {
+      "label": "gin-non-bold",
+      "cond": "noise1",
+      "swRatio": 1.25,
+      "densRatio": 1.365729004763074,
+      "sizeRatio": 0.7446808510638298,
+      "measurable": true,
+      "gate": "bold"
+    },
+    {
+      "label": "gin-non-bold",
+      "cond": "occl1",
+      "measurable": false,
+      "gate": "human"
+    },
+    {
+      "label": "gin-non-bold",
+      "cond": "occl2",
+      "swRatio": 1,
+      "densRatio": 1.4706242211396852,
+      "sizeRatio": 0.6956521739130435,
+      "measurable": true,
+      "gate": "human"
+    },
+    {
+      "label": "gin-non-bold",
+      "cond": "pristine",
+      "swRatio": 1,
+      "densRatio": 1.3905392819915807,
+      "sizeRatio": 0.9491525423728814,
+      "measurable": true,
+      "gate": "human"
+    },
+    {
+      "label": "gin-non-bold",
+      "cond": "rot1",
+      "swRatio": 0.875,
+      "densRatio": 1.1893922534077355,
+      "sizeRatio": 0.8636363636363636,
+      "measurable": true,
+      "gate": "not_bold"
+    },
+    {
+      "label": "gin-non-bold",
+      "cond": "rot2",
+      "swRatio": 0.875,
+      "densRatio": 1.0202048802445205,
+      "sizeRatio": 0.9836065573770492,
+      "measurable": true,
+      "gate": "not_bold"
+    },
+    {
+      "label": "gin-non-bold",
+      "cond": "rot3",
+      "measurable": false,
+      "gate": "human"
+    },
+    {
+      "label": "gin-non-bold",
+      "cond": "shadow1",
+      "measurable": false,
+      "gate": "human"
+    },
+    {
+      "label": "gin-non-bold",
+      "cond": "shadow2",
+      "measurable": false,
+      "gate": "human"
+    },
+    {
+      "label": "gin-non-bold",
+      "cond": "small1",
+      "swRatio": 1,
+      "densRatio": 1.2866741783005384,
+      "sizeRatio": 1,
+      "measurable": true,
+      "gate": "human"
+    },
+    {
+      "label": "gin-non-bold",
+      "cond": "small2",
+      "measurable": false,
+      "gate": "human"
+    },
+    {
+      "label": "gin-non-bold",
+      "cond": "small3",
+      "measurable": false,
+      "gate": "human"
+    },
+    {
+      "label": "gin-non-bold",
+      "cond": "torn1",
+      "swRatio": 1,
+      "densRatio": 1.4415327165598513,
+      "sizeRatio": 0.7111111111111111,
+      "measurable": true,
+      "gate": "human"
+    },
+    {
+      "label": "gin-non-bold",
+      "cond": "torn2",
+      "measurable": false,
+      "gate": "human"
+    },
+    {
+      "label": "non-bold-prefix",
+      "cond": "angle1",
+      "swRatio": 0.8461538461538461,
+      "densRatio": 0.8332648688714972,
+      "sizeRatio": 1.2941176470588236,
+      "measurable": true,
+      "gate": "not_bold"
+    },
+    {
+      "label": "non-bold-prefix",
+      "cond": "angle2",
+      "measurable": false,
+      "gate": "human"
+    },
+    {
+      "label": "non-bold-prefix",
+      "cond": "angle3",
+      "measurable": false,
+      "gate": "human"
+    },
+    {
+      "label": "non-bold-prefix",
+      "cond": "angle4",
+      "measurable": false,
+      "gate": "human"
+    },
+    {
+      "label": "non-bold-prefix",
+      "cond": "blur1",
+      "measurable": false,
+      "gate": "human"
+    },
+    {
+      "label": "non-bold-prefix",
+      "cond": "blur2",
+      "measurable": false,
+      "gate": "human"
+    },
+    {
+      "label": "non-bold-prefix",
+      "cond": "blur3",
+      "measurable": false,
+      "gate": "human"
+    },
+    {
+      "label": "non-bold-prefix",
+      "cond": "blur4",
+      "measurable": false,
+      "gate": "human"
+    },
+    {
+      "label": "non-bold-prefix",
+      "cond": "bright1",
+      "swRatio": 1,
+      "densRatio": 1.4186071793714232,
+      "sizeRatio": 0.7272727272727273,
+      "measurable": true,
+      "gate": "human"
+    },
+    {
+      "label": "non-bold-prefix",
+      "cond": "bright2",
+      "swRatio": 1,
+      "densRatio": 1.3935496139384023,
+      "sizeRatio": 0.7272727272727273,
+      "measurable": true,
+      "gate": "human"
+    },
+    {
+      "label": "non-bold-prefix",
+      "cond": "cast1",
+      "swRatio": 0.9090909090909091,
+      "densRatio": 1.417188451999463,
+      "sizeRatio": 0.7608695652173914,
+      "measurable": true,
+      "gate": "human"
+    },
+    {
+      "label": "non-bold-prefix",
+      "cond": "cast2",
+      "swRatio": 0.9166666666666666,
+      "densRatio": 1.4313673525761805,
+      "sizeRatio": 0.7608695652173914,
+      "measurable": true,
+      "gate": "human"
+    },
+    {
+      "label": "non-bold-prefix",
+      "cond": "combo1",
+      "measurable": false,
+      "gate": "human"
+    },
+    {
+      "label": "non-bold-prefix",
+      "cond": "combo2",
+      "measurable": false,
+      "gate": "human"
+    },
+    {
+      "label": "non-bold-prefix",
+      "cond": "crease1",
+      "swRatio": 0.6923076923076923,
+      "densRatio": 1.1206477135155626,
+      "sizeRatio": 0.851063829787234,
+      "measurable": true,
+      "gate": "not_bold"
+    },
+    {
+      "label": "non-bold-prefix",
+      "cond": "crease2",
+      "measurable": false,
+      "gate": "human"
+    },
+    {
+      "label": "non-bold-prefix",
+      "cond": "curved1",
+      "measurable": false,
+      "gate": "human"
+    },
+    {
+      "label": "non-bold-prefix",
+      "cond": "curved2",
+      "measurable": false,
+      "gate": "human"
+    },
+    {
+      "label": "non-bold-prefix",
+      "cond": "dark1",
+      "swRatio": 0.8461538461538461,
+      "densRatio": 1.4674363584089343,
+      "sizeRatio": 0.7446808510638298,
+      "measurable": true,
+      "gate": "human"
+    },
+    {
+      "label": "non-bold-prefix",
+      "cond": "dark2",
+      "swRatio": 0.8461538461538461,
+      "densRatio": 1.4659480456589415,
+      "sizeRatio": 0.7446808510638298,
+      "measurable": true,
+      "gate": "human"
+    },
+    {
+      "label": "non-bold-prefix",
+      "cond": "dark3",
+      "swRatio": 0.7857142857142857,
+      "densRatio": 1.4086011904761906,
+      "sizeRatio": 0.7446808510638298,
+      "measurable": true,
+      "gate": "human"
+    },
+    {
+      "label": "non-bold-prefix",
+      "cond": "glare1",
+      "swRatio": 0.9285714285714286,
+      "densRatio": 1.4020370040917984,
+      "sizeRatio": 0.7446808510638298,
+      "measurable": true,
+      "gate": "human"
+    },
+    {
+      "label": "non-bold-prefix",
+      "cond": "glare2",
+      "swRatio": 1.4166666666666667,
+      "densRatio": 1.7026992442269873,
+      "sizeRatio": 0.7608695652173914,
+      "measurable": true,
+      "gate": "bold"
+    },
+    {
+      "label": "non-bold-prefix",
+      "cond": "jpeg1",
+      "swRatio": 0.9090909090909091,
+      "densRatio": 1.2974931050955048,
+      "sizeRatio": 0.7631578947368421,
+      "measurable": true,
+      "gate": "human"
+    },
+    {
+      "label": "non-bold-prefix",
+      "cond": "jpeg2",
+      "swRatio": 0.9090909090909091,
+      "densRatio": 1.2025307334226871,
+      "sizeRatio": 0.9487179487179487,
+      "measurable": true,
+      "gate": "human"
+    },
+    {
+      "label": "non-bold-prefix",
+      "cond": "jpeg3",
+      "measurable": false,
+      "gate": "human"
+    },
+    {
+      "label": "non-bold-prefix",
+      "cond": "noise1",
+      "swRatio": 0.9166666666666666,
+      "densRatio": 1.4306489127727218,
+      "sizeRatio": 0.7608695652173914,
+      "measurable": true,
+      "gate": "human"
+    },
+    {
+      "label": "non-bold-prefix",
+      "cond": "occl1",
+      "measurable": false,
+      "gate": "human"
+    },
+    {
+      "label": "non-bold-prefix",
+      "cond": "occl2",
+      "swRatio": 0.8333333333333334,
+      "densRatio": 1.4325203699247087,
+      "sizeRatio": 0.7391304347826086,
+      "measurable": true,
+      "gate": "human"
+    },
+    {
+      "label": "non-bold-prefix",
+      "cond": "pristine",
+      "swRatio": 0.8461538461538461,
+      "densRatio": 1.4353596395020025,
+      "sizeRatio": 0.7608695652173914,
+      "measurable": true,
+      "gate": "human"
+    },
+    {
+      "label": "non-bold-prefix",
+      "cond": "rot1",
+      "swRatio": 0.8,
+      "densRatio": 1.119514661574407,
+      "sizeRatio": 0.9318181818181818,
+      "measurable": true,
+      "gate": "not_bold"
+    },
+    {
+      "label": "non-bold-prefix",
+      "cond": "rot2",
+      "swRatio": 0.8888888888888888,
+      "densRatio": 0.9817946969570979,
+      "sizeRatio": 1.096774193548387,
+      "measurable": true,
+      "gate": "human"
+    },
+    {
+      "label": "non-bold-prefix",
+      "cond": "rot3",
+      "measurable": false,
+      "gate": "human"
+    },
+    {
+      "label": "non-bold-prefix",
+      "cond": "shadow1",
+      "measurable": false,
+      "gate": "human"
+    },
+    {
+      "label": "non-bold-prefix",
+      "cond": "shadow2",
+      "measurable": false,
+      "gate": "human"
+    },
+    {
+      "label": "non-bold-prefix",
+      "cond": "small1",
+      "swRatio": 0.7272727272727273,
+      "densRatio": 1.5194867025787697,
+      "sizeRatio": 0.9393939393939394,
+      "measurable": true,
+      "gate": "human"
+    },
+    {
+      "label": "non-bold-prefix",
+      "cond": "small2",
+      "measurable": false,
+      "gate": "human"
+    },
+    {
+      "label": "non-bold-prefix",
+      "cond": "small3",
+      "measurable": false,
+      "gate": "human"
+    },
+    {
+      "label": "non-bold-prefix",
+      "cond": "torn1",
+      "swRatio": 1,
+      "densRatio": 1.4354424288659806,
+      "sizeRatio": 0.7391304347826086,
+      "measurable": true,
+      "gate": "human"
+    },
+    {
+      "label": "non-bold-prefix",
+      "cond": "torn2",
+      "measurable": false,
+      "gate": "human"
+    },
+    {
+      "label": "wine-non-bold",
+      "cond": "angle1",
+      "measurable": false,
+      "gate": "human"
+    },
+    {
+      "label": "wine-non-bold",
+      "cond": "angle2",
+      "measurable": false,
+      "gate": "human"
+    },
+    {
+      "label": "wine-non-bold",
+      "cond": "angle3",
+      "measurable": false,
+      "gate": "human"
+    },
+    {
+      "label": "wine-non-bold",
+      "cond": "angle4",
+      "measurable": false,
+      "gate": "human"
+    },
+    {
+      "label": "wine-non-bold",
+      "cond": "blur1",
+      "measurable": false,
+      "gate": "human"
+    },
+    {
+      "label": "wine-non-bold",
+      "cond": "blur2",
+      "measurable": false,
+      "gate": "human"
+    },
+    {
+      "label": "wine-non-bold",
+      "cond": "blur3",
+      "measurable": false,
+      "gate": "human"
+    },
+    {
+      "label": "wine-non-bold",
+      "cond": "blur4",
+      "measurable": false,
+      "gate": "human"
+    },
+    {
+      "label": "wine-non-bold",
+      "cond": "bright1",
+      "swRatio": 0.7391304347826086,
+      "densRatio": 1.35415667623628,
+      "sizeRatio": 0.9523809523809523,
+      "measurable": true,
+      "gate": "human"
+    },
+    {
+      "label": "wine-non-bold",
+      "cond": "bright2",
+      "swRatio": 0.7391304347826086,
+      "densRatio": 1.3530140878633876,
+      "sizeRatio": 0.9491525423728814,
+      "measurable": true,
+      "gate": "human"
+    },
+    {
+      "label": "wine-non-bold",
+      "cond": "cast1",
+      "swRatio": 0.7391304347826086,
+      "densRatio": 1.3537164422427028,
+      "sizeRatio": 0.9523809523809523,
+      "measurable": true,
+      "gate": "human"
+    },
+    {
+      "label": "wine-non-bold",
+      "cond": "cast2",
+      "swRatio": 0.8947368421052632,
+      "densRatio": 1.367442336951779,
+      "sizeRatio": 0.9482758620689655,
+      "measurable": true,
+      "gate": "human"
+    },
+    {
+      "label": "wine-non-bold",
+      "cond": "combo1",
+      "measurable": false,
+      "gate": "human"
+    },
+    {
+      "label": "wine-non-bold",
+      "cond": "combo2",
+      "measurable": false,
+      "gate": "human"
+    },
+    {
+      "label": "wine-non-bold",
+      "cond": "crease1",
+      "measurable": false,
+      "gate": "human"
+    },
+    {
+      "label": "wine-non-bold",
+      "cond": "crease2",
+      "measurable": false,
+      "gate": "human"
+    },
+    {
+      "label": "wine-non-bold",
+      "cond": "curved1",
+      "measurable": false,
+      "gate": "human"
+    },
+    {
+      "label": "wine-non-bold",
+      "cond": "curved2",
+      "measurable": false,
+      "gate": "human"
+    },
+    {
+      "label": "wine-non-bold",
+      "cond": "dark1",
+      "swRatio": 0.7391304347826086,
+      "densRatio": 1.3719340798839372,
+      "sizeRatio": 0.9482758620689655,
+      "measurable": true,
+      "gate": "human"
+    },
+    {
+      "label": "wine-non-bold",
+      "cond": "dark2",
+      "swRatio": 0.7391304347826086,
+      "densRatio": 1.3640788001231723,
+      "sizeRatio": 0.9482758620689655,
+      "measurable": true,
+      "gate": "human"
+    },
+    {
+      "label": "wine-non-bold",
+      "cond": "dark3",
+      "swRatio": 0.7727272727272727,
+      "densRatio": 1.373403722924672,
+      "sizeRatio": 0.9464285714285714,
+      "measurable": true,
+      "gate": "human"
+    },
+    {
+      "label": "wine-non-bold",
+      "cond": "glare1",
+      "swRatio": 1,
+      "densRatio": 1.4455505279034693,
+      "sizeRatio": 0.7083333333333334,
+      "measurable": true,
+      "gate": "human"
+    },
+    {
+      "label": "wine-non-bold",
+      "cond": "glare2",
+      "swRatio": 2.2857142857142856,
+      "densRatio": 1.6386974731580897,
+      "sizeRatio": 1.0126582278481013,
+      "measurable": true,
+      "gate": "bold"
+    },
+    {
+      "label": "wine-non-bold",
+      "cond": "jpeg1",
+      "swRatio": 0.7368421052631579,
+      "densRatio": 1.331423183185112,
+      "sizeRatio": 0.9215686274509803,
+      "measurable": true,
+      "gate": "human"
+    },
+    {
+      "label": "wine-non-bold",
+      "cond": "jpeg2",
+      "measurable": false,
+      "gate": "human"
+    },
+    {
+      "label": "wine-non-bold",
+      "cond": "jpeg3",
+      "measurable": false,
+      "gate": "human"
+    },
+    {
+      "label": "wine-non-bold",
+      "cond": "noise1",
+      "swRatio": 0.7391304347826086,
+      "densRatio": 1.364330151185317,
+      "sizeRatio": 0.9482758620689655,
+      "measurable": true,
+      "gate": "human"
+    },
+    {
+      "label": "wine-non-bold",
+      "cond": "occl1",
+      "measurable": false,
+      "gate": "human"
+    },
+    {
+      "label": "wine-non-bold",
+      "cond": "occl2",
+      "swRatio": 0.8571428571428571,
+      "densRatio": 1.5102401666149672,
+      "sizeRatio": 0.75,
+      "measurable": true,
+      "gate": "human"
+    },
+    {
+      "label": "wine-non-bold",
+      "cond": "pristine",
+      "swRatio": 0.7391304347826086,
+      "densRatio": 1.3566791363765551,
+      "sizeRatio": 0.9523809523809523,
+      "measurable": true,
+      "gate": "human"
+    },
+    {
+      "label": "wine-non-bold",
+      "cond": "rot1",
+      "measurable": false,
+      "gate": "human"
+    },
+    {
+      "label": "wine-non-bold",
+      "cond": "rot2",
+      "measurable": false,
+      "gate": "human"
+    },
+    {
+      "label": "wine-non-bold",
+      "cond": "rot3",
+      "measurable": false,
+      "gate": "human"
+    },
+    {
+      "label": "wine-non-bold",
+      "cond": "shadow1",
+      "swRatio": 0.6818181818181818,
+      "densRatio": 1.055696823697359,
+      "sizeRatio": 0.8421052631578947,
+      "measurable": true,
+      "gate": "not_bold"
+    },
+    {
+      "label": "wine-non-bold",
+      "cond": "shadow2",
+      "swRatio": 0.9230769230769231,
+      "densRatio": 1.4190194181149034,
+      "sizeRatio": 0.7346938775510204,
+      "measurable": true,
+      "gate": "human"
+    },
+    {
+      "label": "wine-non-bold",
+      "cond": "small1",
+      "measurable": false,
+      "gate": "human"
+    },
+    {
+      "label": "wine-non-bold",
+      "cond": "small2",
+      "measurable": false,
+      "gate": "human"
+    },
+    {
+      "label": "wine-non-bold",
+      "cond": "small3",
+      "measurable": false,
+      "gate": "human"
+    },
+    {
+      "label": "wine-non-bold",
+      "cond": "torn1",
+      "swRatio": 0.875,
+      "densRatio": 1.4337802094877865,
+      "sizeRatio": 0.9272727272727272,
+      "measurable": true,
+      "gate": "human"
+    },
+    {
+      "label": "wine-non-bold",
+      "cond": "torn2",
+      "measurable": false,
+      "gate": "human"
+    }
+  ],
+  "comparison": {
+    "raw_api_advisory_wrong": "47 of 160 (29%) — docs/robustness-matrix.json, the layer the harness measured",
+    "shipped_gate_silent_misses": "3 of 160 (1.9%) — the layer a user actually sees",
+    "caveat": "This harness OCRs the WHOLE image because no locator band is available offline; the shipped path OCRs a crop of the located warning band, which succeeds far more often. So \"unmeasurable\" (96) is inflated here. Unmeasurable routes to \"human\" (amber) either way, so the silent-miss figure is unaffected — if anything the real measurement catches MORE.",
+    "worst_case_note": "aiAdvisory was forced to \"bold\" on every sample. In reality the model answers not_bold/unclear on most, and the green branch REQUIRES ai===bold, so the true figure is <= 3."
+  }
+}
