@@ -9,6 +9,7 @@ import { downscaleImage } from "@/lib/downscale.ts";
 import { applyBoldGate, type BoldGateResult } from "@/lib/compare/boldGate.ts";
 import { measureBoldSignals } from "@/lib/boldMeasure.ts";
 import { ResultView } from "./ResultView.tsx";
+import { CheckingCard } from "./CheckingCard.tsx";
 import { Shell } from "./Shell.tsx";
 
 /** v2 batch review (design §5/§6): empty-state card → legend + filter chips
@@ -66,6 +67,23 @@ interface BatchRow {
 const boldEligible = (r: BatchRow): boolean =>
   r.status === "done" && !!r.result &&
   (r.result.warning.verdict === "pass" || r.result.warning.verdict === "pass_formatting_note");
+
+/** Still owes a human glance: no ruling, no human bold decision, and the
+ *  measurement gate did not confidently verify it. */
+const boldPendingRow = (r: BatchRow): boolean =>
+  boldEligible(r) && !r.agentReview && !r.boldReview && r.boldAuto !== "bold";
+
+/** Shared control styles so every button in the table area reads as one
+ *  system: chip-style toggles (tinted when active) and quiet secondaries. */
+const CTRL_BASE =
+  "flex h-8 items-center gap-1.5 rounded-[7px] border px-3 text-[12.5px] font-semibold transition disabled:opacity-40";
+const CTRL_IDLE = "border-line bg-card text-ink-2 hover:bg-line-soft";
+const CTRL_ON = {
+  green: "border-green bg-green-tint text-green",
+  amber: "border-amber bg-amber-tint text-amber",
+  red: "border-red bg-red-tint text-red",
+  navy: "border-navy bg-select text-navy",
+} as const;
 
 function bucketOf(r: BatchRow): Bucket {
   if (r.status === "error") return "error";
@@ -393,17 +411,13 @@ export function BatchReview() {
           <span className="text-[11px] font-bold uppercase tracking-[0.06em] text-muted">Your review</span>
           <button
             onClick={() => setReview(r.agentReview === "ok" ? undefined : "ok")}
-            className={`h-7 rounded-[6px] border px-2.5 text-[12px] font-bold transition ${
-              r.agentReview === "ok" ? "border-green bg-green text-white" : "border-line bg-card text-green hover:bg-green-tint"
-            }`}
+            className={`${CTRL_BASE} ${r.agentReview === "ok" ? CTRL_ON.green : CTRL_IDLE}`}
           >
-            Reviewed — OK ✓
+            Reviewed — OK
           </button>
           <button
             onClick={() => setReview(r.agentReview === "correction" ? undefined : "correction")}
-            className={`h-7 rounded-[6px] border px-2.5 text-[12px] font-bold transition ${
-              r.agentReview === "correction" ? "border-red bg-red text-white" : "border-line bg-card text-red hover:bg-red-tint"
-            }`}
+            className={`${CTRL_BASE} ${r.agentReview === "correction" ? CTRL_ON.red : CTRL_IDLE}`}
           >
             Needs correction
           </button>
@@ -414,15 +428,15 @@ export function BatchReview() {
             Bold type: <b className="text-ink">{boldLabel}</b>
             <button
               onClick={() => markBold(r.index, r.boldReview === "confirmed" ? undefined : "confirmed")}
-              className="h-6 rounded-[5px] border border-line bg-card px-2 text-[11.5px] font-bold text-green hover:bg-green-tint"
+              className={`${CTRL_BASE} ${r.boldReview === "confirmed" ? CTRL_ON.green : CTRL_IDLE}`}
             >
-              {r.boldReview === "confirmed" ? "Unconfirm" : "Looks bold"}
+              {r.boldReview === "confirmed" ? "Confirmed" : "Looks bold"}
             </button>
             <button
               onClick={() => markBold(r.index, r.boldReview === "flagged" ? undefined : "flagged")}
-              className="h-6 rounded-[5px] border border-line bg-card px-2 text-[11.5px] font-bold text-red hover:bg-red-tint"
+              className={`${CTRL_BASE} ${r.boldReview === "flagged" ? CTRL_ON.red : CTRL_IDLE}`}
             >
-              {r.boldReview === "flagged" ? "Unflag" : "Not bold — flag"}
+              {r.boldReview === "flagged" ? "Flagged" : "Not bold"}
             </button>
           </span>
         )}
@@ -568,15 +582,24 @@ export function BatchReview() {
     const b = bucketOf(r);
     const isFail = r.result?.overall === "warning_failure" || r.result?.overall === "not_a_label" ||
       r.result?.fields.some((f) => f.verdict === "possible_mismatch");
+    // A green tick must mean FINISHED. While a bold glance is still owed,
+    // the row reads amber "!" even though it sits in the Matched bucket.
+    const boldOwed = boldPendingRow(r);
     const cls =
-      b === "matched" ? "bg-green" : b === "error" || (isFail && r.agentReview !== "ok") ? "bg-red" : b === "review" ? "bg-amber" : "bg-na";
+      b === "error" || (isFail && r.agentReview !== "ok") ? "bg-red"
+        : b === "review" || boldOwed ? "bg-amber"
+        : b === "matched" ? "bg-green" : "bg-na";
     const labels: Record<Bucket, string> = {
       matched: "Matched", review: "Needs review", error: "Error", not_required: "Not required", pending: "Waiting",
     };
     const label =
       r.agentReview === "ok" ? "Reviewed — OK" : r.agentReview === "correction" ? "Correction needed"
-        : b === "review" && isFail ? "Mismatch — needs review" : labels[b];
-    const glyph = b === "matched" ? "✓" : b === "error" || (isFail && r.agentReview !== "ok") ? "✕" : b === "review" ? "!" : "–";
+        : b === "review" && isFail ? "Mismatch — needs review"
+        : boldOwed ? "Bold type still needs a look" : labels[b];
+    const glyph =
+      b === "error" || (isFail && r.agentReview !== "ok") ? "✕"
+        : b === "review" || boldOwed ? "!"
+        : b === "matched" ? "✓" : "–";
     return (
       <span
         title={label}
@@ -593,12 +616,16 @@ export function BatchReview() {
     const b = bucketOf(r);
     const isFail = r.result?.overall === "warning_failure" || r.result?.overall === "not_a_label" ||
       r.result?.fields.some((f) => f.verdict === "possible_mismatch");
+    const boldOwed = boldPendingRow(r);
     const label =
       r.agentReview === "ok" ? "Reviewed ✓" : r.agentReview === "correction" ? "Correction needed"
-        : b === "matched" ? "Matched" : b === "error" ? "Error" : b === "review" ? (isFail ? "Mismatch" : "Needs review") : b === "not_required" ? "Not required" : "Waiting";
+        : b === "error" ? "Error" : b === "review" ? (isFail ? "Mismatch" : "Needs review")
+        : boldOwed ? "Bold to confirm"
+        : b === "matched" ? "Matched" : b === "not_required" ? "Not required" : "Waiting";
     const cls =
       r.agentReview === "ok" ? "bg-green-tint text-green" : r.agentReview === "correction" ? "bg-red-tint text-red"
-        : b === "matched" ? "bg-green-tint text-green" : b === "error" || isFail ? "bg-red-tint text-red" : b === "review" ? "bg-amber-tint text-amber" : "bg-na-tint text-muted";
+        : b === "error" || isFail ? "bg-red-tint text-red" : b === "review" || boldOwed ? "bg-amber-tint text-amber"
+        : b === "matched" ? "bg-green-tint text-green" : "bg-na-tint text-muted";
     return <span className={`shrink-0 whitespace-nowrap rounded-[5px] px-2 py-0.5 text-[11.5px] font-bold ${cls}`}>{label}</span>;
   };
 
@@ -738,15 +765,27 @@ export function BatchReview() {
               </div>
             )}
 
-            {running && done > 0 && (
-              <p className="mb-3 text-[12.5px] text-muted" role="status">
-                {(() => {
-                  const doneRows = rows.filter((r) => r.ms);
-                  const avg = doneRows.length ? doneRows.reduce((a, r) => a + r.ms!, 0) / doneRows.length : 4000;
-                  const etaS = Math.ceil(((rows.length - done) * avg) / CONCURRENCY / 1000);
-                  return `About ${etaS >= 60 ? `${Math.ceil(etaS / 60)} min` : `${etaS}s`} left · finished rows are ready — you can start reviewing while the rest run.`;
-                })()}
-              </p>
+            {/* Same checking card as the single-check page (shared component),
+                in its batch variant — cohesion without hiding the table: rows
+                keep streaming in below while it runs. */}
+            {running && !detail && (
+              <div className="mb-4">
+                <CheckingCard
+                  imageUrl={(rows.find((r) => r.status === "checking") ?? rows.find((r) => r.imageUrl))?.imageUrl ?? null}
+                  isPdf={(rows.find((r) => r.status === "checking"))?.file?.type === "application/pdf"}
+                  batch={{
+                    done,
+                    total: rows.length,
+                    etaLabel: (() => {
+                      const doneRows = rows.filter((r) => r.ms);
+                      if (!doneRows.length) return undefined;
+                      const avg = doneRows.reduce((a, r) => a + r.ms!, 0) / doneRows.length;
+                      const etaS = Math.ceil(((rows.length - done) * avg) / CONCURRENCY / 1000);
+                      return `About ${etaS >= 60 ? `${Math.ceil(etaS / 60)} min` : `${etaS}s`} left`;
+                    })(),
+                  }}
+                />
+              </div>
             )}
             {globalError && (
               <div className="mb-4 rounded-[10px] border border-bad-line bg-red-tint p-4 text-[13.5px] font-semibold text-red">{globalError}</div>
@@ -1145,19 +1184,15 @@ function BoldCard({
       <span className="flex gap-1.5">
         <button
           onClick={() => onMark(row.index, state === "confirmed" ? undefined : "confirmed")}
-          className={`h-7 flex-1 rounded-[6px] border text-[11.5px] font-bold transition ${
-            state === "confirmed" ? "border-green bg-green text-white" : "border-line bg-card text-green hover:bg-green-tint"
-          }`}
+          className={`${CTRL_BASE} flex-1 justify-center px-2 ${state === "confirmed" ? CTRL_ON.green : CTRL_IDLE}`}
         >
-          {state === "confirmed" ? "Bold ✓" : "Looks bold"}
+          {state === "confirmed" ? "Confirmed" : "Looks bold"}
         </button>
         <button
           onClick={() => onMark(row.index, state === "flagged" ? undefined : "flagged")}
-          className={`h-7 flex-1 rounded-[6px] border text-[11.5px] font-bold transition ${
-            state === "flagged" ? "border-red bg-red text-white" : "border-line bg-card text-red hover:bg-red-tint"
-          }`}
+          className={`${CTRL_BASE} flex-1 justify-center px-2 ${state === "flagged" ? CTRL_ON.red : CTRL_IDLE}`}
         >
-          {state === "flagged" ? "Flagged" : "Not bold — flag"}
+          {state === "flagged" ? "Flagged" : "Not bold"}
         </button>
       </span>
     </div>
