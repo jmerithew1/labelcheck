@@ -24,16 +24,18 @@ function WarningRow({
   chip,
   text,
   action,
+  anchor,
 }: {
   compact: boolean;
   label: string;
   chip: React.ReactNode;
   text: string;
   action?: React.ReactNode;
+  anchor?: string;
 }) {
   if (compact) {
     return (
-      <div className="flex flex-col gap-1.5 border-b border-hairline px-4 py-3 last:border-0">
+      <div data-row={anchor} className="flex flex-col gap-1.5 border-b border-hairline px-4 py-3 last:border-0">
         <div className="flex items-center justify-between gap-3">
           <span className="text-[13px] font-semibold text-ink-soft">{label}</span>
           <span className="flex items-center gap-2">{chip}{action}</span>
@@ -43,7 +45,7 @@ function WarningRow({
     );
   }
   return (
-    <div className="flex items-start gap-4 border-b border-hairline px-4 py-3 last:border-0">
+    <div data-row={anchor} className="flex items-start gap-4 border-b border-hairline px-4 py-3 last:border-0">
       <span className="w-24 shrink-0 pt-0.5 text-[13px] font-semibold text-ink-soft">{label}</span>
       <span className="min-w-0 flex-1 text-[13.5px] text-ink">{text}</span>
       {/* Fixed columns so every row's chip lands on the same vertical line,
@@ -107,20 +109,17 @@ export function ResultView({
     return tones;
   }, [result, counts]);
 
-  const firstIssue = (Object.keys(issueTones) as BandField[])[0] ?? null;
-  const [focusedField, setFocusedField] = useState<BandField | null>(firstIssue);
+  const [focusedField, setFocusedField] = useState<BandField | null>(null);
+  // v2 interaction spec: highlights appear ONLY on selection (row click or
+  // "Show on label"), one region at a time — nothing is pre-drawn.
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => setFocusedField(firstIssue), [result]);
+  useEffect(() => setFocusedField(null), [result]);
 
   const shownFields = useMemo(() => {
-    const shown = { ...issueTones };
-    // A focused "confirm this" item (the bold check) highlights amber, not the
-    // green of a verified match — green would say "fine" about the one thing
-    // being double-checked.
-    if (focusedField && !shown[focusedField]) {
-      shown[focusedField] = focusedField === "warning" ? "warn" : "ok";
-    }
-    return shown;
+    if (!focusedField) return {};
+    const tone: Tone =
+      issueTones[focusedField] ?? (focusedField === "warning" ? "warn" : "ok");
+    return { [focusedField]: tone } as Partial<Record<BandField, Tone>>;
   }, [issueTones, focusedField]);
 
   // Connector line (mockups 2-5): focused row's right edge → overlay's left
@@ -131,7 +130,13 @@ export function ResultView({
     let raf = 0;
     const draw = () => {
       raf = 0;
-      const row = focusedField ? grid.querySelector(`[data-row="${focusedField}"]`) : null;
+      // The gov panel's Formatting row anchors the warning connector when no
+      // warning row exists in the comparison list (prototype falls back to
+      // [data-conn-row="gov-warning"] the same way).
+      const row = focusedField
+        ? grid.querySelector(`[data-row="${focusedField}"]`) ??
+          (focusedField === "warning" ? grid.querySelector('[data-row="warning-gov"]') : null)
+        : null;
       const overlay = overlayRef.current;
       const viewer = grid.querySelector("[data-viewer-card]");
       if (!row || !overlay || !viewer) { setConnector(null); return; }
@@ -143,11 +148,22 @@ export function ResultView({
       // If the highlight is scrolled out of the card, draw nothing.
       if (o.width === 0 || o.bottom < v.top + 8 || o.top > v.bottom - 8) { setConnector(null); return; }
       // v2 connector: orthogonal path with a fixed 20px stub off the row,
-      // 3px endpoint dots at both ends (design §Result card / Connector).
+      // 3px endpoint dots at both ends, terminating AT THE BOX EDGE — not at
+      // the viewer card border (design §Result card / Connector).
       const x1 = r.right - g.left - 2;
       const y1 = r.top - g.top + r.height / 2;
-      const x2 = v.left - g.left - 3;
       const y2 = Math.min(Math.max(o.top - g.top + o.height / 2, v.top - g.top + 8), v.bottom - g.top - 8);
+      // Stacked (box above/below the row, e.g. gov panel → viewer): route
+      // around the right side into the box's RIGHT edge, per prototype mode 's'.
+      const stacked = o.top >= r.bottom - 2 || o.bottom <= r.top + 2;
+      if (stacked) {
+        const x2 = Math.min(o.right, v.right) - g.left + 2;
+        const bend = Math.max(x1, x2) + 10;
+        setConnector({ path: `M ${x1} ${y1} L ${bend} ${y1} L ${bend} ${y2} L ${x2} ${y2}`, x1, y1, x2, y2 });
+        return;
+      }
+      const boxLeft = Math.max(o.left, v.left);
+      const x2 = boxLeft - g.left - 2;
       const stub = Math.min(20, Math.max(8, (x2 - x1) / 2));
       setConnector({ path: `M ${x1} ${y1} L ${x1 + stub} ${y1} L ${x1 + stub} ${y2} L ${x2} ${y2}`, x1, y1, x2, y2 });
     };
@@ -254,7 +270,23 @@ export function ResultView({
     v === "possible_mismatch" || v === "absent_on_label" ? "bad" : v === "unreadable" ? "warn" : "ok";
 
   return (
-    <div className={`flex flex-col gap-5 ${compact ? "" : "rounded-xl border border-line bg-card p-6 md:px-7"}`}>
+    <div
+      ref={gridRef}
+      data-conn-root
+      className={`relative flex flex-col gap-5 ${compact ? "" : "rounded-xl border border-line bg-card p-6 md:px-7"}`}
+    >
+      {!compact && connector && focusedField && (
+        <svg className="no-print pointer-events-none absolute inset-0 z-10 hidden h-full w-full lg:block" aria-hidden>
+          <path
+            d={connector.path}
+            fill="none"
+            stroke={TONE_COLORS[shownFields[focusedField] ?? "ok"]}
+            strokeWidth="1.5"
+          />
+          <circle cx={connector.x1} cy={connector.y1} r="3" fill={TONE_COLORS[shownFields[focusedField] ?? "ok"]} />
+          <circle cx={connector.x2} cy={connector.y2} r="3" fill={TONE_COLORS[shownFields[focusedField] ?? "ok"]} />
+        </svg>
+      )}
       {appNumber?.trim() && (
         <p className="hidden text-[12px] text-muted print:block">TTB application #{appNumber.trim()}</p>
       )}
@@ -279,20 +311,7 @@ export function ResultView({
         )}
       </div>
 
-      <div ref={gridRef} data-conn-root className={`relative grid ${compact ? "gap-5" : "gap-5 lg:grid-cols-2 lg:gap-11"}`}>
-        {!compact && connector && focusedField && (
-          <svg className="no-print pointer-events-none absolute inset-0 z-10 hidden h-full w-full lg:block" aria-hidden>
-            <path
-              d={connector.path}
-              fill="none"
-              stroke={TONE_COLORS[shownFields[focusedField] ?? "ok"]}
-              strokeWidth="1.5"
-            />
-            <circle cx={connector.x1} cy={connector.y1} r="3" fill={TONE_COLORS[shownFields[focusedField] ?? "ok"]} />
-            <circle cx={connector.x2} cy={connector.y2} r="3" fill={TONE_COLORS[shownFields[focusedField] ?? "ok"]} />
-          </svg>
-        )}
-
+      <div className={`grid ${compact ? "gap-5" : "gap-5 lg:grid-cols-2 lg:gap-11"}`}>
         {/* Comparison list */}
         <section>
           <p className="mb-2 text-[11.5px] font-semibold uppercase tracking-wider text-ink-faint">Comparison</p>
@@ -378,7 +397,7 @@ export function ResultView({
             viewportHeight={compact ? 300 : 340}
           />
           <p className="mt-1.5 text-[12px] text-ink-faint">
-            Issues are highlighted on the label automatically; click a row to focus it. Locations are found automatically and may be approximate.
+            Click a row (or “Show on label”) to see where it sits on the label. Locations are found automatically and may be approximate.
           </p>
         </section>
       </div>
@@ -394,6 +413,7 @@ export function ResultView({
         <WarningRow
           compact={compact}
           label="Formatting"
+          anchor="warning-gov"
           chip={formattingRow.chip}
           text={formattingRow.text}
           action={

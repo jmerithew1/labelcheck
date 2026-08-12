@@ -1,0 +1,83 @@
+{
+  "best_threshold": 1.53,
+  "accuracy": 1,
+  "results": [
+    {
+      "name": "batch-rye",
+      "bold": true,
+      "ratio": 1.81,
+      "prefixInk": 0.475,
+      "bodyInk": 0.263
+    },
+    {
+      "name": "batch-vodka",
+      "bold": true,
+      "ratio": 1.74,
+      "prefixInk": 0.47,
+      "bodyInk": 0.27
+    },
+    {
+      "name": "case-diff",
+      "bold": true,
+      "ratio": 1.74,
+      "prefixInk": 0.457,
+      "bodyInk": 0.263
+    },
+    {
+      "name": "clean-match",
+      "bold": true,
+      "ratio": 1.74,
+      "prefixInk": 0.457,
+      "bodyInk": 0.263
+    },
+    {
+      "name": "harbor-gin",
+      "bold": true,
+      "ratio": 1.74,
+      "prefixInk": 0.47,
+      "bodyInk": 0.27
+    },
+    {
+      "name": "injection",
+      "bold": true,
+      "ratio": 1.73,
+      "prefixInk": 0.455,
+      "bodyInk": 0.263
+    },
+    {
+      "name": "non-bold-prefix",
+      "bold": false,
+      "ratio": 1.53,
+      "prefixInk": 0.426,
+      "bodyInk": 0.277
+    },
+    {
+      "name": "punct-drift",
+      "bold": true,
+      "ratio": 1.74,
+      "prefixInk": 0.457,
+      "bodyInk": 0.263
+    },
+    {
+      "name": "title-case-prefix",
+      "bold": false,
+      "ratio": 1.13,
+      "prefixInk": 0.321,
+      "bodyInk": 0.284
+    },
+    {
+      "name": "word-drop",
+      "bold": true,
+      "ratio": 1.81,
+      "prefixInk": 0.475,
+      "bodyInk": 0.263
+    },
+    {
+      "name": "word-swap",
+      "bold": true,
+      "ratio": 1.74,
+      "prefixInk": 0.457,
+      "bodyInk": 0.263
+    }
+  ]
+}
