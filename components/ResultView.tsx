@@ -187,7 +187,14 @@ export function ResultView({
   const issueCount = counts.mismatch + (counts.warningFails ? 1 : 0);
   const confirmCount = counts.review + (counts.warningReview ? 1 : 0);
   const banner =
-    issueCount > 0
+    counts.warningFails && counts.mismatch === 0
+      ? {
+          cls: "border-bad-line bg-bad-bg", iconCls: "bg-bad", icon: Icon.x,
+          title: "Government warning fails",
+          titleCls: "text-bad",
+          sub: "The label's warning statement does not meet the requirement.",
+        }
+      : issueCount > 0
       ? {
           cls: "border-bad-line bg-bad-bg", iconCls: "bg-bad", icon: Icon.x,
           title: `${issueCount} item${issueCount === 1 ? "" : "s"} need${issueCount === 1 ? "s" : ""} review`,
@@ -398,8 +405,8 @@ export function ResultView({
         {showWarningDiff && result.warning.labelText && (
           <div className="border-t border-hairline px-4 py-3">
             <p className="mb-1 text-[12px] text-ink-faint">
-              Label text vs required text — <del className="rounded-sm bg-bad-bg px-0.5 text-bad line-through">struck</del> = required text the label gets wrong ·{" "}
-              <ins className="rounded-sm border-b-2 border-ok bg-ok-bg px-0.5 text-ok no-underline">marked</ins> = what the label prints
+              <del className="rounded-sm bg-bad-bg px-0.5 text-bad line-through">Crossed out</del> = what the required text says ·{" "}
+              <ins className="rounded-sm border-b-2 border-ok bg-ok-bg px-0.5 text-ok no-underline">underlined</ins> = what the label actually prints
             </p>
             <CharDiff expected={CANONICAL_WARNING} actual={result.warning.labelText} />
           </div>

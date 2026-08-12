@@ -34,12 +34,18 @@ interface OutcomeData {
 function outcomeSummary(o: OutcomeData | null): Outcome {
   if (!o) return null;
   const r = o.result;
-  let mismatches = r.fields.filter((f) => f.verdict === "possible_mismatch" || f.verdict === "absent_on_label").length;
-  if (r.warning.verdict.startsWith("fail")) mismatches++;
+  const fieldMismatches = r.fields.filter((f) => f.verdict === "possible_mismatch" || f.verdict === "absent_on_label").length;
+  const warningFails = r.warning.verdict.startsWith("fail");
   const reviews =
     r.fields.filter((f) => f.verdict === "unreadable").length + (r.warning.verdict === "unreadable" ? 1 : 0);
   if (!r.is_alcohol_label) return { tone: "warn", label: "not a label" };
-  if (mismatches > 0) return { tone: "bad", label: `${mismatches} mismatch${mismatches === 1 ? "" : "es"}` };
+  // A warning failure is a rule violation, not a field mismatch — it gets
+  // its own name (vocabulary audit: red owns "fails", amber owns "confirm").
+  if (warningFails && fieldMismatches === 0) return { tone: "bad", label: "warning fails" };
+  if (fieldMismatches > 0) {
+    const n = fieldMismatches + (warningFails ? 1 : 0);
+    return { tone: "bad", label: `${n} mismatch${n === 1 ? "" : "es"}` };
+  }
   if (reviews > 0) return { tone: "warn", label: `${reviews} to confirm` };
   return { tone: "ok", label: "matched" };
 }
@@ -52,6 +58,7 @@ export function SingleCheck() {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [outcome, setOutcome] = useState<OutcomeData | null>(null);
+  const [checkDone, setCheckDone] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
   const [dragOver, setDragOver] = useState(false);
 
@@ -79,6 +86,7 @@ export function SingleCheck() {
 
   async function runCheck(f: AppFields, image: File) {
     setStep("checking");
+    setCheckDone(false);
     setError(null);
     setOutcome(null);
     try {
@@ -94,7 +102,10 @@ export function SingleCheck() {
         return;
       }
       setOutcome({ result: body.result, extraction: body.extraction, bands: body.bands ?? {}, ms: body.ms });
-      setStep("result");
+      // Completion beat: let the checklist show all three ticks before the
+      // swap — the labor illusion finishes instead of being interrupted.
+      setCheckDone(true);
+      setTimeout(() => setStep("result"), 250);
     } catch {
       setError("Could not reach the server. Check your connection and try again.");
       setStep("form");
@@ -211,36 +222,49 @@ export function SingleCheck() {
                       <span className="text-[12.5px] text-muted-2">{file.name}</span>
                     </div>
                   ) : (
-                    <div className="flex flex-col items-center gap-2 py-2 text-center">
+                    <div className="flex flex-col items-center gap-2 py-6 text-center">
                       <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-muted-2" aria-hidden>
                         <path d="M7 18a4.6 4.6 0 0 1-.9-9.1 6 6 0 0 1 11.7 1.6A4 4 0 0 1 17 18h-1M12 12v8m0-8l-3 3m3-3l3 3" strokeLinecap="round" strokeLinejoin="round" />
                       </svg>
                       <span className="text-[13.5px] font-semibold text-ink">Drop the label here</span>
-                      <span className="text-[12px] text-muted-2">PDF, PNG or JPG up to 20 MB</span>
+                      <span className="text-[12px] text-muted-2">PNG, JPG or WebP up to 8 MB · PDF up to 10 MB</span>
                       <span
                         className="mt-1 flex h-[38px] items-center rounded-[7px] border border-line-input bg-card px-4 text-[13px] font-semibold text-ink"
                       >
                         Choose file
                       </span>
-                      <span className="my-2 flex w-full items-center gap-3 text-[12px] text-muted-2">
-                        <span className="h-px flex-1 bg-line-soft" aria-hidden /> No label handy? <span className="h-px flex-1 bg-line-soft" aria-hidden />
-                      </span>
-                      <span className="self-start text-[12px] font-bold uppercase tracking-[0.06em] text-muted-2">Try a sample</span>
-                      <span className="grid w-full grid-cols-2 gap-2.5" onClick={(e) => e.stopPropagation()}>
-                        {DEMO_SAMPLES.map((s) => (
+                    </div>
+                  )}
+                </div>
+                {/* Samples live OUTSIDE the clickable dropzone — a click in
+                    the gutter must never launch a surprise file dialog, and
+                    real buttons don't nest inside role="button" (508). */}
+                {!file && (
+                  <div className="flex flex-col gap-2">
+                    <span className="flex w-full items-center gap-3 text-[12px] text-muted-2">
+                      <span className="h-px flex-1 bg-line-soft" aria-hidden /> No label handy? <span className="h-px flex-1 bg-line-soft" aria-hidden />
+                    </span>
+                    <span className="text-[12px] font-bold uppercase tracking-[0.06em] text-muted-2">Try a sample</span>
+                    <div className="grid w-full grid-cols-2 gap-2.5">
+                      {DEMO_SAMPLES.map((s) => {
+                        const dot = s.id === "clean" ? "bg-green" : s.id === "warning" ? "bg-amber" : "bg-red";
+                        return (
                           <button
                             key={s.id}
                             onClick={() => loadSample(s)}
                             className="min-h-[70px] rounded-[9px] border border-line bg-card px-[13px] py-3 text-left transition hover:border-navy hover:bg-select"
                           >
-                            <span className="block text-[13px] font-bold text-ink">{s.title}</span>
+                            <span className="flex items-center gap-1.5 text-[13px] font-bold text-ink">
+                              <span className={`h-2 w-2 rounded-full ${dot}`} aria-hidden />
+                              {s.title}
+                            </span>
                             <span className="block text-[12px] text-muted">{s.blurb}</span>
                           </button>
-                        ))}
-                      </span>
+                        );
+                      })}
                     </div>
-                  )}
-                </div>
+                  </div>
+                )}
                 {file && (
                   <div className="flex gap-4 text-[13px] font-semibold">
                     <button onClick={() => fileInput.current?.click()} className="text-navy hover:underline">Change image</button>
@@ -281,7 +305,7 @@ export function SingleCheck() {
           </>
         )}
 
-        {step === "checking" && <CheckingCard imageUrl={previewUrl} />}
+        {step === "checking" && <CheckingCard imageUrl={previewUrl} complete={checkDone} />}
 
         {step === "result" && outcome && previewUrl && (
           <ResultView

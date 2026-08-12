@@ -16,13 +16,13 @@ Verification points: spec approval (done), post-build final gate, pre-submit.
 - **C1 — MET** Accepts label image + application data — single-check form ([components/SingleCheck.tsx](../components/SingleCheck.tsx)) and batch CSV+images ([components/BatchReview.tsx](../components/BatchReview.tsx)) → [app/api/check/route.ts](../app/api/check/route.ts)
 - **C2 — MET** Brand name verified — [lib/compare/fields.ts](../lib/compare/fields.ts); tests in [compare.test.ts](../lib/compare/compare.test.ts)
 - **C3 — MET** Class/type verified — same module + tests
-- **C4 — MET** Alcohol content format-tolerant: `45% Alc./Vol. (90 Proof)` vs `45%` = MATCH — [lib/compare/abv.ts](../lib/compare/abv.ts); test "matches the rubric's exact example"; verified live in browser (case-diff sample)
+- **C4 — MET** Alcohol content format-tolerant: `45% Alc./Vol. (90 Proof)` vs `45%` = MATCH — [lib/compare/abv.ts](../lib/compare/abv.ts); test "matches the rubric's exact example"; verified live in browser (batch case-diff rows; case-diff label downloadable on the single-check page)
 - **C5 — MET** Net contents: 750 mL = 750ml = 75 cl = 750 milliliters — [lib/compare/netContents.ts](../lib/compare/netContents.ts) + tests; verified live (75 cl sample)
 - **C6 — MET** Warning presence, tri-state — [lib/vision/contract.ts](../lib/vision/contract.ts) + [lib/compare/warning.ts](../lib/compare/warning.ts)
 - **C7 — MET** Warning EXACT word-for-word vs canonical 27 CFR 16.21 — [lib/compare/warning.ts](../lib/compare/warning.ts) (canonical text SME-verified vs GPO/LII); adversarial tests (word-swap, word-drop, punctuation); live: word-swap label fails with deviation named
 - **C8 — MET** `GOVERNMENT WARNING` ALL-CAPS check; title case = hard fail — same module + test; live: title-case sample fails with §16.22(a)(2) citation
 - **C9 — MET (as designed: advisory + documented limitation)** Bold prefix — Sonnet parallel judgment, measured 16/17 ([spike-results.md](spike-results.md)); surfaced as advisory with the number; limitation in [approach.md](approach.md)
-- **C10 — MET** Fuzzy fields, case/punct = MATCH surfaced: `STONE'S THROW` = `Stone's Throw` — [lib/compare/fields.ts](../lib/compare/fields.ts) + test; live: case-diff sample & batch case-diff rows land clean-with-note
+- **C10 — MET** Fuzzy fields, case/punct = MATCH surfaced: `STONE'S THROW` = `Stone's Throw` — [lib/compare/fields.ts](../lib/compare/fields.ts) + test; live: batch case-diff rows land clean-with-note (case-diff label also downloadable for single check)
 - **C11 — MET** Diffs/confidence visible; agent decides — char-level diffs ([components/CharDiff.tsx](../components/CharDiff.tsx)), similarity %, verdict language; only the warning uses FAIL language
 - **C12 — MET** Bottler name/address optional field — form + engine, skipped-when-blank shown
 - **C13 — MET** Country of origin optional field — same
@@ -35,7 +35,7 @@ Verification points: spec approval (done), post-build final gate, pre-submit.
 ### UX
 - **U1 — MET** Non-technical 50+ usable — 3-click demo verified in browser: sample → rendered verdict (single) and sample batch → triage, zero downloads/instructions; UX cold-read at final gate
 - **U2 — MET** Loud human-readable errors — type/size guards, refusal/timeout/429 copy ([lib/vision/extract.ts](../lib/vision/extract.ts) `failureMessage`), not-a-label card, CSV-format and pairing errors
-- **U3 — MET** Triage 250 without drowning — summary tiles (Matched / Need review counts), one-click **Need review** filter chip + search, master-detail table (row click opens the evidence panel with an Audit trail tab, Next label steps through), **Download report** (CSV), refresh guard; verified in browser on sample batch
+- **U3 — MET** Triage 250 without drowning — count-carrying filter chips (All / Matched / Need review / Not required), one-click **Need review** filter + search, master-detail table (row click opens the evidence panel with an Audit trail tab, Review next steps through), **Download report** (CSV), refresh guard; verified in browser on sample batch
 
 ### Constraints
 - **S1 — MET** Standalone, zero COLA integration — no integration code; stated in approach doc

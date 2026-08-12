@@ -73,12 +73,16 @@ function rowSummary(r: BatchRow): React.ReactNode {
   }
   if (r.result.warning.verdict.startsWith("fail")) mismatch++;
   else if (r.result.warning.verdict === "unreadable") review++;
+  // The bold-confirm marker stays in batch summaries — the tool's one blind
+  // spot never hides behind a clean-looking row (behavioral audit finding).
+  const boldConfirm = r.result.warning.verdict === "pass" || r.result.warning.verdict === "pass_formatting_note";
   const sep = <span className="text-muted-2"> • </span>;
   return (
     <>
       <span>{matched} matched</span>
       {mismatch > 0 && (<>{sep}<span className="font-semibold text-red">{mismatch} mismatch{mismatch === 1 ? "" : "es"}</span></>)}
       {review > 0 && (<>{sep}<span className="font-semibold text-amber">{review} review</span></>)}
+      {boldConfirm && (<>{sep}<span className="text-amber">bold: confirm</span></>)}
       {notRequired > 0 && (<>{sep}<span className="text-muted-2">{notRequired} not required</span></>)}
     </>
   );
@@ -97,6 +101,8 @@ export function BatchReview() {
   const [wallMs, setWallMs] = useState<number | null>(null);
   const [autoRun, setAutoRun] = useState(false);
   const [savedToast, setSavedToast] = useState(false);
+  const [exportedSince, setExportedSince] = useState(false);
+  const [visited, setVisited] = useState<Set<number>>(new Set());
   const filesInput = useRef<HTMLInputElement>(null);
   const [dragOver, setDragOver] = useState(false);
   const startedAt = useRef(0);
@@ -230,6 +236,8 @@ export function BatchReview() {
     await Promise.all(Array.from({ length: Math.min(CONCURRENCY, queue.length) }, worker));
     setWallMs(Math.round(performance.now() - startedAt.current));
     setRunning(false);
+    setExportedSince(false);
+    setVisited(new Set());
   }
 
   // Lazy bands for the open detail row.
@@ -272,6 +280,7 @@ export function BatchReview() {
     a.click();
     URL.revokeObjectURL(a.href);
     setSavedToast(true);
+    setExportedSince(true);
     setTimeout(() => setSavedToast(false), 4000);
   }
 
@@ -325,14 +334,24 @@ export function BatchReview() {
     return () => window.removeEventListener("keydown", onKey);
   }, [rows.length, order, orderPos, openRow]);
 
+  const atLast = orderPos === order.length - 1;
   const stepPanel = (dir: 1 | -1) => {
     if (!order.length) return;
     const at = orderPos >= 0 ? orderPos : 0;
-    const nxt = order[(at + dir + order.length) % order.length];
+    // The loop has a finish line: forward from the last row closes the panel
+    // (goal gradient needs a terminus — two audits flagged the endless wrap).
+    if (dir === 1 && at === order.length - 1) { setOpenRow(null); return; }
+    const nxt = order[Math.min(Math.max(at + dir, 0), order.length - 1)];
     setOpenRow(nxt);
     setTab("overview");
     setPage(Math.floor(order.indexOf(nxt) / PAGE_SIZE));
   };
+
+  // "Seen" state: rows the panel has visited get a subtle tick, so an
+  // interrupted reviewer knows where they stopped.
+  useEffect(() => {
+    if (openRow !== null) setVisited((v) => (v.has(openRow) ? v : new Set(v).add(openRow)));
+  }, [openRow]);
 
   const statusDot = (r: BatchRow, size = 22) => {
     const b = bucketOf(r);
@@ -387,10 +406,16 @@ export function BatchReview() {
           disabled={done === 0}
           className="flex h-9 items-center gap-1.5 rounded-[7px] border border-line-input bg-card px-3 text-[13px] font-semibold text-ink-2 hover:bg-line-soft disabled:opacity-40"
         >
-          ↓ Download report
+          ↓ Download report (CSV)
         </button>
         <button
-          onClick={() => { setRows([]); setPairingIssues([]); setWallMs(null); setOpenRow(null); }}
+          onClick={() => {
+            // The one truly irreversible act in the app — nothing is stored.
+            if (done > 0 && !exportedSince) {
+              if (!window.confirm(`This clears all ${rows.length} results and nothing is stored. Download the report first?`)) return;
+            }
+            setRows([]); setPairingIssues([]); setWallMs(null); setOpenRow(null); setVisited(new Set());
+          }}
           disabled={running || rows.length === 0}
           className="h-9 rounded-[7px] bg-navy px-3 text-[13px] font-bold text-white hover:bg-navy-hover disabled:opacity-40"
         >
@@ -470,6 +495,16 @@ export function BatchReview() {
               </div>
             )}
 
+            {running && done > 0 && (
+              <p className="mb-3 text-[12.5px] text-muted" role="status">
+                {(() => {
+                  const doneRows = rows.filter((r) => r.ms);
+                  const avg = doneRows.length ? doneRows.reduce((a, r) => a + r.ms!, 0) / doneRows.length : 4000;
+                  const etaS = Math.ceil(((rows.length - done) * avg) / CONCURRENCY / 1000);
+                  return `About ${etaS >= 60 ? `${Math.ceil(etaS / 60)} min` : `${etaS}s`} left · finished rows are ready — you can start reviewing while the rest run.`;
+                })()}
+              </p>
+            )}
             {globalError && (
               <div className="mb-4 rounded-[10px] border border-bad-line bg-red-tint p-4 text-[13.5px] font-semibold text-red">{globalError}</div>
             )}
@@ -544,7 +579,12 @@ export function BatchReview() {
                                 <span className="h-10 w-[30px] shrink-0 rounded-[3px] border border-line bg-line-soft" />
                               )}
                               <span className="min-w-0">
-                                <span className="block max-w-48 truncate text-[13px] font-bold text-ink">{r.filename}</span>
+                                <span className="block max-w-48 truncate text-[13px] font-bold text-ink">
+                                  {r.filename}
+                                  {visited.has(r.index) && openRow !== r.index && (
+                                    <span className="ml-1.5 text-[11px] font-normal text-muted-2" title="Reviewed">✓ seen</span>
+                                  )}
+                                </span>
                                 {r.file && (
                                   <span className="block text-[11.5px] text-muted-2">
                                     {r.file.type === "application/pdf" ? "PDF" : "IMG"} • {(r.file.size / 1024 / 1024).toFixed(1)} MB
@@ -593,13 +633,14 @@ export function BatchReview() {
               <p className="mt-2 text-[12px] text-muted-2">Processed on {fmtTime(new Date())} · checked in {(wallMs / 1000).toFixed(1)}s</p>
             )}
 
-            {/* Three-lens strip (hidden while the panel is open) */}
+            {/* Info strip (design's three-column footer, refilled with
+                operational facts — two audits flagged the brochure voice). */}
             {!detail && (
               <div className="mt-5 grid gap-8 rounded-xl bg-[#f0f2f5] px-7 py-6 md:grid-cols-3">
                 {[
-                  { c: "bg-navy", t: "Economics", d: <>Batch review saves time by automating the routine checks. <b>Review only what needs attention.</b></> },
-                  { c: "bg-green-dark", t: "Technology", d: <>Every result is traceable and evidence-linked. <b>Built for audit, compliance, and scale.</b></> },
-                  { c: "bg-amber", t: "Psychology", d: <>Clear signals and focused exceptions reduce cognitive load. <b>Confidence in every decision.</b></> },
+                  { c: "bg-navy", t: "What it checks", d: <>Brand, class/type, alcohol content, net contents, and the exact government warning — each label against its own application row.</> },
+                  { c: "bg-green-dark", t: "How it decides", d: <>Fixed rules in the software make every pass or fail; the AI only reads the label. <b>Type size and physical checks stay manual.</b></> },
+                  { c: "bg-amber", t: "Working faster", d: <>Problems sort to the top when the run finishes. <b>Keyboard: ↑↓ move · Enter open · Esc close.</b></> },
                 ].map((l) => (
                   <span key={l.t} className="flex items-start gap-3.5">
                     <span className={`h-10 w-10 shrink-0 rounded-full ${l.c}`} aria-hidden />
@@ -610,57 +651,98 @@ export function BatchReview() {
             )}
           </div>
 
-          {/* Docked detail panel (design §6): sticky sibling column */}
-          {detail?.result && detail.extraction && detail.imageUrl && (
-            <aside className="sticky top-0 ml-4 hidden h-screen w-[clamp(360px,34vw,480px)] flex-col overflow-hidden rounded-none border-l border-line bg-card xl:flex">
-              <div className="flex items-center gap-2.5 px-6 py-[18px]">
-                <p className="min-w-0 flex-1 truncate text-[15px] font-bold text-ink">{detail.filename}</p>
-                {statusDot(detail, 16)}
-                <button onClick={() => window.print()} aria-label="Print this result" title="Print this result" className="flex h-8 w-8 items-center justify-center rounded-[6px] border border-line text-ink-2 hover:bg-line-soft">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                </button>
-                <button onClick={() => setOpenRow(null)} aria-label="Close panel" className="flex h-8 w-8 items-center justify-center rounded-[6px] text-ink-2 hover:bg-line-soft">✕</button>
-              </div>
-              <div className="flex gap-5 border-b border-line px-6">
-                {(["overview", "audit"] as const).map((t) => (
-                  <button
-                    key={t}
-                    onClick={() => setTab(t)}
-                    className={`pb-2 text-[13px] ${tab === t ? "border-b-2 border-navy font-bold text-ink" : "text-muted hover:text-ink-2"}`}
-                  >
-                    {t === "overview" ? "Overview" : "Audit trail"}
+          {/* Docked detail panel (design §6): sticky sibling column on xl+,
+              full-width inline section below xl — a row click must never be
+              a dead end that only removes information (behavioral F1;
+              Windows 125% scaling puts many gov laptops under 1280px). */}
+          {detail?.result && detail.extraction && detail.imageUrl && (() => {
+            const panelInner = (
+              <>
+                <div className="flex items-center gap-2.5 px-6 py-[18px]">
+                  <p className="min-w-0 flex-1 truncate text-[15px] font-bold text-ink">{detail.filename}</p>
+                  {statusDot(detail, 16)}
+                  <button onClick={() => window.print()} aria-label="Print this result" title="Print this result" className="flex h-8 w-8 items-center justify-center rounded-[6px] border border-line text-ink-2 hover:bg-line-soft">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16" strokeLinecap="round" strokeLinejoin="round"/></svg>
                   </button>
-                ))}
-              </div>
-              <div className="min-h-0 flex-1 overflow-auto px-6 py-4">
-                {tab === "overview" ? (
-                  <ResultView
-                    result={detail.result}
-                    extraction={detail.extraction}
-                    imageUrl={detail.imageUrl}
-                    bands={detail.bands ?? {}}
-                    ms={detail.ms}
-                    compact
-                  />
-                ) : (
-                  <AuditTrail row={detail} />
-                )}
-              </div>
-              <div className="flex items-center justify-between border-t border-line px-6 py-3">
-                <span className="text-[12px] text-muted-2">Label {orderPos + 1} of {order.length}</span>
-                <span className="flex items-center gap-2">
-                  <span className="flex overflow-hidden rounded-[7px] border border-line-input">
-                    <button onClick={() => stepPanel(-1)} aria-label="Previous label" className="flex h-[38px] w-[38px] items-center justify-center border-r border-line-input text-ink-2 hover:bg-line-soft">←</button>
-                    <button onClick={() => stepPanel(1)} aria-label="Next label" className="flex h-[38px] w-[38px] items-center justify-center text-ink-2 hover:bg-line-soft">→</button>
+                  <button onClick={() => setOpenRow(null)} aria-label="Close panel" className="flex h-8 w-8 items-center justify-center rounded-[6px] text-ink-2 hover:bg-line-soft">✕</button>
+                </div>
+                <div className="flex gap-5 border-b border-line px-6">
+                  {(["overview", "audit"] as const).map((t) => (
+                    <button
+                      key={t}
+                      onClick={() => setTab(t)}
+                      className={`pb-2 text-[13px] ${tab === t ? "border-b-2 border-navy font-bold text-ink" : "text-muted hover:text-ink-2"}`}
+                    >
+                      {t === "overview" ? "Overview" : "Audit trail"}
+                    </button>
+                  ))}
+                </div>
+                <div className="min-h-0 flex-1 overflow-auto px-6 py-4">
+                  {tab === "overview" ? (
+                    <ResultView
+                      result={detail.result!}
+                      extraction={detail.extraction!}
+                      imageUrl={detail.imageUrl!}
+                      bands={detail.bands ?? {}}
+                      ms={detail.ms}
+                      compact
+                    />
+                  ) : (
+                    <AuditTrail row={detail} />
+                  )}
+                </div>
+                <div className="flex items-center justify-between border-t border-line px-6 py-3">
+                  <span className="text-[12px] text-muted-2">Label {orderPos + 1} of {order.length}</span>
+                  <span className="flex items-center gap-2">
+                    <span className="flex overflow-hidden rounded-[7px] border border-line-input">
+                      <button onClick={() => stepPanel(-1)} aria-label="Previous label" className="flex h-[38px] w-[38px] items-center justify-center border-r border-line-input text-ink-2 hover:bg-line-soft">←</button>
+                      <button onClick={() => stepPanel(1)} aria-label="Next label" className="flex h-[38px] w-[38px] items-center justify-center text-ink-2 hover:bg-line-soft">→</button>
+                    </span>
+                    <button onClick={() => stepPanel(1)} className="h-[38px] rounded-[7px] bg-navy px-4 text-[13px] font-bold text-white hover:bg-navy-hover">
+                      {atLast ? "Done — back to list" : "Review next"}
+                    </button>
                   </span>
-                  <button onClick={() => stepPanel(1)} className="h-[38px] rounded-[7px] bg-navy px-4 text-[13px] font-bold text-white hover:bg-navy-hover">
-                    Review next
-                  </button>
-                </span>
-              </div>
-            </aside>
-          )}
+                </div>
+              </>
+            );
+            return (
+              <aside className="sticky top-0 ml-4 hidden h-screen w-[clamp(360px,34vw,480px)] flex-col overflow-hidden border-l border-line bg-card xl:flex">
+                {panelInner}
+              </aside>
+            );
+          })()}
         </div>
+      )}
+
+      {/* Below xl: the same panel renders inline under the table. */}
+      {rows.length > 0 && detail?.result && detail.extraction && detail.imageUrl && (
+        <section className="mt-4 flex max-h-[80vh] flex-col rounded-xl border border-line bg-card xl:hidden">
+          <div className="flex items-center gap-2.5 px-6 py-[18px]">
+            <p className="min-w-0 flex-1 truncate text-[15px] font-bold text-ink">{detail.filename}</p>
+            {statusDot(detail, 16)}
+            <button onClick={() => setOpenRow(null)} aria-label="Close panel" className="flex h-8 w-8 items-center justify-center rounded-[6px] text-ink-2 hover:bg-line-soft">✕</button>
+          </div>
+          <div className="flex gap-5 border-b border-line px-6">
+            {(["overview", "audit"] as const).map((t) => (
+              <button key={t} onClick={() => setTab(t)} className={`pb-2 text-[13px] ${tab === t ? "border-b-2 border-navy font-bold text-ink" : "text-muted hover:text-ink-2"}`}>
+                {t === "overview" ? "Overview" : "Audit trail"}
+              </button>
+            ))}
+          </div>
+          <div className="min-h-0 flex-1 overflow-auto px-6 py-4">
+            {tab === "overview" ? (
+              <ResultView result={detail.result} extraction={detail.extraction} imageUrl={detail.imageUrl} bands={detail.bands ?? {}} ms={detail.ms} compact />
+            ) : (
+              <AuditTrail row={detail} />
+            )}
+          </div>
+          <div className="flex items-center justify-between border-t border-line px-6 py-3">
+            <span className="text-[12px] text-muted-2">Label {orderPos + 1} of {order.length}</span>
+            <button onClick={() => stepPanel(1)} className="h-[38px] rounded-[7px] bg-navy px-4 text-[13px] font-bold text-white hover:bg-navy-hover">
+              {atLast ? "Done — back to list" : "Review next"}
+            </button>
+          </div>
+        </section>
       )}
       {rows.length > 0 && (
         <input
@@ -680,13 +762,15 @@ function AuditTrail({ row }: { row: BatchRow }) {
   const confirmed = r.warning.notes.some((n) => /second independent/i.test(n));
   const overturned = r.warning.notes.some((n) => /readings disagree/i.test(n));
   const ts = row.checkedAt ? row.checkedAt.toLocaleTimeString() : undefined;
+  // Plain English first (Margaret finding #1); technical identifiers in
+  // parentheses for auditors who need them.
   const items: { t: string; d: string }[] = [
-    { t: "Label uploaded", d: `${row.filename}${row.file ? ` (${(row.file.size / 1024 / 1024).toFixed(1)} MB)` : ""}, downscaled in the browser before upload.` },
-    { t: "Text extracted", d: `claude-haiku-4-5 transcribed the label verbatim; claude-sonnet-5 judged prefix boldness in parallel. Server time ${row.ms ? (row.ms / 1000).toFixed(1) : "?"}s.` },
-    { t: "Compared to application", d: "All verdicts computed deterministically in code — exact warning check vs 27 CFR 16.21, numeric ABV/volume matching, normalized text comparison. The AI never decides pass/fail." },
+    { t: "Label uploaded", d: `${row.filename}${row.file ? ` (${(row.file.size / 1024 / 1024).toFixed(1)} MB)` : ""} — shrunk in your browser before sending.` },
+    { t: "Text read from the label", d: `The computer read the label word for word, exactly as printed, and separately judged whether the warning is in bold type. Took ${row.ms ? (row.ms / 1000).toFixed(1) : "?"} seconds (readers: claude-haiku-4-5, claude-sonnet-5).` },
+    { t: "Compared to the application", d: "Fixed rules in the software — not the AI — decide every pass or fail: the warning must match the required text exactly (27 CFR 16.21), and the other fields are compared with sensible tolerance for formatting." },
   ];
-  if (confirmed) items.push({ t: "Second reading", d: "The warning failure was independently confirmed by a second model reading." });
-  if (overturned) items.push({ t: "Second reading", d: "Two AI readings disagreed — the failure was downgraded to manual review instead of asserted." });
+  if (confirmed) items.push({ t: "Second opinion", d: "Because the warning failed, a second independent reading was taken. It agreed — the failure stands." });
+  if (overturned) items.push({ t: "Second opinion", d: "Two independent readings disagreed, so instead of asserting a failure this row was marked for a manual look." });
   items.push({
     t: "Result recorded",
     d: `${r.overall.replace(/_/g, " ")} — warning: ${r.warning.verdict.replace(/_/g, " ")}; ${r.fields.filter((f) => f.verdict === "match" || f.verdict === "match_formatting").length} field(s) matched.`,
@@ -706,7 +790,7 @@ function AuditTrail({ row }: { row: BatchRow }) {
         ))}
       </ol>
       <p className="mt-4 border-t border-line-soft pt-3 text-[12px] text-muted-2">
-        Evidence lives in this session only — nothing is stored server-side. Every verdict above links to the region on the label that produced it.
+        The AI never decides pass or fail — it only reads. Nothing is stored: the evidence lives in this browser session only.
       </p>
     </div>
   );

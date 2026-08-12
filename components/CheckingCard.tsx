@@ -6,13 +6,18 @@ import { useEffect, useState } from "react";
  *  line plus a 3-phase checklist. The prototype faked 2s; ours paces to the
  *  real request (~4s typical, ~8s when a second warning reading runs) —
  *  phases advance on a timer, all complete only when the response lands. */
-export function CheckingCard({ imageUrl }: { imageUrl: string | null }) {
+export function CheckingCard({ imageUrl, complete = false }: { imageUrl: string | null; complete?: boolean }) {
   const [phase, setPhase] = useState(0);
+  const [slow, setSlow] = useState(false);
   useEffect(() => {
     const t1 = setTimeout(() => setPhase(1), 1300);
     const t2 = setTimeout(() => setPhase(2), 2600);
-    return () => { clearTimeout(t1); clearTimeout(t2); };
+    // Failing labels trigger a second independent reading (~8s total) — the
+    // wait must stay truthful instead of stalling under a 5-second promise.
+    const t3 = setTimeout(() => setSlow(true), 5000);
+    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
   }, []);
+  const shownPhase = complete ? 3 : phase;
 
   const steps = [
     "Extracting text from the label",
@@ -33,8 +38,8 @@ export function CheckingCard({ imageUrl }: { imageUrl: string | null }) {
       </div>
       <ul className="flex w-full flex-col gap-3">
         {steps.map((label, i) => {
-          const done = i < phase;
-          const active = i === phase;
+          const done = i < shownPhase;
+          const active = i === shownPhase;
           return (
             <li key={label} className="flex items-center gap-3 text-[13.5px]">
               {done ? (
@@ -50,7 +55,11 @@ export function CheckingCard({ imageUrl }: { imageUrl: string | null }) {
           );
         })}
       </ul>
-      <p className="text-[12px] text-muted-2">usually under 5 seconds</p>
+      <p className="text-[12px] text-muted-2">
+        {slow && !complete
+          ? "Getting a second independent reading of the warning — a few seconds more"
+          : "usually under 5 seconds"}
+      </p>
       <style jsx>{`
         .scanline { animation: scan 2.2s ease-in-out infinite; }
         @keyframes scan {

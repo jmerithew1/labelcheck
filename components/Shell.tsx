@@ -77,8 +77,8 @@ export function Shell({
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="no-print flex h-16 shrink-0 items-center gap-4 overflow-x-auto whitespace-nowrap border-b border-line bg-card px-7">
           <nav className="flex gap-4 md:hidden">
-            <Link href="/" className={`text-[14px] font-bold ${!isBatch ? "text-ink" : "text-muted-2"}`}>Single</Link>
-            <Link href="/batch" className={`text-[14px] font-bold ${isBatch ? "text-ink" : "text-muted-2"}`}>Batch</Link>
+            <Link href="/" className={`text-[14px] font-bold ${!isBatch ? "text-ink" : "text-muted-2"}`}>Single check</Link>
+            <Link href="/batch" className={`text-[14px] font-bold ${isBatch ? "text-ink" : "text-muted-2"}`}>Batch review</Link>
           </nav>
           {topBar}
         </header>
