@@ -42,9 +42,10 @@ Verification points: spec approval (done), post-build final gate, pre-submit.
 - **S2 — MET** Nothing sensitive stored — no DB/auth/retention; key server-side; `.env.local` gitignored
 
 ## Soft requirements (writeup lines mandatory)
-- **N1 — N/A-documented** Photo tolerance deferred — plan + degradation behavior in [approach.md](approach.md) §limitations
+- **N1 — PARTIAL (measured, not field-tested)** Photo tolerance — validated on simulated degradations (blur/tilt/glare × 5 labels): **15/15 verdicts correct or safely degraded, zero false rejections**, 3/3 degraded false warning-failures rescued by the second-reading pass ([degraded-fidelity.json](degraded-fidelity.json)); real photographed bottles untested — [approach.md](approach.md) §limitations item 4
 - **N2 — MET** Blocked-network path — approach doc §deployment (Bedrock GovCloud / Azure gateway / on-prem VLM)
 - **N3 — MET** Test labels — 18 ground-truthed labels incl. adversarial + injection ([samples/](../samples)), AI-encouraged generation honored via HTML-render pipeline
+- **N4 — MET (documented assumption)** "Requirements vary by beverage type (beer/wine/distilled spirits)" — one commodity-neutral ruleset shipped and justified (label-vs-application matching is the same question for every commodity; per-commodity mandatory-field lists are a documented production enhancement) — [approach.md](approach.md) §assumptions; sample set covers spirits/wine/beer archetypes
 
 ## Graded criteria (final-gate walk)
 - **E1** Correctness/completeness — all C-rows above
