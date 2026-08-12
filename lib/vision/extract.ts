@@ -21,7 +21,7 @@ export const BOLD_MODEL = "claude-sonnet-5";
 const BOLD_TOOL = {
   name: "record_warning_typography",
   description:
-    "Record the typography of the government warning statement's first two words.",
+    "Record the typography of the government warning statement: the weight of its first two words, and whether the remaining body text is bold.",
   input_schema: {
     type: "object" as const,
     properties: {
@@ -29,10 +29,19 @@ const BOLD_TOOL = {
         type: "string",
         enum: ["heavier", "same", "lighter", "no_warning_present"],
         description:
-          "Compare the STROKE THICKNESS of the letters in the warning statement's first two words against the stroke thickness of the rest of the warning paragraph on the same label. 'heavier' only if the strokes are visibly thicker (bold). ALL-CAPS or larger size alone is NOT heavier — judge stroke weight only.",
+          "Compare the STROKE THICKNESS of the letters in the warning statement's first two words against the stroke thickness of the rest of the warning paragraph on the same label. 'heavier' only if the strokes are visibly thicker (bold). ALL-CAPS or larger size alone is NOT heavier — judge stroke weight only. Ignore stroke swelling caused by low resolution, glare, ink bleed or JPEG artifacts: true bolding is a deliberate, substantial difference against the body text right beside it.",
+      },
+      // 27 CFR 16.22(a) requires the prefix bold AND the remainder NOT bold.
+      // Measured clean on 45 ground-truthed labels (no false alarms) before
+      // shipping; surfaced as an advisory, never a hard fail.
+      body_weight: {
+        type: "string",
+        enum: ["regular", "bold", "unclear", "no_warning_present"],
+        description:
+          "Now judge the REMAINING warning text (from '(1) According to the Surgeon General' onward), which must NOT be bold. Answer 'bold' only if that body text itself is visibly heavy — thick strokes throughout the paragraph, not merely dark or small. Use 'unclear' when blur, glare or resolution prevents a confident call.",
       },
     },
-    required: ["prefix_weight"],
+    required: ["prefix_weight", "body_weight"],
   },
 };
 
@@ -180,14 +189,19 @@ export async function extractLabel(
     const extraction = toLabelExtraction(tu.input as Record<string, unknown>);
 
     let bold: LabelExtraction["warning_prefix_bold"] = "unclear";
+    let bodyBold: LabelExtraction["warning_body_bold"] = "unclear";
     if (boldMsg) {
       const btu = boldMsg.content.find((b) => b.type === "tool_use");
       if (btu && btu.type === "tool_use") {
-        const w = (btu.input as { prefix_weight?: string }).prefix_weight;
+        const input = btu.input as { prefix_weight?: string; body_weight?: string };
+        const w = input.prefix_weight;
         bold = w === "heavier" ? "bold" : w === "same" || w === "lighter" ? "not_bold" : "unclear";
+        const b = input.body_weight;
+        bodyBold = b === "bold" ? "bold" : b === "regular" ? "not_bold" : "unclear";
       }
     }
     extraction.warning_prefix_bold = bold;
+    extraction.warning_body_bold = bodyBold;
 
     return { ok: true, extraction, ms };
   } catch (e) {

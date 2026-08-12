@@ -26,6 +26,9 @@ export interface LabelExtraction {
   warning: ExtractedField;
   /** Visual judgment only — no deterministic check exists for bold from pixels. */
   warning_prefix_bold: "bold" | "not_bold" | "unclear";
+  /** 27 CFR 16.22(a) also bars a BOLD body. Same visual-judgment caveat as
+   *  the prefix, so it is surfaced as an advisory, never a hard fail. */
+  warning_body_bold: "bold" | "not_bold" | "unclear";
   /** Advisory: applicants shrink the warning; physical mm size is unknowable
    *  from an image, but relative-size is visible. */
   warning_text_size: "normal" | "small" | "illegibly_small";
@@ -132,6 +135,9 @@ export function toLabelExtraction(flat: Record<string, unknown>): LabelExtractio
     warning: f("warning"),
     warning_prefix_bold:
       (flat.warning_prefix_bold as LabelExtraction["warning_prefix_bold"]) ?? "unclear",
+    // Filled by the parallel typography call, not the transcription schema.
+    warning_body_bold:
+      (flat.warning_body_bold as LabelExtraction["warning_body_bold"]) ?? "unclear",
     warning_text_size:
       (flat.warning_text_size as LabelExtraction["warning_text_size"]) ?? "normal",
   };

@@ -62,6 +62,7 @@ export function compareLabel(app: ApplicationData, ex: LabelExtraction): CheckRe
     status: ex.warning.status,
     text: ex.warning.text,
     boldAdvisory: ex.warning_prefix_bold,
+    bodyBoldAdvisory: ex.warning_body_bold,
     sizeAdvisory: ex.warning_text_size,
   });
 
@@ -73,6 +74,7 @@ export function compareLabel(app: ApplicationData, ex: LabelExtraction): CheckRe
   } else if (
     warning.verdict === "unreadable" ||
     warning.boldAdvisory !== "bold" ||
+    warning.bodyBoldAdvisory === "bold" ||
     fields.some((f) => ["possible_mismatch", "absent_on_label", "unreadable"].includes(f.verdict))
   ) {
     overall = "needs_review";

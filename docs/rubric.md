@@ -21,7 +21,7 @@ Verification points: spec approval (done), post-build final gate (done), pre-sub
 - **C6 — MET** Warning presence, tri-state — [lib/vision/contract.ts](../lib/vision/contract.ts) + [lib/compare/warning.ts](../lib/compare/warning.ts)
 - **C7 — MET** Warning EXACT word-for-word vs canonical 27 CFR 16.21 — [lib/compare/warning.ts](../lib/compare/warning.ts) (canonical text SME-verified vs GPO/LII); adversarial tests (word-swap, word-drop, punctuation); live: word-swap label fails with deviation named
 - **C8 — MET** `GOVERNMENT WARNING` ALL-CAPS check; title case = hard fail — same module + test; live: title-case sample fails with §16.22(a)(2) citation
-- **C9 — MET (confidence-gated: measured auto-verify + human for the rest)** Bold prefix — multi-signal gate (stroke width + ink density + size sanity + Sonnet judgment) validated in a 3-round spike loop at **zero confident mistakes on held-out data** ([bold-multisignal-r2.json](bold-multisignal-r2.json)); confident-bold auto-resolves ("verified by measurement"), confident-not-bold escalates to Needs review, inconclusive keeps the human glance via the **Confirm bold** strip (crops grid, confirm/flag, CSV `bold_check` column incl. auto_verified/auto_flagged); live sample batch: typically 7 of 11 auto-verified (14 runs: range 5–8, median 7 — the AI stroke-weight signal is re-judged each run), the rest to a human glance, 0 false calls observed; gate logic unit-tested (`lib/compare/boldGate.ts`)
+- **C9 — MET (confidence-gated: measured auto-verify + human for the rest)** Bold prefix — multi-signal gate (stroke width + ink density + size sanity + Sonnet judgment) validated in a 3-round spike loop at **zero confident mistakes on held-out data** ([bold-multisignal-r2.json](bold-multisignal-r2.json)); confident-bold auto-resolves ("verified by measurement"), confident-not-bold escalates to Needs review, inconclusive keeps the human glance via the **Confirm bold** strip (crops grid, confirm/flag, CSV `bold_check` column incl. auto_verified/auto_flagged); live sample batch: typically 7 of 11 auto-verified (14 runs: range 5–8, median 7 — the AI stroke-weight signal is re-judged each run), the rest to a human glance, 0 false calls observed; gate logic unit-tested (`lib/compare/boldGate.ts`); the §16.22(a) **body-not-bold** rule is also checked now (advisory, routes to review — 88 tests)
 - **C10 — MET** Fuzzy fields, case/punct = MATCH surfaced: `STONE'S THROW` = `Stone's Throw` — [lib/compare/fields.ts](../lib/compare/fields.ts) + test; live: batch case-diff rows land clean-with-note (case-diff label also downloadable for single check)
 - **C11 — MET** Diffs/confidence visible; agent decides — char-level diffs ([components/CharDiff.tsx](../components/CharDiff.tsx)), similarity %, verdict language; only the warning uses FAIL language
 - **C12 — MET** Bottler name/address optional field — form + engine, skipped-when-blank shown
@@ -51,7 +51,7 @@ Verification points: spec approval (done), post-build final gate (done), pre-sub
 
 ## Graded criteria (final-gate walk)
 - **E1** Correctness/completeness — all C-rows above
-- **E2** Code quality — pure tested engine (85 tests incl. review-regression suite and the second-reading merge), thin UI, flat contracts
+- **E2** Code quality — pure tested engine (88 tests incl. review-regression suite and the second-reading merge), thin UI, flat contracts
 - **E3** Appropriate tech choices — decisions log with rejected alternatives ([decisions.md](decisions.md))
 - **E4** UX & error handling — U-rows
 - **E5** Attention to requirements — this file

@@ -305,7 +305,8 @@ export function ResultView({
                     ? "The computer suggests the prefix may NOT be bold (bold is required by 27 CFR 16.22(a)(2)) — please check the picture."
                     : "The computer could not judge bold type — please check the picture.",
             };
-  const sizeNote = result.warning.notes.find((n) => /small/i.test(n));
+  const bodyBoldNote = result.warning.notes.find((n) => n.startsWith("The warning body text appears"));
+  const sizeNote = result.warning.notes.find((n) => /small/i.test(n) && n !== bodyBoldNote);
   const wasConfirmed = result.warning.notes.some((n) => n.startsWith("Confirmed by a second"));
   const singleReadingNote = result.warning.notes.find((n) => n.includes("from a single reading"));
   const showWarningDiff = wv === "fail_wording";
@@ -477,6 +478,9 @@ export function ResultView({
             </button>
           }
         />
+        {bodyBoldNote && (
+          <WarningRow compact={compact} label="Body type" chip={<Chip tone="warn">Review</Chip>} text={bodyBoldNote} />
+        )}
         {sizeNote && (
           <WarningRow compact={compact} label="Size" chip={<Chip tone="warn">Review</Chip>} text={sizeNote} />
         )}

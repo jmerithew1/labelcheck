@@ -190,6 +190,7 @@ function extractionFromSidecar(name: string, bold?: "bold" | "not_bold"): LabelE
     country_of_origin: { status: "absent", text: "" },
     warning: sc.warning_text_verbatim ? found(sc.warning_text_verbatim) : { status: "absent", text: "" },
     warning_prefix_bold: bold ?? (sc.warning_prefix_bold ? "bold" : "not_bold"),
+    warning_body_bold: "not_bold",
     warning_text_size: "normal",
   };
 }

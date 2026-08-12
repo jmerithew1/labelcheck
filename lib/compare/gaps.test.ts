@@ -156,6 +156,7 @@ function cleanExtraction(): LabelExtraction {
     country_of_origin: absent,
     warning: found(CANONICAL_WARNING),
     warning_prefix_bold: "bold",
+    warning_body_bold: "not_bold",
     warning_text_size: "normal",
   };
 }
@@ -205,5 +206,33 @@ describe("compareLabel gaps (wrapNumeric paths and triage)", () => {
     ex.is_alcohol_label = false;
     ex.warning = absent;
     expect(compareLabel(app, ex).overall).toBe("not_a_label");
+  });
+});
+
+/** 27 CFR 16.22(a) requires the prefix bold AND the remainder NOT bold.
+ *  Advisory like the prefix judgment: it routes the row to review, never
+ *  asserts a failure on a visual call. */
+describe("body-not-bold advisory (27 CFR 16.22(a))", () => {
+  const base = { status: "found" as const, text: CANONICAL_WARNING, boldAdvisory: "bold" as const };
+
+  it("notes a bold body without failing the warning", () => {
+    const r = checkWarning({ ...base, bodyBoldAdvisory: "bold" });
+    expect(r.verdict).toBe("pass");
+    expect(r.bodyBoldAdvisory).toBe("bold");
+    expect(r.notes.some((n) => /body text appears to be in BOLD/i.test(n))).toBe(true);
+    expect(r.notes.some((n) => /16\.22\(a\)/.test(n))).toBe(true);
+  });
+
+  it("says nothing when the body is regular or unclear", () => {
+    for (const v of ["not_bold", "unclear"] as const) {
+      const r = checkWarning({ ...base, bodyBoldAdvisory: v });
+      expect(r.notes.some((n) => /body text appears to be in BOLD/i.test(n))).toBe(false);
+    }
+  });
+
+  it("routes the label to review rather than clean", () => {
+    const ex = { ...cleanExtraction(), warning_body_bold: "bold" as const };
+    expect(compareLabel(app, ex).overall).toBe("needs_review");
+    expect(compareLabel(app, cleanExtraction()).overall).toBe("clean");
   });
 });

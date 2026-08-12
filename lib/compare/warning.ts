@@ -62,12 +62,14 @@ export function checkWarning(input: {
   status: "found" | "absent" | "unreadable";
   text: string;
   boldAdvisory: "bold" | "not_bold" | "unclear";
+  bodyBoldAdvisory?: "bold" | "not_bold" | "unclear";
   sizeAdvisory?: "normal" | "small" | "illegibly_small";
 }): WarningResult {
   const notes: string[] = [];
   const base = {
     labelText: input.text,
     boldAdvisory: input.boldAdvisory,
+    bodyBoldAdvisory: input.bodyBoldAdvisory ?? "unclear",
     prefixAllCaps: false,
     deviations: [] as WordDiff[],
   };
@@ -146,6 +148,15 @@ export function checkWarning(input: {
     notes.push("Text is exact. Bold type is judged visually and cannot be guaranteed on every label — glance at the image to confirm “GOVERNMENT WARNING” is bold.");
   }
 
+  // 27 CFR 16.22(a): the prefix must be bold AND "the remainder ... shall not
+  // appear in bold type." Same visual-judgment caveat as the prefix, so it is
+  // an advisory that routes the row to review — never a hard fail.
+  if (input.bodyBoldAdvisory === "bold") {
+    notes.push(
+      "The warning body text appears to be in BOLD type. 27 CFR 16.22(a) requires the statement after “GOVERNMENT WARNING:” to be in non-bold type — check the label image.",
+    );
+  }
+
   if (input.sizeAdvisory === "small" || input.sizeAdvisory === "illegibly_small") {
     // ResultView's "Size" row finds this note by matching /small/i on the
     // text — keep the word "small" in any rewording.
@@ -180,6 +191,7 @@ export function applySecondReading(
   second: { status: "found" | "absent" | "unreadable"; text: string } | null,
   advisories: {
     boldAdvisory: "bold" | "not_bold" | "unclear";
+    bodyBoldAdvisory?: "bold" | "not_bold" | "unclear";
     sizeAdvisory?: "normal" | "small" | "illegibly_small";
   },
 ): { warning: WarningResult; overall: OverallVerdict; outcome: "confirmed" | "downgraded" | "unavailable" } {
@@ -192,6 +204,7 @@ export function applySecondReading(
     status: "found",
     text: second.text,
     boldAdvisory: advisories.boldAdvisory,
+    bodyBoldAdvisory: advisories.bodyBoldAdvisory,
     sizeAdvisory: advisories.sizeAdvisory,
   });
   if (secondCheck.verdict === "pass" || secondCheck.verdict === "pass_formatting_note") {

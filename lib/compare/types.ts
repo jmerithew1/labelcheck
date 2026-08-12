@@ -46,5 +46,7 @@ export interface WarningResult {
   prefixAllCaps: boolean;
   /** Advisory AI judgment (measured 16/17 on test labels) — never a hard verdict */
   boldAdvisory: "bold" | "not_bold" | "unclear";
+  /** 27 CFR 16.22(a) bars a bold BODY too — advisory, same caveat as the prefix */
+  bodyBoldAdvisory: "bold" | "not_bold" | "unclear";
   notes: string[];
 }
