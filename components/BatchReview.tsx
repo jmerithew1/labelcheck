@@ -768,8 +768,8 @@ export function BatchReview() {
                   <p className="text-[13.5px] font-bold text-ink">Confirm bold type</p>
                   <p className="text-[12px] text-muted">
                     {boldRows.length - boldPendingRows.length > 0
-                      ? `${boldRows.length - boldPendingRows.length} of ${boldRows.length} verified by measurement — these ${boldPendingRows.length === 1 ? "is the one" : `are the ${boldPendingRows.length}`} that need your eyes. Confirm the ones that look bold, flag any that don't.`
-                      : "Bold is the one check that needs your eyes. Glance at each warning below — confirm the ones that look bold, flag any that don't."}
+                      ? `${boldRows.length - boldPendingRows.length} of ${boldRows.length} verified by measurement — these ${boldPendingRows.length === 1 ? "is the one" : `are the ${boldPendingRows.length}`} that need your eyes. Hover a warning to magnify it, then confirm or flag.`
+                      : "Bold is the one check that needs your eyes. Hover a warning below to magnify it, then confirm the ones that look bold and flag any that don't."}
                   </p>
                   <span className="ml-auto whitespace-nowrap rounded-[5px] bg-amber-tint px-2 py-0.5 text-[11.5px] font-bold text-amber">
                     {boldPendingRows.length} left
@@ -1065,11 +1065,16 @@ function BoldCard({
   onOpen: (index: number) => void;
 }) {
   const [aspect, setAspect] = useState<number | null>(null);
+  // Hover magnifier: the whole point of the strip is judging stroke weight
+  // without opening rows, so the crop magnifies under the cursor.
+  const [lens, setLens] = useState<{ x: number; y: number } | null>(null);
   const isPdf = row.file?.type === "application/pdf" || row.filename.toLowerCase().endsWith(".pdf");
   const band = row.bands?.warning;
   const tried = row.bands !== undefined;
-  const top = band ? Math.max(0, band[0] / 10 - 1.5) : 0;
-  const bh = band ? Math.max(4, Math.min(100, band[1] / 10 + 1.5) - top) : 0;
+  // Generous padding: located bands sometimes clip the first or last line of
+  // the warning, and a clipped warning can't be judged.
+  const top = band ? Math.max(0, band[0] / 10 - 4) : 0;
+  const bh = band ? Math.max(6, Math.min(100, band[1] / 10 + 4) - top) : 0;
   const state = row.boldReview;
   const auto = row.boldAuto;
   const cropReady = !isPdf && !!band && aspect !== null;
@@ -1085,8 +1090,16 @@ function BoldCard({
     >
       <button
         onClick={() => onOpen(row.index)}
-        title="Open this label"
-        className="relative w-full overflow-hidden rounded-[6px] border border-paper-line bg-paper text-left"
+        title="Hover to magnify · click to open this label"
+        onMouseMove={(e) => {
+          if (!cropReady) return;
+          const r = e.currentTarget.getBoundingClientRect();
+          setLens({ x: ((e.clientX - r.left) / r.width) * 100, y: ((e.clientY - r.top) / r.height) * 100 });
+        }}
+        onMouseLeave={() => setLens(null)}
+        onPointerLeave={() => setLens(null)}
+        onBlur={() => setLens(null)}
+        className="relative w-full cursor-zoom-in overflow-hidden rounded-[6px] border border-paper-line bg-paper text-left"
         style={cropReady ? { aspectRatio: `${100 / (aspect! * bh)}`, maxHeight: 120 } : { height: 64 }}
       >
         {isPdf ? (
@@ -1095,14 +1108,21 @@ function BoldCard({
           </span>
         ) : row.imageUrl ? (
           <>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={row.imageUrl}
-              alt={`Warning area of ${row.filename}`}
-              onLoad={(e) => setAspect(e.currentTarget.naturalHeight / e.currentTarget.naturalWidth)}
-              className="absolute left-0 top-0 w-full"
-              style={{ transform: `translateY(-${top}%)`, visibility: cropReady ? "visible" : "hidden" }}
-            />
+            {/* The magnifier scales the crop about the cursor, so the strip
+                answers "is this bold?" without opening a single row. */}
+            <span
+              className="absolute inset-0 transition-transform duration-100"
+              style={lens ? { transform: "scale(2.6)", transformOrigin: `${lens.x}% ${lens.y}%` } : undefined}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={row.imageUrl}
+                alt={`Warning area of ${row.filename}`}
+                onLoad={(e) => setAspect(e.currentTarget.naturalHeight / e.currentTarget.naturalWidth)}
+                className="absolute left-0 top-0 w-full"
+                style={{ transform: `translateY(-${top}%)`, visibility: cropReady ? "visible" : "hidden" }}
+              />
+            </span>
             {!cropReady && (
               <span className={`absolute inset-0 flex items-center justify-center px-2 text-center text-[11px] text-muted-2 ${tried && !band ? "" : "animate-pulse"}`}>
                 {tried && !band ? "couldn't locate the warning — open the row" : "finding the warning…"}
