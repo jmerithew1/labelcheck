@@ -66,6 +66,7 @@ export function ResultView({
   primaryAction,
   compact = false,
   confirming = false,
+  isPdf = false,
   appNumber,
 }: {
   result: CheckResult;
@@ -79,6 +80,8 @@ export function ResultView({
   compact?: boolean;
   /** the second warning reading is still in flight — provisional verdict shown */
   confirming?: boolean;
+  /** the submitted file is a PDF — the viewer shows a placeholder, not <img> */
+  isPdf?: boolean;
   /** optional TTB application number — shown on the printed report */
   appNumber?: string;
 }) {
@@ -250,7 +253,7 @@ export function ResultView({
   const wv = result.warning.verdict;
   const wordingRow =
     wv === "fail_wording" || wv === "fail_missing"
-      ? { chip: <Chip tone="bad">FAIL</Chip>, text: result.warning.notes.find((n) => !/bold|second/i.test(n)) ?? "Warning text deviates from the required statement." }
+      ? { chip: <Chip tone="bad">FAIL</Chip>, text: result.warning.notes.find((n) => !/bold|second|single reading/i.test(n)) ?? "Warning text deviates from the required statement." }
       : wv === "unreadable"
         ? { chip: <Chip tone="warn">Review</Chip>, text: result.warning.notes[0] }
         : { chip: <Chip tone="ok">PASS</Chip>, text: "Exact required text found." };
@@ -380,7 +383,7 @@ export function ResultView({
                   {/* The row states the REASON; "confirmed by second reading"
                       is corroboration, not the explanation. */}
                   <span className="block text-[13.5px] text-ink">
-                    {result.warning.notes.find((n) => !/second independent/i.test(n)) ?? result.warning.notes[0]}
+                    {result.warning.notes.find((n) => !/second independent|single reading/i.test(n)) ?? result.warning.notes[0]}
                   </span>
                 </span>
                 {counts.warningFails ? <Chip tone="bad">{Icon.x} Fail</Chip> : <Chip tone="warn">Review</Chip>}
@@ -394,6 +397,7 @@ export function ResultView({
           <p className="mb-2 text-[11.5px] font-semibold uppercase tracking-wider text-ink-faint">Submitted label</p>
           <LabelViewer
             imageUrl={imageUrl}
+            isPdf={isPdf}
             fieldTexts={fieldTexts}
             bands={bands}
             shownFields={shownFields}

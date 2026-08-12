@@ -19,6 +19,7 @@ export const TONE_COLORS: Record<Tone, string> = {
 
 export function LabelViewer({
   imageUrl,
+  isPdf = false,
   fieldTexts,
   bands,
   shownFields,
@@ -27,6 +28,8 @@ export function LabelViewer({
   viewportHeight = 340,
 }: {
   imageUrl: string;
+  /** PDFs can't render in <img> — show an honest placeholder instead */
+  isPdf?: boolean;
   fieldTexts: FieldTexts;
   bands: Bands;
   shownFields: Partial<Record<BandField, Tone>>;
@@ -49,6 +52,7 @@ export function LabelViewer({
   }, [fullSize]);
 
   useEffect(() => {
+    if (isPdf) return; // no pixels to resolve against
     let alive = true;
     const immediate: Partial<Record<BandField, Region>> = {};
     for (const f of Object.keys(fieldTexts) as BandField[]) {
@@ -81,6 +85,27 @@ export function LabelViewer({
   });
 
   const rotated = rotation % 360 !== 0;
+
+  // Browsers can't render a PDF inside <img>; show an honest placeholder
+  // instead of a broken image with dead zoom controls. Verdicts, notes, and
+  // diffs above are unaffected — only on-image highlighting is unavailable.
+  if (isPdf) {
+    return (
+      <div className="flex flex-col gap-2.5">
+        <div
+          className="flex items-center justify-center rounded-[10px] border border-line bg-line-soft/40 p-3"
+          style={{ height: viewportHeight }}
+        >
+          <div className="flex flex-col items-center gap-2.5 text-center">
+            <span className="rounded border border-line bg-card px-6 py-8 text-[13px] font-semibold text-ink">PDF</span>
+            <span className="max-w-[250px] text-[12px] text-muted-2">
+              PDF files can&rsquo;t be previewed here — open the file to see the label. Every check above still ran on it.
+            </span>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const overlays = (focusable: boolean) =>
     (Object.entries(shownFields) as [BandField, Tone][]).map(([field, tone]) => {

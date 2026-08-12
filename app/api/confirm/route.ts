@@ -23,6 +23,7 @@ function rateLimited(ip: string): boolean {
 }
 
 const OVERALLS = new Set<OverallVerdict>(["clean", "needs_review", "warning_failure", "not_a_label"]);
+const VERDICTS = new Set(["pass", "pass_formatting_note", "fail_wording", "fail_prefix_case", "fail_missing", "unreadable"]);
 const BOLD = new Set(["bold", "not_bold", "unclear"]);
 const SIZE = new Set(["normal", "small", "illegibly_small"]);
 
@@ -66,7 +67,11 @@ export async function POST(req: Request) {
   let warning: WarningResult;
   try {
     warning = JSON.parse(field("warning"));
-    if (typeof warning?.verdict !== "string" || !Array.isArray(warning?.notes)) throw new Error();
+    if (
+      !VERDICTS.has(warning?.verdict) ||
+      !Array.isArray(warning?.notes) ||
+      !warning.notes.every((n) => typeof n === "string")
+    ) throw new Error();
   } catch {
     return NextResponse.json({ error: "The provisional warning result is missing or malformed." }, { status: 400 });
   }

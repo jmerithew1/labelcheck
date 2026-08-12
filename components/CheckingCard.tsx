@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
  *  real request (~4s — the second warning reading no longer blocks here, it
  *  confirms asynchronously on the result screen) — phases advance on a
  *  timer, all complete only when the response lands. */
-export function CheckingCard({ imageUrl, complete = false }: { imageUrl: string | null; complete?: boolean }) {
+export function CheckingCard({ imageUrl, isPdf = false, complete = false }: { imageUrl: string | null; isPdf?: boolean; complete?: boolean }) {
   const [phase, setPhase] = useState(0);
   const [slow, setSlow] = useState(false);
   useEffect(() => {
@@ -30,11 +30,13 @@ export function CheckingCard({ imageUrl, complete = false }: { imageUrl: string 
     /* Full-width card, label left / checklist right (conformance #9). */
     <div className="mx-auto flex max-w-[1120px] flex-col items-center gap-8 rounded-xl border border-line bg-card p-8 md:flex-row md:items-start md:justify-center md:gap-14 md:p-12">
       <div className="relative overflow-hidden rounded-md border border-paper-line">
-        {imageUrl ? (
+        {imageUrl && !isPdf ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={imageUrl} alt="Label being checked" className="block w-[170px]" />
         ) : (
-          <div className="h-[240px] w-[170px] bg-paper" />
+          <div className="flex h-[240px] w-[170px] items-center justify-center bg-paper text-[13px] font-semibold text-ink">
+            {isPdf ? "PDF" : ""}
+          </div>
         )}
         <div className="scanline pointer-events-none absolute inset-x-0 h-[2px] bg-[#2b5f9e] shadow-[0_0_8px_2px_rgba(43,95,158,0.55)]" aria-hidden />
       </div>

@@ -60,6 +60,7 @@ export function SingleCheck() {
   const [outcome, setOutcome] = useState<OutcomeData | null>(null);
   const [checkDone, setCheckDone] = useState(false);
   const [confirming, setConfirming] = useState(false);
+  const [sampleLoading, setSampleLoading] = useState(false);
   // Guards the async confirmation against a stale merge: bumped whenever the
   // user starts a new check or resets, so a late /api/confirm response for a
   // previous label can never overwrite the current result.
@@ -109,6 +110,9 @@ export function SingleCheck() {
       form.set("async_confirm", "1");
       const res = await fetch("/api/check", { method: "POST", body: form });
       const body = await res.json().catch(() => null);
+      // A newer check started while this one was in flight (overlapping
+      // sample clicks) — its result owns the screen; drop this one.
+      if (token !== runToken.current) return;
       if (!res.ok || !body) {
         setError(body?.error ?? "Something went wrong. Please try again.");
         setStep("form");
@@ -124,6 +128,7 @@ export function SingleCheck() {
       setCheckDone(true);
       setTimeout(() => setStep("result"), 250);
     } catch {
+      if (token !== runToken.current) return;
       setError("Could not reach the server. Check your connection and try again.");
       setStep("form");
     }
@@ -179,6 +184,8 @@ export function SingleCheck() {
   }
 
   async function loadSample(s: DemoSample) {
+    if (sampleLoading) return; // one sample at a time — no double-fired checks
+    setSampleLoading(true);
     setError(null);
     try {
       const res = await fetch(`/api/samples/${s.png}`);
@@ -191,6 +198,8 @@ export function SingleCheck() {
       await runCheck(filled, f);
     } catch {
       setError("Could not load the sample. Check your connection and try again.");
+    } finally {
+      setSampleLoading(false);
     }
   }
 
@@ -318,7 +327,8 @@ export function SingleCheck() {
                           <button
                             key={s.id}
                             onClick={() => loadSample(s)}
-                            className="min-h-[70px] rounded-[9px] border border-line bg-card px-[13px] py-3 text-left transition hover:border-navy hover:bg-select"
+                            disabled={sampleLoading}
+                            className="min-h-[70px] rounded-[9px] border border-line bg-card px-[13px] py-3 text-left transition hover:border-navy hover:bg-select disabled:cursor-wait disabled:opacity-60"
                           >
                             <span className="flex items-center gap-1.5 text-[13px] font-bold text-ink">
                               <span className={`h-2 w-2 rounded-full ${dot}`} aria-hidden />
@@ -371,7 +381,7 @@ export function SingleCheck() {
           </>
         )}
 
-        {step === "checking" && <CheckingCard imageUrl={previewUrl} complete={checkDone} />}
+        {step === "checking" && <CheckingCard imageUrl={previewUrl} isPdf={file?.type === "application/pdf"} complete={checkDone} />}
 
         {step === "result" && outcome && previewUrl && (
           <ResultView
@@ -381,6 +391,7 @@ export function SingleCheck() {
             bands={outcome.bands}
             ms={outcome.ms}
             confirming={confirming}
+            isPdf={file?.type === "application/pdf"}
             appNumber={appNumber}
             onPrint={() => window.print()}
             primaryAction={{ label: "Check another label", onClick: resetAll }}

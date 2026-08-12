@@ -703,6 +703,7 @@ export function BatchReview() {
                       imageUrl={detail.imageUrl!}
                       bands={detail.bands ?? {}}
                       ms={detail.ms}
+                      isPdf={detail.filename.toLowerCase().endsWith(".pdf")}
                       compact
                     />
                   ) : (
@@ -751,7 +752,7 @@ export function BatchReview() {
           </div>
           <div className="min-h-0 flex-1 overflow-auto px-6 py-4">
             {tab === "overview" ? (
-              <ResultView result={detail.result} extraction={detail.extraction} imageUrl={detail.imageUrl} bands={detail.bands ?? {}} ms={detail.ms} compact />
+              <ResultView result={detail.result} extraction={detail.extraction} imageUrl={detail.imageUrl} bands={detail.bands ?? {}} ms={detail.ms} isPdf={detail.filename.toLowerCase().endsWith(".pdf")} compact />
             ) : (
               <AuditTrail row={detail} />
             )}
