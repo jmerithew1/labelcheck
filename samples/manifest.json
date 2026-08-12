@@ -1,5 +1,5 @@
 {
-  "generated": "2026-08-11",
+  "generated": "2026-08-12",
   "generator": "samples/tools/render.mjs (HTML/CSS rendered via Playwright Chromium)",
   "canonical_warning": "GOVERNMENT WARNING: (1) According to the Surgeon General, women should not drink alcoholic beverages during pregnancy because of the risk of birth defects. (2) Consumption of alcoholic beverages impairs your ability to drive a car or operate machinery, and may cause health problems.",
   "spike_cases": {
@@ -278,6 +278,36 @@
         "class_type": "Rosé Wine",
         "alcohol_content": "12% Alc. by Vol.",
         "net_contents": "750 mL"
+      },
+      "warning_ok": true
+    },
+    {
+      "name": "batch-mismatch-brand",
+      "png": "samples/labels/batch-mismatch-brand.png",
+      "ground_truth": "samples/labels/batch-mismatch-brand.json",
+      "template": "gin",
+      "spike_case": "demo-mismatch",
+      "summary": "Clean label used for the batch brand-mismatch row — the APPLICATION names a different distillery, so the brand must surface as a possible mismatch.",
+      "fields": {
+        "brand_name": "COPPER CREEK DISTILLERY",
+        "class_type": "London Dry Gin",
+        "alcohol_content": "44% Alc./Vol. (88 Proof)",
+        "net_contents": "750 mL"
+      },
+      "warning_ok": true
+    },
+    {
+      "name": "batch-case-diff",
+      "png": "samples/labels/batch-case-diff.png",
+      "ground_truth": "samples/labels/batch-case-diff.json",
+      "template": "can",
+      "spike_case": "demo-case-diff",
+      "summary": "Clean label used for the batch formatting-difference row — the APPLICATION supplies the same values in different letter case, which must read as a match with a formatting note.",
+      "fields": {
+        "brand_name": "NORTH PIER LAGER",
+        "class_type": "Vienna Lager",
+        "alcohol_content": "5.4% Alc./Vol.",
+        "net_contents": "355 mL"
       },
       "warning_ok": true
     }

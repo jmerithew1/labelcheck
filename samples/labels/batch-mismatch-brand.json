@@ -1,0 +1,10 @@
+{
+  "brand_name": "COPPER CREEK DISTILLERY",
+  "class_type": "London Dry Gin",
+  "alcohol_content": "44% Alc./Vol. (88 Proof)",
+  "net_contents": "750 mL",
+  "warning_text_verbatim": "GOVERNMENT WARNING: (1) According to the Surgeon General, women should not drink alcoholic beverages during pregnancy because of the risk of birth defects. (2) Consumption of alcoholic beverages impairs your ability to drive a car or operate machinery, and may cause health problems.",
+  "warning_prefix_all_caps": true,
+  "warning_prefix_bold": true,
+  "notes": "Clean label used for the batch brand-mismatch row — the APPLICATION names a different distillery, so the brand must surface as a possible mismatch."
+}

@@ -320,6 +320,29 @@ const SPECS = [
     spike_case: 'demo-clean',
     notes: 'Clean rosé wine label for the batch set (accented character in class/type). All fields and warning canonical.',
   },
+  // Distinct artwork for the two batch rows whose TEST is in the application
+  // data, not the label: a demo that shows the same image twice reads as a
+  // bug. Each now has its own brand and template.
+  {
+    name: 'batch-mismatch-brand', template: 'gin', ink: '#1f3d34',
+    brand: 'COPPER CREEK DISTILLERY', classType: 'London Dry Gin',
+    abv: '44% Alc./Vol. (88 Proof)', net: '750 mL',
+    sub: 'ELEVEN BOTANICALS · SMALL BATCH', icon: '⚗',
+    tagline: 'Juniper, coriander and citrus peel, redistilled in a copper pot.',
+    warning: { ...WARN_OK },
+    spike_case: 'demo-mismatch',
+    notes: 'Clean label used for the batch brand-mismatch row — the APPLICATION names a different distillery, so the brand must surface as a possible mismatch.',
+  },
+  {
+    name: 'batch-case-diff', template: 'can', bg: '#2c3f52', accent: '#e0b062',
+    brand: 'NORTH PIER LAGER', classType: 'Vienna Lager',
+    abv: '5.4% Alc./Vol.', net: '355 mL',
+    icon: '⚓',
+    tagline: 'Munich malt, cold-conditioned six weeks on the lakefront.',
+    warning: { ...WARN_OK },
+    spike_case: 'demo-case-diff',
+    notes: 'Clean label used for the batch formatting-difference row — the APPLICATION supplies the same values in different letter case, which must read as a match with a formatting note.',
+  },
 ];
 
 function verbatimWarning(w) {
@@ -436,11 +459,12 @@ const batchRows = [
   ['batch-rose.png', 'batch-rose.png', 'VALLEY MIST CELLARS', 'Rosé Wine', '12% Alc. by Vol.', '750 mL'],
   // 2 case-difference matches — CSV case differs from the rendered label
   ['case-diff.png', 'case-diff.png', 'OLD TOM DISTILLERY', 'Kentucky Straight Bourbon Whiskey', '45% Alc./Vol. (90 Proof)', '750 mL'], // label prints "Old Tom Distillery"
-  ['stones-throw.png', 'case-diff-2.png', "Stone's Throw Brewing", 'India pale ale', '6.2% alc./vol.', '355 mL'], // label prints ALL CAPS brand
+  // …its own artwork, so no image appears twice in the demo batch
+  ['batch-case-diff.png', 'case-diff-2.png', 'north pier lager', 'vienna lager', '5.4% alc./vol.', '355 ML'], // label prints ALL CAPS brand
   // 1 warning failure — fields all correct, warning has "health defects"
   ['word-swap.png', 'warning-fail.png', 'OLD TOM DISTILLERY', 'Kentucky Straight Bourbon Whiskey', '45% Alc./Vol. (90 Proof)', '750 mL'],
-  // 1 deliberate brand mismatch — label prints OLD TOM DISTILLERY
-  ['clean-match.png', 'brand-mismatch.png', 'OLD CROW DISTILLERY', 'Kentucky Straight Bourbon Whiskey', '45% Alc./Vol. (90 Proof)', '750 mL'],
+  // 1 deliberate brand mismatch — label prints COPPER CREEK DISTILLERY
+  ['batch-mismatch-brand.png', 'brand-mismatch.png', 'COPPER RIDGE DISTILLERY', 'London Dry Gin', '44% Alc./Vol. (88 Proof)', '750 mL'],
 ];
 const csvCell = (v) => (/[",\n]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v);
 const csvLines = ['filename,brand_name,class_type,alcohol_content,net_contents'];

@@ -91,10 +91,18 @@ function bucketOf(r: BatchRow): Bucket {
   // The agent's ruling on a reviewed row outranks every machine state.
   if (r.agentReview === "ok") return "matched";
   if (r.agentReview === "correction") return "review";
+  // While the gate is still measuring, don't flicker the row through review.
+  if (boldEligible(r) && r.boldAuto === undefined && !r.boldReview) {
+    return r.result.overall === "clean" ? "matched" : "review";
+  }
   // An agent's flag outranks the clean verdict — a human said "not bold."
   if (r.boldReview === "flagged") return "review";
   // A confident machine "not bold" escalates too, unless a human overruled it.
   if (r.boldAuto === "not_bold" && r.boldReview !== "confirmed") return "review";
+  // An owed bold glance IS review work. (Before the measurement gate every
+  // passing label owed one, which would have made this filter useless; the
+  // gate resolves most of them, so the few left belong here honestly.)
+  if (boldPendingRow(r)) return "review";
   if (r.result.overall === "clean") {
     const anyChecked = r.result.fields.some((f) => f.verdict !== "not_provided");
     return anyChecked ? "matched" : "not_required";
