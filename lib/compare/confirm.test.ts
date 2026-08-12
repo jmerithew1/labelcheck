@@ -14,7 +14,7 @@ describe("applySecondReading", () => {
     expect(applied.outcome).toBe("confirmed");
     expect(applied.warning.verdict).toBe("fail_wording");
     expect(applied.overall).toBe("warning_failure");
-    expect(applied.warning.notes[0]).toBe("Confirmed by a second independent AI reading.");
+    expect(applied.warning.notes[0]).toBe("Confirmed by a second independent reading.");
   });
 
   it("downgrades to check-manually when the second reading passes (disagreement)", () => {
@@ -22,7 +22,7 @@ describe("applySecondReading", () => {
     expect(applied.outcome).toBe("downgraded");
     expect(applied.warning.verdict).toBe("unreadable");
     expect(applied.overall).toBe("needs_review");
-    expect(applied.warning.notes[0]).toMatch(/two independent ai readings.*disagree/i);
+    expect(applied.warning.notes[0]).toMatch(/readings.*disagree/i);
   });
 
   it("leaves the single-reading verdict untouched when the confirmation is unavailable", () => {

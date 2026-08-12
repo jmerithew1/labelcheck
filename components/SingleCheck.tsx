@@ -140,7 +140,7 @@ export function SingleCheck() {
                 warning: {
                   ...prev.result.warning,
                   notes: [
-                    "The second confirming reading could not run — this verdict is from a single AI reading. Check the warning on the image before acting.",
+                    "This result could not be double-checked — it is from a single reading. Check the warning on the image before acting.",
                     ...prev.result.warning.notes,
                   ],
                 },

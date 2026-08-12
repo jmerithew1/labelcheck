@@ -267,8 +267,8 @@ export function ResultView({
                 : "The computer could not judge bold type — please check the picture.",
         };
   const sizeNote = result.warning.notes.find((n) => /small/i.test(n));
-  const confirmationNote = result.warning.notes.find((n) => n.startsWith("Confirmed by a second"));
-  const singleReadingNote = result.warning.notes.find((n) => n.includes("single AI reading"));
+  const wasConfirmed = result.warning.notes.some((n) => n.startsWith("Confirmed by a second"));
+  const singleReadingNote = result.warning.notes.find((n) => n.includes("from a single reading"));
   const showWarningDiff = wv === "fail_wording";
 
   const rowTone = (v: string): Tone =>
@@ -434,12 +434,15 @@ export function ResultView({
           <WarningRow compact={compact} label="Size" chip={<Chip tone="warn">Review</Chip>} text={sizeNote} />
         )}
         {confirming && (
-          <p className="animate-pulse border-t border-hairline px-4 py-2.5 text-[12px] font-semibold text-amber">
-            Confirming this with a second independent AI reading — a few seconds…
+          <p className="flex items-center gap-2 border-t border-hairline px-4 py-2.5 text-[12px] font-semibold text-amber">
+            <span className="h-3.5 w-3.5 shrink-0 animate-spin rounded-full border-2 border-amber border-t-transparent" aria-hidden />
+            <span className="animate-pulse">Double-checking this with a second reading — this may take a few seconds…</span>
           </p>
         )}
-        {!confirming && confirmationNote && (
-          <p className="border-t border-hairline px-4 py-2.5 text-[12px] text-ink-faint">✓ {confirmationNote}</p>
+        {!confirming && wasConfirmed && (
+          <p className="border-t border-hairline px-4 py-2.5 text-[12px] text-ink-faint">
+            ✓ Double-checked — a second reading of the label found the same thing.
+          </p>
         )}
         {!confirming && singleReadingNote && (
           <p className="border-t border-hairline px-4 py-2.5 text-[12px] font-semibold text-amber">{singleReadingNote}</p>

@@ -780,7 +780,7 @@ export function BatchReview() {
 function AuditTrail({ row }: { row: BatchRow }) {
   const r = row.result!;
   const confirmed = r.warning.notes.some((n) => /second independent/i.test(n));
-  const overturned = r.warning.notes.some((n) => /readings disagree/i.test(n));
+  const overturned = r.warning.notes.some((n) => /readings.*disagree/i.test(n));
   const ts = row.checkedAt ? row.checkedAt.toLocaleTimeString() : undefined;
   // Plain English first (Margaret finding #1); technical identifiers in
   // parentheses for auditors who need them.

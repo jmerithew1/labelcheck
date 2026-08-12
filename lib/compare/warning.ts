@@ -200,7 +200,7 @@ export function applySecondReading(
         ...warning,
         verdict: "unreadable",
         notes: [
-          "Two independent AI readings of the warning disagree — the first found a deviation, the second reads it as exact. This is usually a transcription artifact, not a label defect. Check the warning on the image before acting.",
+          "Two readings of the warning disagree — this is usually a misread, not a problem with the label. Check the warning on the image before deciding.",
           ...warning.notes,
         ],
       },
@@ -211,7 +211,7 @@ export function applySecondReading(
   return {
     warning: {
       ...warning,
-      notes: ["Confirmed by a second independent AI reading.", ...warning.notes],
+      notes: ["Confirmed by a second independent reading.", ...warning.notes],
     },
     overall,
     outcome: "confirmed",
