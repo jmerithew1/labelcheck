@@ -30,6 +30,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';
 import { createWorker } from 'tesseract.js';
+import { applyBoldGate, BOLD_GATE as GATE } from '../../lib/compare/boldGate.ts';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..', '..');
@@ -38,19 +39,10 @@ const argv = process.argv.slice(2);
 const arg = (k, d) => { const a = argv.find((x) => x.startsWith(`--${k}=`)); return a ? a.split('=')[1] : d; };
 const LIMIT = Number(arg('limit', 0));
 
-// The frozen shipped thresholds — imported by value so this harness cannot
-// drift from lib/compare/boldGate.ts without the mismatch being visible here.
-const GATE = { swHi: 1.225, swLo: 0.875, dHi: 1.0, dLo: 1.3, sizeMin: 0.6, sizeMax: 1.7 };
-
-function applyBoldGate(s, ai) {
-  if (!s) return 'human';
-  const { swRatio, densRatio, sizeRatio } = s;
-  if (![swRatio, densRatio, sizeRatio].every(Number.isFinite)) return 'human';
-  if (sizeRatio < GATE.sizeMin || sizeRatio > GATE.sizeMax) return 'human';
-  if (swRatio >= GATE.swHi && densRatio >= GATE.dHi && ai === 'bold') return 'bold';
-  if (swRatio <= GATE.swLo && densRatio <= GATE.dLo) return 'not_bold';
-  return 'human';
-}
+// Import the SHIPPED gate rather than restating it. A local copy silently
+// fell out of sync the moment lib/compare/boldGate.ts gained a resolution
+// floor — this harness would then have been measuring a gate that no longer
+// exists, which is the exact class of error it was written to catch.
 
 // Pixel helpers, evaluated inside the browser page (identical maths to
 // lib/boldMeasure.ts — that file is "use client" and cannot be imported here).
@@ -155,6 +147,7 @@ async function signalsFor(file) {
       swRatio: pm.sw / bm.sw,
       densRatio: pm.inkFrac / bm.inkFrac,
       sizeRatio: pm.capH / bm.capH,
+      swBodyNativePx: bm.sw / 3, // measured on a 3x upscale
     };
   }, { b64: prep, prefix, body, MEASURE_FN });
 }

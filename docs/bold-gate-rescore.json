@@ -7,7 +7,8 @@
     "dHi": 1,
     "dLo": 1.3,
     "sizeMin": 0.6,
-    "sizeMax": 1.7
+    "sizeMax": 1.7,
+    "minBodyStrokePx": 2
   },
   "n": 160,
   "not_bold": 6,
@@ -21,6 +22,7 @@
       "swRatio": 1.1428571428571428,
       "densRatio": 0.7660600295261265,
       "sizeRatio": 1.4782608695652173,
+      "swBodyNativePx": 2.3333333333333335,
       "measurable": true,
       "gate": "human"
     },
@@ -72,6 +74,7 @@
       "swRatio": 1,
       "densRatio": 1.3600930283001247,
       "sizeRatio": 0.8095238095238095,
+      "swBodyNativePx": 1.6666666666666667,
       "measurable": true,
       "gate": "human"
     },
@@ -81,6 +84,7 @@
       "swRatio": 1,
       "densRatio": 1.3451070429771068,
       "sizeRatio": 0.8048780487804879,
+      "swBodyNativePx": 1.6666666666666667,
       "measurable": true,
       "gate": "human"
     },
@@ -90,6 +94,7 @@
       "swRatio": 1,
       "densRatio": 1.4501080348973103,
       "sizeRatio": 0.7555555555555555,
+      "swBodyNativePx": 2.3333333333333335,
       "measurable": true,
       "gate": "human"
     },
@@ -99,6 +104,7 @@
       "swRatio": 1,
       "densRatio": 1.3462122234214788,
       "sizeRatio": 0.8,
+      "swBodyNativePx": 3,
       "measurable": true,
       "gate": "human"
     },
@@ -144,6 +150,7 @@
       "swRatio": 1,
       "densRatio": 1.4477961172292992,
       "sizeRatio": 0.7555555555555555,
+      "swBodyNativePx": 2.3333333333333335,
       "measurable": true,
       "gate": "human"
     },
@@ -153,6 +160,7 @@
       "swRatio": 1,
       "densRatio": 1.4346827619446638,
       "sizeRatio": 0.7555555555555555,
+      "swBodyNativePx": 2.3333333333333335,
       "measurable": true,
       "gate": "human"
     },
@@ -162,6 +170,7 @@
       "swRatio": 1,
       "densRatio": 1.4357783239159307,
       "sizeRatio": 0.7555555555555555,
+      "swBodyNativePx": 2.6666666666666665,
       "measurable": true,
       "gate": "human"
     },
@@ -177,6 +186,7 @@
       "swRatio": 1,
       "densRatio": 0.9383434547908232,
       "sizeRatio": 0.9696969696969697,
+      "swBodyNativePx": 1.3333333333333333,
       "measurable": true,
       "gate": "human"
     },
@@ -186,6 +196,7 @@
       "swRatio": 1,
       "densRatio": 1.2608489975649646,
       "sizeRatio": 0.8529411764705882,
+      "swBodyNativePx": 2.3333333333333335,
       "measurable": true,
       "gate": "human"
     },
@@ -207,6 +218,7 @@
       "swRatio": 1,
       "densRatio": 1.4509746866092632,
       "sizeRatio": 0.7555555555555555,
+      "swBodyNativePx": 2.3333333333333335,
       "measurable": true,
       "gate": "human"
     },
@@ -222,6 +234,7 @@
       "swRatio": 1,
       "densRatio": 1.3966952506182024,
       "sizeRatio": 0.7777777777777778,
+      "swBodyNativePx": 2.6666666666666665,
       "measurable": true,
       "gate": "human"
     },
@@ -231,6 +244,7 @@
       "swRatio": 1,
       "densRatio": 1.45378752897257,
       "sizeRatio": 0.7555555555555555,
+      "swBodyNativePx": 2.3333333333333335,
       "measurable": true,
       "gate": "human"
     },
@@ -240,6 +254,7 @@
       "swRatio": 1,
       "densRatio": 1.1818899929322746,
       "sizeRatio": 0.8913043478260869,
+      "swBodyNativePx": 2.3333333333333335,
       "measurable": true,
       "gate": "human"
     },
@@ -249,6 +264,7 @@
       "swRatio": 1,
       "densRatio": 0.952369369039667,
       "sizeRatio": 1.1206896551724137,
+      "swBodyNativePx": 2.3333333333333335,
       "measurable": true,
       "gate": "human"
     },
@@ -276,6 +292,7 @@
       "swRatio": 1,
       "densRatio": 1.50388247894455,
       "sizeRatio": 0.8,
+      "swBodyNativePx": 1.6666666666666667,
       "measurable": true,
       "gate": "human"
     },
@@ -297,6 +314,7 @@
       "swRatio": 1,
       "densRatio": 1.4465200348710558,
       "sizeRatio": 0.7555555555555555,
+      "swBodyNativePx": 2.3333333333333335,
       "measurable": true,
       "gate": "human"
     },
@@ -378,6 +396,7 @@
       "swRatio": 1.0344827586206897,
       "densRatio": 1.388968664990677,
       "sizeRatio": 0.9491525423728814,
+      "swBodyNativePx": 9.666666666666666,
       "measurable": true,
       "gate": "human"
     },
@@ -423,6 +442,7 @@
       "swRatio": 1,
       "densRatio": 1.3876663243058738,
       "sizeRatio": 0.9491525423728814,
+      "swBodyNativePx": 9.666666666666666,
       "measurable": true,
       "gate": "human"
     },
@@ -432,6 +452,7 @@
       "swRatio": 1,
       "densRatio": 1.3847530234632013,
       "sizeRatio": 0.9491525423728814,
+      "swBodyNativePx": 9.666666666666666,
       "measurable": true,
       "gate": "human"
     },
@@ -441,6 +462,7 @@
       "swRatio": 1,
       "densRatio": 1.3829761470461541,
       "sizeRatio": 0.9491525423728814,
+      "swBodyNativePx": 9.666666666666666,
       "measurable": true,
       "gate": "human"
     },
@@ -480,6 +502,7 @@
       "swRatio": 1.25,
       "densRatio": 1.365729004763074,
       "sizeRatio": 0.7446808510638298,
+      "swBodyNativePx": 6.666666666666667,
       "measurable": true,
       "gate": "bold"
     },
@@ -495,6 +518,7 @@
       "swRatio": 1,
       "densRatio": 1.4706242211396852,
       "sizeRatio": 0.6956521739130435,
+      "swBodyNativePx": 3,
       "measurable": true,
       "gate": "human"
     },
@@ -504,6 +528,7 @@
       "swRatio": 1,
       "densRatio": 1.3905392819915807,
       "sizeRatio": 0.9491525423728814,
+      "swBodyNativePx": 9.666666666666666,
       "measurable": true,
       "gate": "human"
     },
@@ -513,6 +538,7 @@
       "swRatio": 0.875,
       "densRatio": 1.1893922534077355,
       "sizeRatio": 0.8636363636363636,
+      "swBodyNativePx": 2.6666666666666665,
       "measurable": true,
       "gate": "not_bold"
     },
@@ -522,6 +548,7 @@
       "swRatio": 0.875,
       "densRatio": 1.0202048802445205,
       "sizeRatio": 0.9836065573770492,
+      "swBodyNativePx": 2.6666666666666665,
       "measurable": true,
       "gate": "not_bold"
     },
@@ -549,6 +576,7 @@
       "swRatio": 1,
       "densRatio": 1.2866741783005384,
       "sizeRatio": 1,
+      "swBodyNativePx": 4.666666666666667,
       "measurable": true,
       "gate": "human"
     },
@@ -570,6 +598,7 @@
       "swRatio": 1,
       "densRatio": 1.4415327165598513,
       "sizeRatio": 0.7111111111111111,
+      "swBodyNativePx": 2.6666666666666665,
       "measurable": true,
       "gate": "human"
     },
@@ -585,6 +614,7 @@
       "swRatio": 0.8461538461538461,
       "densRatio": 0.8332648688714972,
       "sizeRatio": 1.2941176470588236,
+      "swBodyNativePx": 4.333333333333333,
       "measurable": true,
       "gate": "not_bold"
     },
@@ -636,6 +666,7 @@
       "swRatio": 1,
       "densRatio": 1.4186071793714232,
       "sizeRatio": 0.7272727272727273,
+      "swBodyNativePx": 2.6666666666666665,
       "measurable": true,
       "gate": "human"
     },
@@ -645,6 +676,7 @@
       "swRatio": 1,
       "densRatio": 1.3935496139384023,
       "sizeRatio": 0.7272727272727273,
+      "swBodyNativePx": 2.3333333333333335,
       "measurable": true,
       "gate": "human"
     },
@@ -654,6 +686,7 @@
       "swRatio": 0.9090909090909091,
       "densRatio": 1.417188451999463,
       "sizeRatio": 0.7608695652173914,
+      "swBodyNativePx": 3.6666666666666665,
       "measurable": true,
       "gate": "human"
     },
@@ -663,6 +696,7 @@
       "swRatio": 0.9166666666666666,
       "densRatio": 1.4313673525761805,
       "sizeRatio": 0.7608695652173914,
+      "swBodyNativePx": 4,
       "measurable": true,
       "gate": "human"
     },
@@ -684,6 +718,7 @@
       "swRatio": 0.6923076923076923,
       "densRatio": 1.1206477135155626,
       "sizeRatio": 0.851063829787234,
+      "swBodyNativePx": 4.333333333333333,
       "measurable": true,
       "gate": "not_bold"
     },
@@ -711,6 +746,7 @@
       "swRatio": 0.8461538461538461,
       "densRatio": 1.4674363584089343,
       "sizeRatio": 0.7446808510638298,
+      "swBodyNativePx": 4.333333333333333,
       "measurable": true,
       "gate": "human"
     },
@@ -720,6 +756,7 @@
       "swRatio": 0.8461538461538461,
       "densRatio": 1.4659480456589415,
       "sizeRatio": 0.7446808510638298,
+      "swBodyNativePx": 4.333333333333333,
       "measurable": true,
       "gate": "human"
     },
@@ -729,6 +766,7 @@
       "swRatio": 0.7857142857142857,
       "densRatio": 1.4086011904761906,
       "sizeRatio": 0.7446808510638298,
+      "swBodyNativePx": 4.666666666666667,
       "measurable": true,
       "gate": "human"
     },
@@ -738,6 +776,7 @@
       "swRatio": 0.9285714285714286,
       "densRatio": 1.4020370040917984,
       "sizeRatio": 0.7446808510638298,
+      "swBodyNativePx": 4.666666666666667,
       "measurable": true,
       "gate": "human"
     },
@@ -747,6 +786,7 @@
       "swRatio": 1.4166666666666667,
       "densRatio": 1.7026992442269873,
       "sizeRatio": 0.7608695652173914,
+      "swBodyNativePx": 4,
       "measurable": true,
       "gate": "bold"
     },
@@ -756,6 +796,7 @@
       "swRatio": 0.9090909090909091,
       "densRatio": 1.2974931050955048,
       "sizeRatio": 0.7631578947368421,
+      "swBodyNativePx": 3.6666666666666665,
       "measurable": true,
       "gate": "human"
     },
@@ -765,6 +806,7 @@
       "swRatio": 0.9090909090909091,
       "densRatio": 1.2025307334226871,
       "sizeRatio": 0.9487179487179487,
+      "swBodyNativePx": 3.6666666666666665,
       "measurable": true,
       "gate": "human"
     },
@@ -780,6 +822,7 @@
       "swRatio": 0.9166666666666666,
       "densRatio": 1.4306489127727218,
       "sizeRatio": 0.7608695652173914,
+      "swBodyNativePx": 4,
       "measurable": true,
       "gate": "human"
     },
@@ -795,6 +838,7 @@
       "swRatio": 0.8333333333333334,
       "densRatio": 1.4325203699247087,
       "sizeRatio": 0.7391304347826086,
+      "swBodyNativePx": 4,
       "measurable": true,
       "gate": "human"
     },
@@ -804,6 +848,7 @@
       "swRatio": 0.8461538461538461,
       "densRatio": 1.4353596395020025,
       "sizeRatio": 0.7608695652173914,
+      "swBodyNativePx": 4.333333333333333,
       "measurable": true,
       "gate": "human"
     },
@@ -813,6 +858,7 @@
       "swRatio": 0.8,
       "densRatio": 1.119514661574407,
       "sizeRatio": 0.9318181818181818,
+      "swBodyNativePx": 3.3333333333333335,
       "measurable": true,
       "gate": "not_bold"
     },
@@ -822,6 +868,7 @@
       "swRatio": 0.8888888888888888,
       "densRatio": 0.9817946969570979,
       "sizeRatio": 1.096774193548387,
+      "swBodyNativePx": 3,
       "measurable": true,
       "gate": "human"
     },
@@ -849,6 +896,7 @@
       "swRatio": 0.7272727272727273,
       "densRatio": 1.5194867025787697,
       "sizeRatio": 0.9393939393939394,
+      "swBodyNativePx": 3.6666666666666665,
       "measurable": true,
       "gate": "human"
     },
@@ -870,6 +918,7 @@
       "swRatio": 1,
       "densRatio": 1.4354424288659806,
       "sizeRatio": 0.7391304347826086,
+      "swBodyNativePx": 3.3333333333333335,
       "measurable": true,
       "gate": "human"
     },
@@ -933,6 +982,7 @@
       "swRatio": 0.7391304347826086,
       "densRatio": 1.35415667623628,
       "sizeRatio": 0.9523809523809523,
+      "swBodyNativePx": 7.666666666666667,
       "measurable": true,
       "gate": "human"
     },
@@ -942,6 +992,7 @@
       "swRatio": 0.7391304347826086,
       "densRatio": 1.3530140878633876,
       "sizeRatio": 0.9491525423728814,
+      "swBodyNativePx": 7.666666666666667,
       "measurable": true,
       "gate": "human"
     },
@@ -951,6 +1002,7 @@
       "swRatio": 0.7391304347826086,
       "densRatio": 1.3537164422427028,
       "sizeRatio": 0.9523809523809523,
+      "swBodyNativePx": 7.666666666666667,
       "measurable": true,
       "gate": "human"
     },
@@ -960,6 +1012,7 @@
       "swRatio": 0.8947368421052632,
       "densRatio": 1.367442336951779,
       "sizeRatio": 0.9482758620689655,
+      "swBodyNativePx": 6.333333333333333,
       "measurable": true,
       "gate": "human"
     },
@@ -1005,6 +1058,7 @@
       "swRatio": 0.7391304347826086,
       "densRatio": 1.3719340798839372,
       "sizeRatio": 0.9482758620689655,
+      "swBodyNativePx": 7.666666666666667,
       "measurable": true,
       "gate": "human"
     },
@@ -1014,6 +1068,7 @@
       "swRatio": 0.7391304347826086,
       "densRatio": 1.3640788001231723,
       "sizeRatio": 0.9482758620689655,
+      "swBodyNativePx": 7.666666666666667,
       "measurable": true,
       "gate": "human"
     },
@@ -1023,6 +1078,7 @@
       "swRatio": 0.7727272727272727,
       "densRatio": 1.373403722924672,
       "sizeRatio": 0.9464285714285714,
+      "swBodyNativePx": 7.333333333333333,
       "measurable": true,
       "gate": "human"
     },
@@ -1032,6 +1088,7 @@
       "swRatio": 1,
       "densRatio": 1.4455505279034693,
       "sizeRatio": 0.7083333333333334,
+      "swBodyNativePx": 3.3333333333333335,
       "measurable": true,
       "gate": "human"
     },
@@ -1041,6 +1098,7 @@
       "swRatio": 2.2857142857142856,
       "densRatio": 1.6386974731580897,
       "sizeRatio": 1.0126582278481013,
+      "swBodyNativePx": 2.3333333333333335,
       "measurable": true,
       "gate": "bold"
     },
@@ -1050,6 +1108,7 @@
       "swRatio": 0.7368421052631579,
       "densRatio": 1.331423183185112,
       "sizeRatio": 0.9215686274509803,
+      "swBodyNativePx": 6.333333333333333,
       "measurable": true,
       "gate": "human"
     },
@@ -1071,6 +1130,7 @@
       "swRatio": 0.7391304347826086,
       "densRatio": 1.364330151185317,
       "sizeRatio": 0.9482758620689655,
+      "swBodyNativePx": 7.666666666666667,
       "measurable": true,
       "gate": "human"
     },
@@ -1086,6 +1146,7 @@
       "swRatio": 0.8571428571428571,
       "densRatio": 1.5102401666149672,
       "sizeRatio": 0.75,
+      "swBodyNativePx": 4.666666666666667,
       "measurable": true,
       "gate": "human"
     },
@@ -1095,6 +1156,7 @@
       "swRatio": 0.7391304347826086,
       "densRatio": 1.3566791363765551,
       "sizeRatio": 0.9523809523809523,
+      "swBodyNativePx": 7.666666666666667,
       "measurable": true,
       "gate": "human"
     },
@@ -1122,6 +1184,7 @@
       "swRatio": 0.6818181818181818,
       "densRatio": 1.055696823697359,
       "sizeRatio": 0.8421052631578947,
+      "swBodyNativePx": 7.333333333333333,
       "measurable": true,
       "gate": "not_bold"
     },
@@ -1131,6 +1194,7 @@
       "swRatio": 0.9230769230769231,
       "densRatio": 1.4190194181149034,
       "sizeRatio": 0.7346938775510204,
+      "swBodyNativePx": 4.333333333333333,
       "measurable": true,
       "gate": "human"
     },
@@ -1158,6 +1222,7 @@
       "swRatio": 0.875,
       "densRatio": 1.4337802094877865,
       "sizeRatio": 0.9272727272727272,
+      "swBodyNativePx": 5.333333333333333,
       "measurable": true,
       "gate": "human"
     },
@@ -1167,11 +1232,5 @@
       "measurable": false,
       "gate": "human"
     }
-  ],
-  "comparison": {
-    "raw_api_advisory_wrong": "47 of 160 (29%) — docs/robustness-matrix.json, the layer the harness measured",
-    "shipped_gate_silent_misses": "3 of 160 (1.9%) — the layer a user actually sees",
-    "caveat": "This harness OCRs the WHOLE image because no locator band is available offline; the shipped path OCRs a crop of the located warning band, which succeeds far more often. So \"unmeasurable\" (96) is inflated here. Unmeasurable routes to \"human\" (amber) either way, so the silent-miss figure is unaffected — if anything the real measurement catches MORE.",
-    "worst_case_note": "aiAdvisory was forced to \"bold\" on every sample. In reality the model answers not_bold/unclear on most, and the green branch REQUIRES ai===bold, so the true figure is <= 3."
-  }
+  ]
 }
