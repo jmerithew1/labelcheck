@@ -15,12 +15,19 @@
     ]
   },
   "p1_warning_failure_path": {
-    "note": "Warning-failing labels pay a second independent reading (deliberate false-rejection-aversion trade-off, see approach.md); measured live against the production URL during the round-2 audit on 2026-08-11. Passing control included for comparison.",
-    "cases": [
-      { "label": "title-case-prefix.png", "outcome": "fail_prefix_case", "wall_ms": 8109, "server_ms": 7562 },
-      { "label": "word-swap.png", "outcome": "fail_wording", "wall_ms": 8280, "server_ms": 7933 },
-      { "label": "case-diff.png (passing control)", "outcome": "clean", "wall_ms": 3802, "server_ms": 3478 }
-    ]
+    "note": "Warning-failing labels get a second independent reading before a FAIL is trusted (false-rejection guard, see approach.md). Originally the reading blocked /api/check (~8s end-to-end, 'blocking' below, measured in the round-2 audit); single checks now return the provisional verdict immediately and confirm asynchronously via /api/confirm ('async' below). Batch rows keep the blocking path. All measured live against the production URL on 2026-08-11.",
+    "async": {
+      "provisional_check": { "label": "title-case-prefix.png", "verdict": "fail_prefix_case", "wall_ms": 4024, "server_ms": 3748, "confirm_pending": true },
+      "confirm_call": { "wall_ms": 5362, "server_ms": 4994, "outcome": "confirmed" },
+      "passing_control": { "label": "case-diff.png", "overall": "clean", "wall_ms": 3884, "server_ms": 3634, "confirm_pending": false }
+    },
+    "blocking": {
+      "cases": [
+        { "label": "title-case-prefix.png", "outcome": "fail_prefix_case", "wall_ms": 8109, "server_ms": 7562 },
+        { "label": "word-swap.png", "outcome": "fail_wording", "wall_ms": 8280, "server_ms": 7933 },
+        { "label": "case-diff.png (passing control)", "outcome": "clean", "wall_ms": 3802, "server_ms": 3478 }
+      ]
+    }
   },
   "p3_batch": {
     "rows": 250,

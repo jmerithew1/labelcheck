@@ -200,7 +200,7 @@ export function applySecondReading(
         ...warning,
         verdict: "unreadable",
         notes: [
-          "Two readings of the warning disagree — this is usually a misread, not a problem with the label. Check the warning on the image before deciding.",
+          "The two readings of the warning disagree — check the warning on the image before deciding.",
           ...warning.notes,
         ],
       },
