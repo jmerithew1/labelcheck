@@ -3,7 +3,7 @@ import Anthropic from "@anthropic-ai/sdk";
 /**
  * Field locator: approximate vertical BANDS (not boxes) for evidence
  * highlighting. Spike-validated (scripts/spike-locate-v2.ts): 20/20 bands
- * parse, p50 2.0s — faster than the main extraction call, so running it in
+ * parse, p50 1.75s (max 1.98s) — faster than the main extraction call, so running it in
  * parallel adds zero wall-clock. Bands are approximate by design: the UI pads
  * them ±2.5% and labels them "approximate location"; x-precision was measured
  * too sloppy to show (v1), so full-width bands only. Best-effort: any failure

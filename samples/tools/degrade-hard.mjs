@@ -14,7 +14,7 @@ import path from 'node:path';
 
 const ROOT = path.resolve(process.cwd(), '..', '..');
 const OUT = path.join(ROOT, 'samples', 'degraded-hard');
-const BASE = process.argv[2] ?? 'https://labelcheck-production-8f22.up.railway.app';
+const BASE = process.argv[2] ?? LOCAL_DEFAULT;
 fs.mkdirSync(OUT, { recursive: true });
 
 const manifest = JSON.parse(fs.readFileSync(path.join(ROOT, 'samples', 'manifest.json'), 'utf8'));

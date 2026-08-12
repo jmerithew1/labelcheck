@@ -19,8 +19,12 @@ import path from 'node:path';
 const ROOT = path.resolve(process.cwd(), '..', '..');
 const OUT = path.join(ROOT, 'samples', 'robustness');
 fs.mkdirSync(OUT, { recursive: true });
+// Default to LOCAL. These harnesses fire hundreds of billed requests; with a
+// production URL as the default, running one with no argument would hammer the
+// live deployment and spend real money by accident.
+const LOCAL_DEFAULT = 'http://localhost:3000';
 const argv = process.argv.slice(2);
-const BASE = argv.find((a) => a.startsWith('http')) ?? 'https://labelcheck-production-8f22.up.railway.app';
+const BASE = argv.find((a) => a.startsWith('http')) ?? LOCAL_DEFAULT;
 const arg = (k, d) => { const a = argv.find((x) => x.startsWith(`--${k}=`)); return a ? a.split('=')[1] : d; };
 const CONC = Number(arg('conc', 2));
 const LIMIT = Number(arg('limit', 0));

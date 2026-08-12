@@ -35,4 +35,5 @@ samples/robustness/
 # redistribute, and regenerable via samples/tools/harvest-ttb.mjs. The scored
 # summary (docs/real-labels.json) and the COLA ID list ARE committed — that is
 # the evidence; the pixels are not.
-samples/real/
+samples/real/*
+!samples/real/manifest.json

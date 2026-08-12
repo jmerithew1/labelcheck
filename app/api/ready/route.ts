@@ -6,6 +6,10 @@ import path from "node:path";
 // bundled assets shipped in the image (openemr shipped an empty corpus once;
 // this probe is what catches that class of bug). Always 200 with a body that
 // says degraded-or-not, so orchestrators don't kill the container.
+// One paid upstream call per minute at most, shared across all callers.
+const DEEP_TTL_MS = 60_000;
+let deepCache: { at: number; usable: boolean; detail?: string } | null = null;
+
 export async function GET(req: Request) {
   const key = process.env.ANTHROPIC_API_KEY ?? "";
   const checks: Record<string, boolean> = {
@@ -20,8 +24,17 @@ export async function GET(req: Request) {
   // a revoked key fails every check while this probe still reports ready —
   // observed in practice, so ?deep=1 spends one token to actually transact.
   // Opt-in: the cheap probe stays free for orchestrator polling.
+  // The deep probe costs money on every call, and this endpoint is public and
+  // unauthenticated — /api/check is rate-limited, this was not. Cache the
+  // result so a loop cannot drain the credit balance (the exact failure that
+  // took the deployment down once already), and so orchestrator polling stays
+  // effectively free.
   let detail: string | undefined;
-  if (new URL(req.url).searchParams.get("deep") === "1" && checks.api_key_present) {
+  const wantsDeep = new URL(req.url).searchParams.get("deep") === "1";
+  if (wantsDeep && deepCache && Date.now() - deepCache.at < DEEP_TTL_MS) {
+    checks.api_usable = deepCache.usable;
+    detail = deepCache.detail;
+  } else if (wantsDeep && checks.api_key_present) {
     try {
       const res = await fetch("https://api.anthropic.com/v1/messages", {
         method: "POST",
@@ -34,9 +47,11 @@ export async function GET(req: Request) {
         const body = (await res.json().catch(() => null)) as { error?: { message?: string } } | null;
         detail = body?.error?.message ?? `HTTP ${res.status}`;
       }
+      deepCache = { at: Date.now(), usable: checks.api_usable, detail };
     } catch (e) {
       checks.api_usable = false;
       detail = e instanceof Error ? e.message : "upstream unreachable";
+      deepCache = { at: Date.now(), usable: false, detail };
     }
   }
 

@@ -93,14 +93,23 @@ const CTRL_ON = {
   navy: "border-navy bg-select text-navy",
 } as const;
 
-function bucketOf(r: BatchRow): Bucket {
+// gateStarted: has the bold measurement pass actually begun for this batch?
+// Small batches start it eagerly; large ones wait for the agent to ask.
+function bucketOf(r: BatchRow, gateStarted: boolean): Bucket {
   if (r.status === "error") return "error";
   if (r.status !== "done" || !r.result) return "pending";
   // The agent's ruling on a reviewed row outranks every machine state.
   if (r.agentReview === "ok") return "matched";
   if (r.agentReview === "correction") return "review";
-  // While the gate is still measuring, don't flicker the row through review.
+  // While the gate is still MEASURING, don't flicker the row through review.
+  // But "measuring" and "never started" are different states: above
+  // BOLD_GATE_EAGER_MAX the pass is opt-in and may never run, and a row whose
+  // bold was never looked at must not show a green tick — that would make the
+  // Matched filter mean "checked" on small batches and "not checked" on the
+  // large ones the brief actually targets. When the pass has not started, the
+  // glance is genuinely owed, so the row is review work.
   if (boldEligible(r) && r.boldAuto === undefined && !r.boldReview) {
+    if (!gateStarted) return "review";
     return r.result.overall === "clean" ? "matched" : "review";
   }
   // An agent's flag outranks the clean verdict — a human said "not bold."
@@ -181,6 +190,10 @@ export function BatchReview() {
   // the pending set changes again.
   const [stripDismissed, setStripDismissed] = useState(false);
   const [boldPassStarted, setBoldPassStarted] = useState(false);
+  // Small batches start the bold measurement eagerly; large ones wait for the
+  // agent. Until it starts, an unmeasured bold prefix is genuinely unchecked,
+  // and bucketOf must not report those rows as matched.
+  const gateRuns = rows.length <= BOLD_GATE_EAGER_MAX || boldPassStarted;
   const boldFetching = useRef<Set<number>>(new Set());
   // Below xl the detail panel renders inline BELOW the table, so opening a
   // row from the strip (or a row far down the list) can land off-screen and
@@ -445,8 +458,7 @@ export function BatchReview() {
   }, [rows]);
 
   const reviewBar = (r: BatchRow) => (
-    <ReviewBar
-      row={r}
+    <ReviewBar gateRuns={gateRuns} row={r}
       onReview={(v) => setRows((rs) => rs.map((x) => (x.index === r.index ? { ...x, agentReview: v } : x)))}
       onMarkBold={markBold}
     />
@@ -504,7 +516,7 @@ export function BatchReview() {
 
   const counts = useMemo(() => {
     const c: Record<Bucket, number> = { matched: 0, review: 0, not_required: 0, error: 0, pending: 0 };
-    for (const r of rows) c[bucketOf(r)]++;
+    for (const r of rows) c[bucketOf(r, gateRuns)]++;
     return c;
   }, [rows]);
   const done = rows.length - counts.pending;
@@ -521,14 +533,14 @@ export function BatchReview() {
   const visible = useMemo(() => {
     const q = search.trim().toLowerCase();
     const filtered = rows.filter((r) => {
-      const b = bucketOf(r);
+      const b = bucketOf(r, gateRuns);
       if (filter !== "all" && !(filter === b || (filter === "review" && b === "error"))) return false;
       if (q && !r.filename.toLowerCase().includes(q) && !(r.application.brand_name ?? "").toLowerCase().includes(q)) return false;
       return true;
     });
     if (!running && rows.every((r) => r.status !== "queued" && r.status !== "checking")) {
       const rank: Record<Bucket, number> = { error: 0, review: 1, matched: 2, not_required: 3, pending: 4 };
-      return [...filtered].sort((a, b) => rank[bucketOf(a)] - rank[bucketOf(b)] || a.index - b.index);
+      return [...filtered].sort((a, b) => rank[bucketOf(a, gateRuns)] - rank[bucketOf(b, gateRuns)] || a.index - b.index);
     }
     return filtered;
   }, [rows, filter, search, running]);
@@ -607,7 +619,7 @@ export function BatchReview() {
   }, [openRow]);
 
   const statusDot = (r: BatchRow, size = 22) => {
-    const b = bucketOf(r);
+    const b = bucketOf(r, gateRuns);
     const isFail = r.result?.overall === "warning_failure" || r.result?.overall === "not_a_label" ||
       r.result?.fields.some((f) => f.verdict === "possible_mismatch");
     // A green tick must mean FINISHED. While a bold glance is still owed,
@@ -641,7 +653,7 @@ export function BatchReview() {
   };
 
   const statusPill = (r: BatchRow) => {
-    const b = bucketOf(r);
+    const b = bucketOf(r, gateRuns);
     const isFail = r.result?.overall === "warning_failure" || r.result?.overall === "not_a_label" ||
       r.result?.fields.some((f) => f.verdict === "possible_mismatch");
     const boldOwed = boldPendingRow(r);
@@ -1151,15 +1163,18 @@ export function BatchReview() {
  *  disagree with the tool. */
 function ReviewBar({
   row: r,
+  gateRuns,
   onReview,
   onMarkBold,
 }: {
   row: BatchRow;
+  /** has the bold measurement pass begun for this batch? */
+  gateRuns: boolean;
   onReview: (v: "ok" | "correction" | undefined) => void;
   onMarkBold: (index: number, v: "confirmed" | "flagged" | undefined) => void;
 }) {
   const [open, setOpen] = useState(false);
-  const bucket = bucketOf(r);
+  const bucket = bucketOf(r, gateRuns);
   const boldOwed = boldPendingRow(r);
   const decided = !!r.agentReview || !!r.boldReview;
   const show = open || decided || bucket === "review" || bucket === "error" || boldOwed;

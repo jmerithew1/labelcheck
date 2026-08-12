@@ -32,8 +32,9 @@ const BOLD_TOOL = {
           "Compare the STROKE THICKNESS of the letters in the warning statement's first two words against the stroke thickness of the rest of the warning paragraph on the same label. 'heavier' only if the strokes are visibly thicker (bold). ALL-CAPS or larger size alone is NOT heavier — judge stroke weight only. Ignore stroke swelling caused by low resolution, glare, ink bleed or JPEG artifacts: true bolding is a deliberate, substantial difference against the body text right beside it.",
       },
       // 27 CFR 16.22(a) requires the prefix bold AND the remainder NOT bold.
-      // Measured clean on 45 ground-truthed labels (no false alarms) before
-      // shipping; surfaced as an advisory, never a hard fail.
+      // Checked against the ground-truthed label set with no false alarms
+      // observed; that run is not committed as an evidence file, so treat it
+      // as a spot-check. Surfaced as an advisory, never a hard fail.
       body_weight: {
         type: "string",
         enum: ["regular", "bold", "unclear", "no_warning_present"],
@@ -43,7 +44,7 @@ const BOLD_TOOL = {
       // The word-for-word check asserts character-level equality. On a blurred
       // or tiny warning the model reconstructs the familiar text from memory
       // instead of reading it — measured: a real one-word swap passed as clean
-      // on 10 of 40 degraded variants (docs/robustness-matrix.json). This asks
+      // on a large share of its degraded variants before the legibility gate shipped. This asks
       // the separate, easier question "could you actually READ it?" so a pass
       // that isn't supportable becomes "check manually" instead.
       legibility: {

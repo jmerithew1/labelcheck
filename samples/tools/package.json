@@ -9,6 +9,8 @@
   "keywords": [],
   "type": "commonjs",
   "dependencies": {
-    "playwright": "^1.57.0"
+    "playwright": "^1.57.0",
+    "tesseract.js": "^7.0.0",
+    "sharp": "^0.34.5"
   }
 }

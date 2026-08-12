@@ -17,7 +17,7 @@ import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const argv = process.argv.slice(2);
-const BASE = argv.find((a) => a.startsWith('http')) ?? 'http://localhost:3200';
+const BASE = argv.find((a) => a.startsWith('http')) ?? 'http://localhost:3000';
 const arg = (k, d) => { const a = argv.find((x) => x.startsWith(`--${k}=`)); return a ? a.split('=')[1] : d; };
 const DIR = path.resolve(__dirname, arg('dir', '../real'));
 const CONC = Number(arg('conc', 2));

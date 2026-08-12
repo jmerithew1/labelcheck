@@ -19,7 +19,7 @@ import type { WarningResult, WordDiff } from "./types.ts";
  * Trim a transcription to the statement's own boundaries.
  *
  * On a crowded real label the reader does not always stop where the statement
- * does: measured on TTB's registry, 6 of 196 approved labels came back with
+ * does: measured on the real TTB corpus, a small number of approved labels came back with
  * the sulfite declaration appended ("…health problems. CONTAINS SULFITES") or
  * with a neighbouring block captured instead of the warning. Comparing that
  * against the canonical text reports a wording defect that is not on the
@@ -103,6 +103,12 @@ export function checkWarning(input: {
 }): WarningResult {
   const notes: string[] = [];
 
+  // What was actually compared. Reported rather than the raw transcription so
+  // the character diff in the UI shows the region the verdict was computed on
+  // — otherwise a fail_wording after trimming highlights the adjacent text the
+  // engine deliberately excluded, burying the one real deviation in noise.
+  const compared = trimToStatement(normalizeTranscription(input.text)).text;
+
   // A "bold" claim is a judgment about stroke weight in pixels — the same
   // class of claim the word-for-word gate below refuses to make on an
   // unreadable image, and for the same reason. If the warning could not be
@@ -122,7 +128,7 @@ export function checkWarning(input: {
       : input.boldAdvisory;
 
   const base = {
-    labelText: input.text,
+    labelText: compared || input.text,
     boldAdvisory,
     bodyBoldAdvisory: input.bodyBoldAdvisory ?? "unclear",
     prefixAllCaps: false,
@@ -135,7 +141,7 @@ export function checkWarning(input: {
     // pixels — reports the warning as illegible, the two readings disagree
     // about whether a warning is even THERE: one saw nothing, the other saw
     // something it could not read. Measured: a real but tiny warning was called
-    // absent on 6 degraded variants (docs/robustness-matrix.json). A disputed
+    // absent on degraded variants where the text was present but unreadable. A disputed
     // absence is a manual check, not a rejection.
     if (input.legibility === "illegible" || input.legibility === "marginal") {
       return {
@@ -160,8 +166,13 @@ export function checkWarning(input: {
     };
   }
 
-  const trim = trimToStatement(input.text);
-  const text = normalizeTranscription(trim.text);
+  // Normalize BEFORE trimming: the boundary regexes below look for
+  // "GOVERNMENT WARNING" and "health problems.", and a line-wrap hyphen
+  // ("health prob- lems.") or a curly quote defeats them on the raw string.
+  // normalizeTranscription() repairs exactly those, so trimming the normalized
+  // text finds the boundary that trimming the raw text misses.
+  const trim = trimToStatement(normalizeTranscription(input.text));
+  const text = trim.text;
   if (!text) {
     // "found" with empty text is a contradiction from the extractor —
     // treat as missing (loud) rather than diffing against an empty string.
@@ -185,7 +196,7 @@ export function checkWarning(input: {
   // Spacing is typography, not wording. Real approved labels routinely set
   // "(1)According" and "defects.(2)" with no space after the numeral or the
   // period — measured on TTB's own registry, 12 of 14 sampled wording
-  // failures were this and nothing else (docs/real-labels.json). Every word,
+  // failures sampled during the real-label campaign were this and nothing else. Every word,
   // every character and every mark is present and in order; only the gaps
   // differ. normalizeTranscription() already treats whitespace as carrying no
   // compliance meaning by collapsing runs of it, but collapsing cannot
@@ -219,8 +230,8 @@ export function checkWarning(input: {
   // Other text sat adjacent to the statement in the reading. Two causes look
   // identical from a transcription: the label really printed something beside
   // the warning (27 CFR 16.22(a)(1) requires it "separate and apart"), or the
-  // reader simply over-captured on a crowded label — measured as the latter on
-  // 6 of 196 approved TTB labels. Because the two cannot be told apart from
+  // reader simply over-captured on a crowded label — observed as the latter on
+  // a handful of approved TTB labels (docs/real-labels-causes.json). Because the two cannot be told apart from
   // the text alone, this is NOT corroborated and therefore cannot be a FAIL;
   // it is surfaced for a human, which is the cheaper error.
   if (trim.trimmed) {
@@ -279,8 +290,9 @@ export function checkWarning(input: {
   // supportable if the characters were actually legible: on a blurred, tiny or
   // heavily compressed warning the reader reconstructs the familiar sentence
   // from memory, and a one-word alteration — exactly the evasion this check
-  // exists to catch — slides through as "exact" (measured: 10 of 40 degraded
-  // variants of a real word swap passed clean, docs/robustness-matrix.json).
+  // exists to catch — slides through as "exact" (measured before this gate: a real word swap passed clean on a
+  // quarter of its degraded variants; after the gate, docs/robustness-matrix.json
+  // shows word-swap labels passing clean on 0-2 of 40).
   // So an unsupportable pass becomes "check manually". It can never create a
   // failure: a label that already failed keeps its failure.
   if (input.legibility === "illegible" || input.legibility === "marginal") {
