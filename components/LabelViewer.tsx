@@ -134,10 +134,20 @@ export function LabelViewer({
       >
         <div
           className="relative mx-auto origin-center transition-transform duration-200"
-          style={{ width: `${zoom * 100}%`, transform: `rotate(${rotation}deg)` }}
+          style={
+            zoom === 1
+              ? { width: "fit-content", height: "100%", transform: `rotate(${rotation}deg)` }
+              : { width: `${zoom * 100}%`, transform: `rotate(${rotation}deg)` }
+          }
         >
+          {/* Default (100%) fits the whole label in the viewport — the brand
+              must be visible without scrolling (conformance finding #4). */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={imageUrl} alt="Submitted label" className="w-full rounded" />
+          <img
+            src={imageUrl}
+            alt="Submitted label"
+            className={zoom === 1 ? "h-full w-auto rounded" : "w-full rounded"}
+          />
           {!rotated && overlays(true)}
         </div>
       </div>

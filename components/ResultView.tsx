@@ -218,13 +218,15 @@ export function ResultView({
           };
 
   const boldConfirmPending = wvPasses(result.warning.verdict);
+  // Count chips carry their tone (conformance #5): matched green, mismatch
+  // red, review/confirm amber, not-required grey.
   const countBits = [
-    `${counts.matched} matched`,
-    issueCount > 0 ? `${issueCount} mismatch${issueCount === 1 ? "" : "es"}` : null,
-    confirmCount > 0 ? `${confirmCount} review` : null,
-    boldConfirmPending ? "1 to confirm (bold)" : null,
-    `${counts.notRequired} not required`,
-  ].filter(Boolean);
+    { text: `${counts.matched} matched`, cls: "text-green" },
+    issueCount > 0 ? { text: `${issueCount} mismatch${issueCount === 1 ? "" : "es"}`, cls: "text-red font-semibold" } : null,
+    confirmCount > 0 ? { text: `${confirmCount} review`, cls: "text-amber font-semibold" } : null,
+    boldConfirmPending ? { text: "1 to confirm (bold)", cls: "text-amber" } : null,
+    { text: `${counts.notRequired} not required`, cls: "text-muted-2" },
+  ].filter(Boolean) as { text: string; cls: string }[];
 
   const wv = result.warning.verdict;
   const wordingRow =
@@ -256,17 +258,19 @@ export function ResultView({
       {appNumber?.trim() && (
         <p className="hidden text-[12px] text-muted print:block">TTB application #{appNumber.trim()}</p>
       )}
-      {/* Banner (v2: 30px tone circle, nowrap count chips, right-aligned time) */}
-      <div className={`flex flex-wrap items-start gap-3 rounded-[10px] border p-4 ${banner.cls}`}>
+      {/* Banner (v2: 30px tone circle, tone-tinted count chips, right-aligned
+          time). Prototype: untinted row on the result page; tinted container
+          only in the compact panel (conformance #11). */}
+      <div className={`flex flex-wrap items-start gap-3 ${compact ? `rounded-[10px] border p-4 ${banner.cls}` : "py-1"}`}>
         <span className={`mt-0.5 flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-full text-white ${banner.iconCls}`}>
           {banner.icon}
         </span>
         <div className="min-w-0 flex-1">
           <p className={`text-[18px] font-bold ${banner.titleCls}`}>{banner.title}</p>
           <p className="text-[13px] text-muted">{banner.sub}</p>
-          <p className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-[12.5px] font-medium text-muted">
+          <p className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-[12.5px] font-medium">
             {countBits.map((b) => (
-              <span key={b} className="whitespace-nowrap">{b}</span>
+              <span key={b.text} className={`whitespace-nowrap ${b.cls}`}>{b.text}</span>
             ))}
           </p>
         </div>
@@ -330,7 +334,9 @@ export function ResultView({
                     )}
                   </span>
                   {fieldChip(f.verdict)}
-                  {locatable && (
+                  {/* Magnifier only on flaggable rows (conformance #10) —
+                      matched rows stay clickable but don't advertise it. */}
+                  {locatable && tone !== "ok" && (
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="shrink-0 text-ink-faint" aria-hidden>
                       <circle cx="11" cy="11" r="7" /><path d="M21 21l-5-5" strokeLinecap="round" />
                     </svg>

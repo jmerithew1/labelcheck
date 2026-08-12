@@ -26,7 +26,8 @@ export function CheckingCard({ imageUrl, complete = false }: { imageUrl: string 
   ];
 
   return (
-    <div className="mx-auto flex max-w-lg flex-col items-center gap-6 rounded-xl border border-line bg-card p-8">
+    /* Full-width card, label left / checklist right (conformance #9). */
+    <div className="mx-auto flex max-w-[1120px] flex-col items-center gap-8 rounded-xl border border-line bg-card p-8 md:flex-row md:items-start md:justify-center md:gap-14 md:p-12">
       <div className="relative overflow-hidden rounded-md border border-paper-line">
         {imageUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -36,6 +37,7 @@ export function CheckingCard({ imageUrl, complete = false }: { imageUrl: string 
         )}
         <div className="scanline pointer-events-none absolute inset-x-0 h-[2px] bg-[#2b5f9e] shadow-[0_0_8px_2px_rgba(43,95,158,0.55)]" aria-hidden />
       </div>
+      <div className="flex w-full max-w-sm flex-col gap-6 md:pt-6">
       <ul className="flex w-full flex-col gap-3">
         {steps.map((label, i) => {
           const done = i < shownPhase;
@@ -60,6 +62,7 @@ export function CheckingCard({ imageUrl, complete = false }: { imageUrl: string 
           ? "Getting a second independent reading of the warning — a few seconds more"
           : "usually under 5 seconds"}
       </p>
+      </div>
       <style jsx>{`
         .scanline { animation: scan 2.2s ease-in-out infinite; }
         @keyframes scan {

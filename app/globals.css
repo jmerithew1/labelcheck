@@ -60,5 +60,9 @@ body {
 @media print {
   body { background: #fff; }
   .no-print { display: none !important; }
-  .label-scroll { max-height: none !important; overflow: visible !important; }
+  /* Print shows the whole label WITHOUT escaping its container: natural
+     height, zoom/rotation reset, and the warning block stays on one page. */
+  .label-scroll { height: auto !important; max-height: none !important; overflow: visible !important; }
+  .label-scroll > div { width: 100% !important; height: auto !important; transform: none !important; }
+  .print-keep-together { break-inside: avoid; }
 }

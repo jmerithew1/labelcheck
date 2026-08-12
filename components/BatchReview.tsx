@@ -97,6 +97,7 @@ export function BatchReview() {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(0);
   const [openRow, setOpenRow] = useState<number | null>(null);
+  const [selectedRow, setSelectedRow] = useState<number | null>(null);
   const [tab, setTab] = useState<"overview" | "audit">("overview");
   const [wallMs, setWallMs] = useState<number | null>(null);
   const [autoRun, setAutoRun] = useState(false);
@@ -322,17 +323,24 @@ export function BatchReview() {
       if (e.key !== "ArrowDown" && e.key !== "ArrowUp" && e.key !== "Enter") return;
       e.preventDefault();
       if (e.key === "Enter") {
-        if (openRow === null && order.length) setOpenRow(order[0]);
+        const target = selectedRow ?? order[0];
+        if (target !== undefined) { setOpenRow(target); setTab("overview"); }
         return;
       }
+      // Arrows move the SELECTION; they only move the open panel along with
+      // it when a panel is already open ("↑↓ to move · Enter to open").
       const dir = e.key === "ArrowDown" ? 1 : -1;
-      const at = orderPos >= 0 ? orderPos : -1;
-      const nxt = order[Math.min(Math.max(at + dir, 0), order.length - 1)];
-      if (nxt !== undefined) { setOpenRow(nxt); setTab("overview"); setPage(Math.floor(order.indexOf(nxt) / PAGE_SIZE)); }
+      const currentIdx = selectedRow !== null ? order.indexOf(selectedRow) : openRow !== null ? orderPos : -1;
+      const nxt = order[Math.min(Math.max(currentIdx + dir, 0), order.length - 1)];
+      if (nxt !== undefined) {
+        setSelectedRow(nxt);
+        setPage(Math.floor(order.indexOf(nxt) / PAGE_SIZE));
+        if (openRow !== null) { setOpenRow(nxt); setTab("overview"); }
+      }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [rows.length, order, orderPos, openRow]);
+  }, [rows.length, order, orderPos, openRow, selectedRow]);
 
   const atLast = orderPos === order.length - 1;
   const stepPanel = (dir: 1 | -1) => {
@@ -374,6 +382,15 @@ export function BatchReview() {
         <span className="sr-only">{label}</span>
       </span>
     );
+  };
+
+  const statusPill = (r: BatchRow) => {
+    const b = bucketOf(r);
+    const isFail = r.result?.overall === "warning_failure" || r.result?.overall === "not_a_label" ||
+      r.result?.fields.some((f) => f.verdict === "possible_mismatch");
+    const label = b === "matched" ? "Matched" : b === "error" ? "Error" : b === "review" ? (isFail ? "Mismatch" : "Needs review") : b === "not_required" ? "Not required" : "Waiting";
+    const cls = b === "matched" ? "bg-green-tint text-green" : b === "error" || isFail ? "bg-red-tint text-red" : b === "review" ? "bg-amber-tint text-amber" : "bg-na-tint text-muted";
+    return <span className={`shrink-0 whitespace-nowrap rounded-[5px] px-2 py-0.5 text-[11.5px] font-bold ${cls}`}>{label}</span>;
   };
 
   const chip = (key: "all" | Bucket, label: string, n: number, tone: string) => {
@@ -563,11 +580,12 @@ export function BatchReview() {
                           key={r.index}
                           onClick={() => {
                             if (!r.result) return;
+                            setSelectedRow(r.index);
                             if (selected) { setOpenRow(null); return; }
                             setOpenRow(r.index);
                             setTab("overview");
                           }}
-                          className={`border-b border-line-row text-[12.5px] last:border-0 ${r.result ? "cursor-pointer" : ""} ${selected ? "bg-select shadow-[inset_3px_0_0_#10233f]" : "hover:bg-[#fafbfc]"}`}
+                          className={`border-b border-line-row text-[12.5px] last:border-0 ${r.result ? "cursor-pointer" : ""} ${selected || selectedRow === r.index ? "bg-select shadow-[inset_3px_0_0_#10233f]" : "hover:bg-[#fafbfc]"}`}
                         >
                           <td className="px-4 py-2.5">{statusDot(r)}</td>
                           <td className="px-2 py-2.5">
@@ -660,7 +678,7 @@ export function BatchReview() {
               <>
                 <div className="flex items-center gap-2.5 px-6 py-[18px]">
                   <p className="min-w-0 flex-1 truncate text-[15px] font-bold text-ink">{detail.filename}</p>
-                  {statusDot(detail, 16)}
+                  {statusPill(detail)}
                   <button onClick={() => window.print()} aria-label="Print this result" title="Print this result" className="flex h-8 w-8 items-center justify-center rounded-[6px] border border-line text-ink-2 hover:bg-line-soft">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16" strokeLinecap="round" strokeLinejoin="round"/></svg>
                   </button>
@@ -706,7 +724,9 @@ export function BatchReview() {
               </>
             );
             return (
-              <aside className="sticky top-0 ml-4 hidden h-screen w-[clamp(360px,34vw,480px)] flex-col overflow-hidden border-l border-line bg-card xl:flex">
+              /* Pinned within the viewport: header, tabs, scrollable body AND
+                 the Review-next footer all stay on screen (conformance #3). */
+              <aside className="sticky top-3 ml-4 hidden h-[calc(100vh-24px)] w-[clamp(360px,34vw,480px)] flex-col overflow-hidden rounded-xl border border-line bg-card xl:flex">
                 {panelInner}
               </aside>
             );
@@ -719,7 +739,7 @@ export function BatchReview() {
         <section className="mt-4 flex max-h-[80vh] flex-col rounded-xl border border-line bg-card xl:hidden">
           <div className="flex items-center gap-2.5 px-6 py-[18px]">
             <p className="min-w-0 flex-1 truncate text-[15px] font-bold text-ink">{detail.filename}</p>
-            {statusDot(detail, 16)}
+            {statusPill(detail)}
             <button onClick={() => setOpenRow(null)} aria-label="Close panel" className="flex h-8 w-8 items-center justify-center rounded-[6px] text-ink-2 hover:bg-line-soft">✕</button>
           </div>
           <div className="flex gap-5 border-b border-line px-6">
