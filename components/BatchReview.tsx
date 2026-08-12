@@ -555,7 +555,10 @@ export function BatchReview() {
 
   const topBar = (
     <>
-      <span className="text-[15px] font-bold text-ink">Batch review</span>
+      {/* The page name already appears in the sidebar nav (desktop) and the
+          header mini-nav (mobile) — the top-bar title earns its place only
+          while the sidebar is collapsed to icons (detail panel open). */}
+      {detail && <span className="hidden text-[15px] font-bold text-ink md:inline">Batch review</span>}
       {rows.length > 0 && (
         <span className={`rounded-[5px] px-2 py-0.5 text-[11.5px] font-bold ${running ? "bg-select text-navy" : done === rows.length && done > 0 ? "bg-green-tint text-green" : "bg-line-soft text-muted"}`}>
           {running ? `${done}/${rows.length}` : done === rows.length && done > 0 ? "Complete" : "Ready"}
