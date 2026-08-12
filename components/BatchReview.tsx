@@ -696,11 +696,15 @@ export function BatchReview() {
           {running ? `${done}/${rows.length}` : done === rows.length && done > 0 ? "Complete" : "Ready"}
         </span>
       )}
+      {/* Empty batch page: both actions are dead (nothing to export, no batch
+          to clear) and rendered at 40% opacity they read as missing rather
+          than disabled. Show them once they can actually do something. */}
+      {rows.length > 0 && (
       <span className="ml-auto flex items-center gap-2">
         <button
           onClick={exportCsv}
           disabled={done === 0}
-          className="flex h-9 items-center gap-1.5 rounded-[7px] border border-line-input bg-card px-3 text-[13px] font-semibold text-ink-2 hover:bg-line-soft disabled:opacity-40"
+          className="flex h-9 items-center gap-1.5 rounded-[7px] border border-line-input bg-card px-3 text-[13px] font-semibold text-ink-2 hover:bg-line-soft disabled:opacity-50"
         >
           ↓ Download report (CSV)
         </button>
@@ -718,6 +722,7 @@ export function BatchReview() {
           + New batch
         </button>
       </span>
+      )}
     </>
   );
 
