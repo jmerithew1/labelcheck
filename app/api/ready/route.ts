@@ -6,7 +6,7 @@ import path from "node:path";
 // bundled assets shipped in the image (openemr shipped an empty corpus once;
 // this probe is what catches that class of bug). Always 200 with a body that
 // says degraded-or-not, so orchestrators don't kill the container.
-export async function GET() {
+export async function GET(req: Request) {
   const key = process.env.ANTHROPIC_API_KEY ?? "";
   const checks: Record<string, boolean> = {
     // The .env.example placeholder must not read as ready — a cloner who
@@ -15,6 +15,31 @@ export async function GET() {
     api_key_present: Boolean(key) && !key.includes("your-key"),
     samples_bundled: fs.existsSync(path.join(process.cwd(), "samples")),
   };
+
+  // A key that EXISTS is not a key that WORKS. An exhausted credit balance or
+  // a revoked key fails every check while this probe still reports ready —
+  // observed in practice, so ?deep=1 spends one token to actually transact.
+  // Opt-in: the cheap probe stays free for orchestrator polling.
+  let detail: string | undefined;
+  if (new URL(req.url).searchParams.get("deep") === "1" && checks.api_key_present) {
+    try {
+      const res = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: { "x-api-key": key, "anthropic-version": "2023-06-01", "content-type": "application/json" },
+        body: JSON.stringify({ model: "claude-haiku-4-5", max_tokens: 1, messages: [{ role: "user", content: "." }] }),
+        signal: AbortSignal.timeout(10_000),
+      });
+      checks.api_usable = res.ok || res.status === 429; // rate-limited still means funded
+      if (!checks.api_usable) {
+        const body = (await res.json().catch(() => null)) as { error?: { message?: string } } | null;
+        detail = body?.error?.message ?? `HTTP ${res.status}`;
+      }
+    } catch (e) {
+      checks.api_usable = false;
+      detail = e instanceof Error ? e.message : "upstream unreachable";
+    }
+  }
+
   const ready = Object.values(checks).every(Boolean);
-  return NextResponse.json({ ready, checks, ts: new Date().toISOString() });
+  return NextResponse.json({ ready, checks, ...(detail ? { detail } : {}), ts: new Date().toISOString() });
 }

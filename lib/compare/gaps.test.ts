@@ -17,14 +17,21 @@ const unreadable = { status: "unreadable" as const, text: "" };
 // ---------- warning: prefix position and adversarial prefixes ----------
 
 describe("warning gaps", () => {
-  it("fails when extra text precedes the warning (prefix must be at the start, not mid-text)", () => {
+  // BEHAVIOUR CHANGE (evidence: docs/real-labels.json). This used to be a
+  // fail_wording. Real approved labels showed the reader over-capturing
+  // neighbouring blocks on crowded artwork — 6 of 196 — which is
+  // indistinguishable from the label printing text beside the warning. An
+  // uncorroborated cause cannot justify rejecting a compliant application, so
+  // the wording is now compared on the statement alone and the adjacency is
+  // raised for a human instead.
+  it("raises adjacent text for review rather than failing the wording", () => {
     const r = checkWarning({
       status: "found",
       text: "Enjoy responsibly. " + CANONICAL_WARNING,
       boldAdvisory: "bold",
     });
-    expect(r.verdict).toBe("fail_wording");
-    expect(r.deviations.some((d) => d.kind === "added")).toBe(true);
+    expect(r.verdict.startsWith("fail")).toBe(false);
+    expect(r.notes.some((n) => /separate and apart/i.test(n))).toBe(true);
   });
 
   it("fails a mixed-case prefix (GOVERNMENT Warning:) as a case failure, not a pass", () => {
@@ -157,6 +164,7 @@ function cleanExtraction(): LabelExtraction {
     warning: found(CANONICAL_WARNING),
     warning_prefix_bold: "bold",
     warning_body_bold: "not_bold",
+    warning_legibility: "crisp",
     warning_text_size: "normal",
   };
 }
@@ -234,5 +242,179 @@ describe("body-not-bold advisory (27 CFR 16.22(a))", () => {
     const ex = { ...cleanExtraction(), warning_body_bold: "bold" as const };
     expect(compareLabel(app, ex).overall).toBe("needs_review");
     expect(compareLabel(app, cleanExtraction()).overall).toBe("clean");
+  });
+});
+
+/** Legibility gate (evidence: docs/robustness-matrix.json). A word-for-word
+ *  PASS asserts character-level equality; on a blurred or tiny warning the
+ *  reader reconstructs the familiar sentence and a real alteration slides
+ *  through. An unsupportable pass becomes "check manually" — and the gate can
+ *  never manufacture a failure. */
+describe("legibility gates the word-for-word claim", () => {
+  const exact = { status: "found" as const, text: CANONICAL_WARNING, boldAdvisory: "bold" as const };
+
+  it("passes when the warning is crisp", () => {
+    expect(checkWarning({ ...exact, legibility: "crisp" }).verdict).toBe("pass");
+    expect(checkWarning(exact).verdict).toBe("pass"); // absent signal = crisp
+  });
+
+  it("downgrades an exact-looking pass to check-manually when marginal or illegible", () => {
+    for (const g of ["marginal", "illegible"] as const) {
+      const r = checkWarning({ ...exact, legibility: g });
+      expect(r.verdict).toBe("unreadable");
+      expect(r.notes[0]).toMatch(/legible|too blurred/i);
+    }
+  });
+
+  it("never turns a legibility problem into a failure", () => {
+    const r = checkWarning({ ...exact, legibility: "illegible" });
+    expect(r.verdict.startsWith("fail")).toBe(false);
+  });
+
+  it("leaves a genuine wording failure failing, whatever the legibility", () => {
+    const swapped = CANONICAL_WARNING.replace("birth", "health");
+    for (const g of ["crisp", "marginal", "illegible"] as const) {
+      expect(checkWarning({ status: "found", text: swapped, boldAdvisory: "bold", legibility: g }).verdict).toBe("fail_wording");
+    }
+  });
+
+  it("routes a marginal label to review, not clean", () => {
+    const ex = { ...cleanExtraction(), warning_legibility: "marginal" as const };
+    expect(compareLabel(app, ex).overall).toBe("needs_review");
+  });
+});
+
+/** A disputed absence is not a rejection. The transcription pass can report
+ *  "absent" on a warning that is merely too degraded to read; the typography
+ *  pass, on the same pixels, reports illegible. Two readings disagreeing about
+ *  whether a warning EXISTS is a manual check. */
+describe("legibility gates the missing-warning claim", () => {
+  const absent = { status: "absent" as const, text: "", boldAdvisory: "unclear" as const };
+
+  it("still fails a genuinely missing warning on a legible image", () => {
+    expect(checkWarning({ ...absent, legibility: "crisp" }).verdict).toBe("fail_missing");
+    expect(checkWarning(absent).verdict).toBe("fail_missing");
+  });
+
+  it("downgrades a disputed absence to check-manually", () => {
+    for (const g of ["marginal", "illegible"] as const) {
+      const r = checkWarning({ ...absent, legibility: g });
+      expect(r.verdict).toBe("unreadable");
+      expect(r.notes[0]).toMatch(/too degraded/i);
+    }
+  });
+});
+
+/** Spacing is typography, not wording. Real approved TTB labels routinely
+ *  print "(1)According" and "defects.(2)" with no space — 12 of 14 sampled
+ *  wording failures on the real corpus were this and nothing else. Removing
+ *  whitespace before comparing cannot mask a genuine defect. */
+describe("missing whitespace is a formatting note, not a wording failure", () => {
+  const bold = { boldAdvisory: "bold" as const, legibility: "crisp" as const };
+  const squash = (s: string) => s.replace(") ", ")").replace(". (2)", ".(2)");
+
+  it("accepts a warning printed without spaces after (1) and the period", () => {
+    const r = checkWarning({ status: "found", text: squash(CANONICAL_WARNING), ...bold });
+    expect(r.verdict.startsWith("fail")).toBe(false);
+    expect(r.notes.some((n) => /spacing differs/i.test(n))).toBe(true);
+  });
+
+  it("still surfaces it — never silently accepted", () => {
+    const r = checkWarning({ status: "found", text: squash(CANONICAL_WARNING), ...bold });
+    expect(r.notes.some((n) => /typography difference/i.test(n))).toBe(true);
+  });
+
+  it("does not mask a swapped word hidden by missing spaces", () => {
+    const swapped = squash(CANONICAL_WARNING).replace("birth", "health");
+    expect(checkWarning({ status: "found", text: swapped, ...bold }).verdict).toBe("fail_wording");
+  });
+
+  it("does not mask a dropped word", () => {
+    const dropped = squash(CANONICAL_WARNING).replace("drive a car or ", "drive a car ");
+    expect(checkWarning({ status: "found", text: dropped, ...bold }).verdict).toBe("fail_wording");
+  });
+
+  it("does not mask altered punctuation", () => {
+    const punct = squash(CANONICAL_WARNING).replace("machinery, and", "machinery. and");
+    expect(checkWarning({ status: "found", text: punct, ...bold }).verdict).toBe("fail_wording");
+  });
+});
+
+/** Bold is a pixel judgment. On an image too degraded to read, that judgment
+ *  is no more supportable than the word-for-word claim — so an affirmative
+ *  "bold" becomes "unclear" (amber), never a failure. Measured driver: 56 of
+ *  61 missed violations in docs/robustness-matrix.json were the bold check. */
+describe("legibility gates the bold claim", () => {
+  const exact = { status: "found" as const, text: CANONICAL_WARNING };
+
+  it("keeps an affirmative bold claim on a crisp image", () => {
+    const r = checkWarning({ ...exact, boldAdvisory: "bold", legibility: "crisp" });
+    expect(r.boldAdvisory).toBe("bold");
+    expect(r.verdict).toBe("pass");
+  });
+
+  it("downgrades bold to unclear when the warning is not legible", () => {
+    for (const g of ["marginal", "illegible"] as const) {
+      // verdict is gated to unreadable by legibility; the advisory itself is
+      // what this asserts — it must not still claim bold.
+      expect(checkWarning({ ...exact, boldAdvisory: "bold", legibility: g }).boldAdvisory).toBe("unclear");
+    }
+  });
+
+  it("never manufactures a failure — unclear is not a fail state", () => {
+    for (const g of ["marginal", "illegible"] as const) {
+      const r = checkWarning({ ...exact, boldAdvisory: "bold", legibility: g });
+      expect(r.verdict.startsWith("fail")).toBe(false);
+    }
+  });
+
+  it("leaves an explicit not_bold finding intact", () => {
+    // Downgrading only ever removes a green claim; it must not soften a
+    // negative finding into "unclear" and lose the signal.
+    const r = checkWarning({ ...exact, boldAdvisory: "not_bold", legibility: "marginal" });
+    expect(r.boldAdvisory).toBe("not_bold");
+  });
+
+  it("routes a degraded bold claim to review, not clean", () => {
+    const ex = { ...cleanExtraction(), warning_prefix_bold: "bold" as const, warning_legibility: "marginal" as const };
+    expect(compareLabel(app, ex).overall).toBe("needs_review");
+  });
+});
+
+/** The reader does not always stop where the statement does. On crowded real
+ *  labels it appended the sulfite declaration or captured a neighbouring
+ *  block — 6 of 196 approved TTB labels (docs/real-labels.json). 27 CFR 16.21
+ *  fixes both boundaries, so trimming to them cannot hide a defect. */
+describe("transcription is trimmed to the statement's own boundaries", () => {
+  const bold = { boldAdvisory: "bold" as const, legibility: "crisp" as const };
+  const check = (text: string) => checkWarning({ status: "found", text, ...bold });
+
+  it("ignores a sulfite declaration appended after the warning", () => {
+    expect(check(`${CANONICAL_WARNING} CONTAINS SULFITES`).verdict).toBe("pass");
+  });
+
+  it("ignores label copy printed before the warning", () => {
+    expect(check(`PRODUCT OF FRANCE. IMPORTED BY ACME. ${CANONICAL_WARNING}`).verdict).toBe("pass");
+  });
+
+  it("handles both at once", () => {
+    expect(check(`BOTTLED BY X. ${CANONICAL_WARNING} CONTAINS SULFITES. 750 ML`).verdict).toBe("pass");
+  });
+
+  it("still fails a swapped word inside the trimmed region", () => {
+    const bad = CANONICAL_WARNING.replace("birth", "health");
+    expect(check(`INTRO. ${bad} CONTAINS SULFITES`).verdict).toBe("fail_wording");
+  });
+
+  it("still fails a warning that is genuinely truncated", () => {
+    // No closing boundary to trim at, so nothing is trimmed and the missing
+    // tail is reported — a real defect must survive this.
+    const cut = CANONICAL_WARNING.slice(0, CANONICAL_WARNING.length - 40);
+    expect(check(cut).verdict).toBe("fail_wording");
+  });
+
+  it("still fails when the prefix is absent entirely", () => {
+    const noPrefix = CANONICAL_WARNING.replace("GOVERNMENT WARNING: ", "");
+    expect(check(noPrefix).verdict.startsWith("fail")).toBe(true);
   });
 });

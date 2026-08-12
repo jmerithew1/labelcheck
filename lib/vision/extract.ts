@@ -40,8 +40,20 @@ const BOLD_TOOL = {
         description:
           "Now judge the REMAINING warning text (from '(1) According to the Surgeon General' onward), which must NOT be bold. Answer 'bold' only if that body text itself is visibly heavy — thick strokes throughout the paragraph, not merely dark or small. Use 'unclear' when blur, glare or resolution prevents a confident call.",
       },
+      // The word-for-word check asserts character-level equality. On a blurred
+      // or tiny warning the model reconstructs the familiar text from memory
+      // instead of reading it — measured: a real one-word swap passed as clean
+      // on 10 of 40 degraded variants (docs/robustness-matrix.json). This asks
+      // the separate, easier question "could you actually READ it?" so a pass
+      // that isn't supportable becomes "check manually" instead.
+      legibility: {
+        type: "string",
+        enum: ["crisp", "marginal", "illegible", "no_warning_present"],
+        description:
+          "Independently of what it says: could every individual character of the warning paragraph be read with confidence in THIS image? 'crisp' = each letter is sharp and unambiguous. 'marginal' = you can mostly read it but blur, glare, angle, small size or compression means a one-letter or one-word difference could be missed. 'illegible' = the paragraph cannot be reliably read at all. Judge only the image quality of the warning text, never its wording.",
+      },
     },
-    required: ["prefix_weight", "body_weight"],
+    required: ["prefix_weight", "body_weight", "legibility"],
   },
 };
 
@@ -190,6 +202,7 @@ export async function extractLabel(
 
     let bold: LabelExtraction["warning_prefix_bold"] = "unclear";
     let bodyBold: LabelExtraction["warning_body_bold"] = "unclear";
+    let legibility: LabelExtraction["warning_legibility"] = "crisp";
     if (boldMsg) {
       const btu = boldMsg.content.find((b) => b.type === "tool_use");
       if (btu && btu.type === "tool_use") {
@@ -198,10 +211,13 @@ export async function extractLabel(
         bold = w === "heavier" ? "bold" : w === "same" || w === "lighter" ? "not_bold" : "unclear";
         const b = input.body_weight;
         bodyBold = b === "bold" ? "bold" : b === "regular" ? "not_bold" : "unclear";
+        const g = (input as { legibility?: string }).legibility;
+        legibility = g === "marginal" ? "marginal" : g === "illegible" ? "illegible" : "crisp";
       }
     }
     extraction.warning_prefix_bold = bold;
     extraction.warning_body_bold = bodyBold;
+    extraction.warning_legibility = legibility;
 
     return { ok: true, extraction, ms };
   } catch (e) {

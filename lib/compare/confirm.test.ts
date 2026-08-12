@@ -38,3 +38,41 @@ describe("applySecondReading", () => {
     expect(applied.warning.verdict).toBe("fail_wording");
   });
 });
+
+/** Damaged-image guard (evidence: docs/degraded-hard.json). Two readings that
+ *  both fail but disagree about WHICH words differ indicate a misread, not a
+ *  defect — a deliberate swap reproduces, a torn corner does not. */
+describe("applySecondReading — deviation agreement", () => {
+  const advisories = { boldAdvisory: "bold" as const };
+  const swapped = CANONICAL_WARNING.replace("birth", "health");
+  const otherSwap = CANONICAL_WARNING.replace("machinery", "machinary");
+
+  it("upholds a real word swap when both readings name the SAME word", () => {
+    const first = checkWarning({ status: "found", text: swapped, boldAdvisory: "bold" });
+    const applied = applySecondReading(first, "warning_failure", { status: "found", text: swapped }, advisories);
+    expect(applied.outcome).toBe("confirmed");
+    expect(applied.warning.verdict).toBe("fail_wording");
+  });
+
+  it("downgrades when both readings fail but disagree about which word", () => {
+    const first = checkWarning({ status: "found", text: swapped, boldAdvisory: "bold" });
+    const applied = applySecondReading(first, "warning_failure", { status: "found", text: otherSwap }, advisories);
+    expect(applied.outcome).toBe("downgraded");
+    expect(applied.warning.verdict).toBe("unreadable");
+    expect(applied.overall).toBe("needs_review");
+    expect(applied.warning.notes[0]).toMatch(/disagree about which words/i);
+  });
+
+  it("downgrades when the second reading is truncated (far more deviations)", () => {
+    const first = checkWarning({ status: "found", text: swapped, boldAdvisory: "bold" });
+    const truncated = CANONICAL_WARNING.split(" ").slice(0, 12).join(" ");
+    const applied = applySecondReading(first, "warning_failure", { status: "found", text: truncated }, advisories);
+    expect(applied.outcome).toBe("downgraded");
+  });
+
+  it("still rescues a clean label whose first read hallucinated a deviation", () => {
+    const first = checkWarning({ status: "found", text: swapped, boldAdvisory: "bold" });
+    const applied = applySecondReading(first, "warning_failure", { status: "found", text: CANONICAL_WARNING }, advisories);
+    expect(applied.outcome).toBe("downgraded");
+  });
+});

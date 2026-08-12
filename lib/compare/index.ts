@@ -63,6 +63,7 @@ export function compareLabel(app: ApplicationData, ex: LabelExtraction): CheckRe
     text: ex.warning.text,
     boldAdvisory: ex.warning_prefix_bold,
     bodyBoldAdvisory: ex.warning_body_bold,
+    legibility: ex.warning_legibility,
     sizeAdvisory: ex.warning_text_size,
   });
 

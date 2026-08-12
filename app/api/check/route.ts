@@ -129,8 +129,12 @@ export async function POST(req: Request) {
   // other model tier; if the two readings disagree on the verdict, downgrade
   // to "check manually" instead of asserting a failure. Only failing labels
   // pay the extra call.
+  // fail_missing is included deliberately: "this label has no government
+  // warning" is the most consequential claim the tool makes, and on a dark,
+  // torn or heavily compressed photo it is exactly the claim a single read
+  // gets wrong (measured: docs/degraded-hard.json).
   const v = result.warning.verdict;
-  if (v === "fail_wording" || v === "fail_prefix_case") {
+  if (v === "fail_wording" || v === "fail_prefix_case" || v === "fail_missing") {
     // Async mode (single-check UI): return the provisional verdict now so
     // every label answers in ~5s; the client runs the confirmation through
     // /api/confirm and updates the warning row in place. Batch rows omit the
