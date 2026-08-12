@@ -1,0 +1,27 @@
+# The only structural guard against drift. Every check in this repo was
+# manual until now, which is how three separate stale numbers reached the
+# documentation and how a typecheck that was never an npm script got skipped.
+name: verify
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      # typecheck -> unit tests -> production build, in one command so it
+      # cannot be partially run.
+      - run: npm run verify
+      # Counts asserted in prose must match the repo. A stale number in a
+      # requirements document reads as evidence, so drift fails the build
+      # rather than waiting to be caught in an audit.
+      - run: npm run check:docs
