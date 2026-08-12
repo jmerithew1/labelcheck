@@ -137,9 +137,13 @@ function rowSummary(r: BatchRow): React.ReactNode {
   // spot never hides behind a clean-looking row (behavioral audit finding).
   // It resolves only when a human glances: confirmed clears it, flagged
   // escalates it.
-  const boldState = boldEligible(r)
-    ? r.boldReview ?? (r.boldAuto === "bold" ? "auto" : r.boldAuto === "not_bold" ? "auto_flag" : "confirm")
-    : null;
+  // While the gate is still measuring a row, say nothing about bold — the
+  // status dot already reads Matched, and asking for a glance the machine
+  // may be about to resolve makes one row contradict itself.
+  const boldState = !boldEligible(r)
+    ? null
+    : r.boldReview ??
+      (r.boldAuto === undefined ? null : r.boldAuto === "bold" ? "auto" : r.boldAuto === "not_bold" ? "auto_flag" : "confirm");
   const sep = <span className="text-muted-2"> • </span>;
   return (
     <>
@@ -202,7 +206,25 @@ export function BatchReview() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoRun, rows]);
 
+  // Every batch gets a generation number. Late /api/locate and bold-gate
+  // responses write back by ROW INDEX, which restarts at 0 for each batch —
+  // without this a stale band or bold verdict from the previous batch could
+  // land on an unrelated label.
+  const batchGen = useRef(0);
+  function resetBatchState() {
+    batchGen.current++;
+    boldFetching.current.clear();
+    gateRunning.current.clear();
+    setBoldPassStarted(false);
+    setStripDismissed(false);
+    setBoldUndo(null);
+    setFilter("all");
+    setSearch("");
+    setSelectedRow(null);
+  }
+
   function buildRows(csvText: string, images: File[]) {
+    resetBatchState();
     setRows((old) => {
       for (const r of old) if (r.imageUrl) URL.revokeObjectURL(r.imageUrl);
       return old;
@@ -246,8 +268,6 @@ export function BatchReview() {
     setWallMs(null);
     setPage(0);
     setOpenRow(null);
-    setStripDismissed(false);
-    boldFetching.current.clear();
     return issues.length === 0 && newRows.length > 0;
   }
 
@@ -335,6 +355,7 @@ export function BatchReview() {
     if (!targets.length) return;
     let alive = true;
     let next = 0;
+    const gen = batchGen.current;
     async function worker() {
       while (alive) {
         const t = targets[next++];
@@ -349,6 +370,7 @@ export function BatchReview() {
           form.set("image", small);
           const res = await fetch("/api/locate", { method: "POST", body: form });
           const body = await res.json().catch(() => null);
+          if (gen !== batchGen.current) return; // a new batch owns these indexes now
           // {} marks "tried, nothing found" so the card can say so honestly.
           setRows((rs) => rs.map((r) => (r.index === t.index ? { ...r, bands: body?.bands ?? {} } : r)));
         } catch {
@@ -402,14 +424,17 @@ export function BatchReview() {
         boldEligible(r) && r.boldAuto === undefined && r.bands?.warning && r.imageUrl &&
         r.file && r.file.type !== "application/pdf" && !gateRunning.current.has(r.index),
     );
+    const gen = batchGen.current;
     for (const t of targets) {
       gateRunning.current.add(t.index);
       void (async () => {
         try {
           const signals = await measureBoldSignals(t.imageUrl!, t.bands!.warning!);
           const verdict = applyBoldGate(signals, t.result!.warning.boldAdvisory);
+          if (gen !== batchGen.current) return; // stale: a new batch reused these indexes
           setRows((rs) => rs.map((r) => (r.index === t.index ? { ...r, boldAuto: verdict } : r)));
         } catch {
+          if (gen !== batchGen.current) return;
           setRows((rs) => rs.map((r) => (r.index === t.index ? { ...r, boldAuto: "human" } : r)));
         } finally {
           gateRunning.current.delete(t.index);
@@ -562,6 +587,9 @@ export function BatchReview() {
       if (!rows.length) return;
       if (e.key === "Escape") { setOpenRow(null); return; }
       if (e.key !== "ArrowDown" && e.key !== "ArrowUp" && e.key !== "Enter") return;
+      // Never swallow Enter on a focused control — that is its activation
+      // key, and stealing it broke every button and nav link on this page.
+      if (e.key === "Enter" && t.closest('button, a, [role="button"], select')) return;
       e.preventDefault();
       if (e.key === "Enter") {
         const target = selectedRow ?? order[0];
@@ -714,7 +742,14 @@ export function BatchReview() {
             if (done > 0 && !exportedSince) {
               if (!window.confirm(`This clears all ${rows.length} results and nothing is stored. Download the report first?`)) return;
             }
-            setRows([]); setPairingIssues([]); setWallMs(null); setOpenRow(null); setVisited(new Set());
+            resetBatchState();
+            // Free the blobs before dropping the rows — clearing first would
+            // strand one object URL per label for the life of the tab.
+            setRows((old) => {
+              for (const r of old) if (r.imageUrl) URL.revokeObjectURL(r.imageUrl);
+              return [];
+            });
+            setPairingIssues([]); setWallMs(null); setOpenRow(null); setVisited(new Set());
           }}
           disabled={running || rows.length === 0}
           className="h-9 rounded-[7px] bg-navy px-3 text-[13px] font-bold text-white hover:bg-navy-hover disabled:opacity-40"
@@ -1068,7 +1103,7 @@ export function BatchReview() {
                       imageUrl={detail.imageUrl!}
                       bands={detail.bands ?? {}}
                       ms={detail.ms}
-                      boldAuto={detail.boldReview ? null : detail.boldAuto ?? null}
+                      boldAuto={detail.boldAuto ?? null} boldHuman={detail.boldReview ?? null}
                       isPdf={detail.filename.toLowerCase().endsWith(".pdf")}
                       compact
                     />
@@ -1121,7 +1156,7 @@ export function BatchReview() {
             {tab === "overview" ? (
               <>
               {reviewBar(detail)}
-              <ResultView result={detail.result} extraction={detail.extraction} imageUrl={detail.imageUrl} bands={detail.bands ?? {}} ms={detail.ms} boldAuto={detail.boldReview ? null : detail.boldAuto ?? null} isPdf={detail.filename.toLowerCase().endsWith(".pdf")} compact />
+              <ResultView result={detail.result} extraction={detail.extraction} imageUrl={detail.imageUrl} bands={detail.bands ?? {}} ms={detail.ms} boldAuto={detail.boldAuto ?? null} boldHuman={detail.boldReview ?? null} isPdf={detail.filename.toLowerCase().endsWith(".pdf")} compact />
               </>
             ) : (
               <AuditTrail row={detail} />

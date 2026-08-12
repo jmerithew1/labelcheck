@@ -68,6 +68,7 @@ export function ResultView({
   compact = false,
   confirming = false,
   boldAuto = null,
+  boldHuman = null,
   isPdf = false,
   appNumber,
 }: {
@@ -87,6 +88,8 @@ export function ResultView({
   confirming?: boolean;
   /** multi-signal bold gate result (null/undefined = not run or pending) */
   boldAuto?: "bold" | "not_bold" | "human" | null;
+  /** the agent's own bold decision — outranks the gate in this panel */
+  boldHuman?: "confirmed" | "flagged" | null;
   /** the submitted file is a PDF — the viewer shows a placeholder, not <img> */
   isPdf?: boolean;
   /** optional TTB application number — shown on the printed report */
@@ -247,12 +250,17 @@ export function ResultView({
             // headline — the bold confirm is named in the verdict itself,
             // unless the measurement gate resolved it.
             sub:
-              boldAuto === "bold"
+              boldHuman === "confirmed"
+                ? "All required fields match, the warning wording is exact, and you confirmed the bold type."
+                : boldAuto === "bold"
                 ? "All required fields match, the warning wording is exact, and bold type was verified by measuring the stroke width against the rest of the warning."
                 : "All required fields match and the warning wording is exact. One last step: glance at the label to confirm “GOVERNMENT WARNING” is in bold type — the computer can't be sure of bold.",
           };
 
-  const boldConfirmPending = wvPasses(result.warning.verdict) && boldAuto !== "bold";
+  // Resolved = the agent confirmed it, or the gate verified it. Agreeing with
+  // the machine must never make the panel look worse than not touching it.
+  const boldResolved = boldHuman === "confirmed" || boldAuto === "bold";
+  const boldConfirmPending = wvPasses(result.warning.verdict) && !boldResolved;
   // Count chips carry their tone (conformance #5): matched green, mismatch
   // red, review/confirm amber, not-required grey.
   const countBits = [
@@ -273,7 +281,11 @@ export function ResultView({
   const formattingRow =
     wv === "fail_prefix_case"
       ? { chip: <Chip tone="bad">FAIL</Chip>, text: '"GOVERNMENT WARNING" must appear in capital letters (27 CFR 16.22(a)(2)).' }
-      : boldAuto === "bold"
+      : boldHuman === "confirmed"
+        ? { chip: <Chip tone="ok">PASS</Chip>, text: "Bold type confirmed by you." }
+        : boldHuman === "flagged"
+        ? { chip: <Chip tone="bad">FAIL</Chip>, text: "You flagged “GOVERNMENT WARNING:” as not bold (bold is required by 27 CFR 16.22(a)(2))." }
+        : boldAuto === "bold"
         ? { chip: <Chip tone="ok">PASS</Chip>, text: "Bold type verified — the prefix strokes measure heavier than the warning body, and both readings of the label agree. This check is only trusted when it is certain; anything borderline is sent to you instead." }
         : boldAuto === "not_bold"
           ? { chip: <Chip tone="warn">Review</Chip>, text: "The stroke-width measurement says “GOVERNMENT WARNING:” may NOT be bold (required by 27 CFR 16.22(a)(2)) — check the picture." }

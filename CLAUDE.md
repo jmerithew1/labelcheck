@@ -19,4 +19,4 @@ Take-home project: a standalone prototype that verifies alcohol label images aga
 
 ## Status
 
-- Repo initialized 2026-08-10; no code yet. No commits — commit only when asked.
+- **Shipped.** Working app deployed at https://labelcheck-production-8f22.up.railway.app. Start with [docs/submission.md](docs/submission.md) for the evaluator walkthrough, [docs/approach.md](docs/approach.md) for the writeup, [docs/rubric.md](docs/rubric.md) for requirement-by-requirement evidence, [docs/decisions.md](docs/decisions.md) for the decision log.
