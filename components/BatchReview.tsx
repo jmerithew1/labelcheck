@@ -444,53 +444,13 @@ export function BatchReview() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rows]);
 
-  // "Your review" bar in the detail panel: the agent's durable ruling on a
-  // row (outranks machine triage; exports in the CSV), plus a changeable
-  // bold decision — any past decision can be revisited by opening the row.
-  const reviewBar = (r: BatchRow) => {
-    const setReview = (v: "ok" | "correction" | undefined) =>
-      setRows((rs) => rs.map((x) => (x.index === r.index ? { ...x, agentReview: v } : x)));
-    const boldLabel =
-      r.boldReview === "confirmed" ? "confirmed by you" : r.boldReview === "flagged" ? "flagged by you"
-        : r.boldAuto === "bold" ? "verified by measurement" : r.boldAuto === "not_bold" ? "measurement says check" : "not yet confirmed";
-    return (
-      <div className="mb-4 flex flex-col gap-2 rounded-[10px] border border-line bg-page px-3.5 py-3">
-        <span className="flex flex-wrap items-center gap-2">
-          <span className="text-[11px] font-bold uppercase tracking-[0.06em] text-muted">Your review</span>
-          <button
-            onClick={() => setReview(r.agentReview === "ok" ? undefined : "ok")}
-            className={`${CTRL_BASE} ${r.agentReview === "ok" ? CTRL_ON.green : CTRL_IDLE}`}
-          >
-            Reviewed — OK
-          </button>
-          <button
-            onClick={() => setReview(r.agentReview === "correction" ? undefined : "correction")}
-            className={`${CTRL_BASE} ${r.agentReview === "correction" ? CTRL_ON.red : CTRL_IDLE}`}
-          >
-            Needs correction
-          </button>
-          {r.agentReview && <span className="text-[11.5px] text-muted-2">click again to clear</span>}
-        </span>
-        {boldEligible(r) && (
-          <span className="flex flex-wrap items-center gap-2 text-[12px] text-muted">
-            Bold type: <b className="text-ink">{boldLabel}</b>
-            <button
-              onClick={() => markBold(r.index, r.boldReview === "confirmed" ? undefined : "confirmed")}
-              className={`${CTRL_BASE} ${r.boldReview === "confirmed" ? CTRL_ON.green : CTRL_IDLE}`}
-            >
-              {r.boldReview === "confirmed" ? "Confirmed" : "Looks bold"}
-            </button>
-            <button
-              onClick={() => markBold(r.index, r.boldReview === "flagged" ? undefined : "flagged")}
-              className={`${CTRL_BASE} ${r.boldReview === "flagged" ? CTRL_ON.red : CTRL_IDLE}`}
-            >
-              {r.boldReview === "flagged" ? "Flagged" : "Not bold"}
-            </button>
-          </span>
-        )}
-      </div>
-    );
-  };
+  const reviewBar = (r: BatchRow) => (
+    <ReviewBar
+      row={r}
+      onReview={(v) => setRows((rs) => rs.map((x) => (x.index === r.index ? { ...x, agentReview: v } : x)))}
+      onMarkBold={markBold}
+    />
+  );
 
   // Lazy bands for the open detail row.
   useEffect(() => {
@@ -1178,6 +1138,108 @@ export function BatchReview() {
         />
       )}
     </Shell>
+  );
+}
+
+/** "Your review" — the agent's durable ruling on a row (outranks machine
+ *  triage, exports as agent_review) plus a changeable bold decision.
+ *
+ *  Exception-based by design: a row with nothing outstanding shows one calm
+ *  line, not two decision buttons. Offering a verdict on a label that already
+ *  passed everything manufactures doubt and trains people to click through.
+ *  The override stays one quiet link away — the agent must always be able to
+ *  disagree with the tool. */
+function ReviewBar({
+  row: r,
+  onReview,
+  onMarkBold,
+}: {
+  row: BatchRow;
+  onReview: (v: "ok" | "correction" | undefined) => void;
+  onMarkBold: (index: number, v: "confirmed" | "flagged" | undefined) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const bucket = bucketOf(r);
+  const boldOwed = boldPendingRow(r);
+  const decided = !!r.agentReview || !!r.boldReview;
+  const show = open || decided || bucket === "review" || bucket === "error" || boldOwed;
+
+  // Bold controls appear only when the glance is actually owed or a human
+  // already ruled — a machine-verified label needs no buttons.
+  const showBold = boldEligible(r) && (boldOwed || !!r.boldReview || open);
+  const boldLabel =
+    r.boldReview === "confirmed" ? "confirmed by you" : r.boldReview === "flagged" ? "flagged by you"
+      : r.boldAuto === "bold" ? "verified by measurement" : r.boldAuto === "not_bold" ? "measurement says check it"
+      : r.boldAuto === undefined ? "measuring…" : "needs your glance";
+  const pair = "grid grid-cols-2 gap-2";
+
+  if (!show) {
+    return (
+      <div className="mb-4 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-[10px] border border-ok-line bg-ok-bg px-4 py-2.5">
+        <span className="text-[12.5px] text-ink">
+          <b className="font-semibold text-ok">Nothing to review</b> — every field matched and the warning checks passed.
+        </span>
+        <button
+          onClick={() => setOpen(true)}
+          className="ml-auto whitespace-nowrap text-[11.5px] font-semibold text-muted hover:text-ink hover:underline"
+        >
+          Disagree?
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mb-4 overflow-hidden rounded-[10px] border border-line bg-card">
+      <div className="flex items-center gap-2 border-b border-hairline px-4 py-2.5">
+        <p className="flex-1 text-[11.5px] font-semibold uppercase tracking-wider text-ink-faint">Your review</p>
+        {decided && (
+          <button
+            onClick={() => { onReview(undefined); onMarkBold(r.index, undefined); }}
+            className="text-[11.5px] font-semibold text-muted hover:text-ink hover:underline"
+          >
+            Clear
+          </button>
+        )}
+      </div>
+      <div className="flex flex-col gap-2 px-4 py-3">
+        <div className={pair}>
+          <button
+            onClick={() => onReview(r.agentReview === "ok" ? undefined : "ok")}
+            className={`${CTRL_BASE} justify-center ${r.agentReview === "ok" ? CTRL_ON.green : CTRL_IDLE}`}
+          >
+            {r.agentReview === "ok" ? "Reviewed ✓" : "Reviewed — OK"}
+          </button>
+          <button
+            onClick={() => onReview(r.agentReview === "correction" ? undefined : "correction")}
+            className={`${CTRL_BASE} justify-center ${r.agentReview === "correction" ? CTRL_ON.red : CTRL_IDLE}`}
+          >
+            Needs correction
+          </button>
+        </div>
+        {showBold && (
+          <>
+            <p className="mt-1 text-[12px] text-muted">
+              Bold type — <span className="font-semibold text-ink">{boldLabel}</span>
+            </p>
+            <div className={pair}>
+              <button
+                onClick={() => onMarkBold(r.index, r.boldReview === "confirmed" ? undefined : "confirmed")}
+                className={`${CTRL_BASE} justify-center ${r.boldReview === "confirmed" ? CTRL_ON.green : CTRL_IDLE}`}
+              >
+                {r.boldReview === "confirmed" ? "Confirmed ✓" : "Looks bold"}
+              </button>
+              <button
+                onClick={() => onMarkBold(r.index, r.boldReview === "flagged" ? undefined : "flagged")}
+                className={`${CTRL_BASE} justify-center ${r.boldReview === "flagged" ? CTRL_ON.red : CTRL_IDLE}`}
+              >
+                {r.boldReview === "flagged" ? "Flagged" : "Not bold"}
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
   );
 }
 

@@ -219,7 +219,12 @@ export function ResultView({
   }
 
   const issueCount = counts.mismatch + (counts.warningFails ? 1 : 0);
-  const confirmCount = counts.review + (counts.warningReview ? 1 : 0);
+  // A bold glance the machine couldn't resolve is an outstanding item, so it
+  // belongs in the count — a green "matches" headline that then asks for a
+  // check contradicts itself (and the row's amber status in the batch table).
+  const boldGlanceOwed =
+    wvPasses(result.warning.verdict) && boldHuman !== "confirmed" && boldAuto !== null && boldAuto !== "bold";
+  const confirmCount = counts.review + (counts.warningReview ? 1 : 0) + (boldGlanceOwed ? 1 : 0);
   const banner =
     counts.warningFails && counts.mismatch === 0
       ? {
@@ -240,7 +245,9 @@ export function ResultView({
             cls: "border-warn-line bg-warn-bg", iconCls: "bg-warn", icon: Icon.dot,
             title: `${confirmCount} item${confirmCount === 1 ? "" : "s"} need${confirmCount === 1 ? "s" : ""} confirmation`,
             titleCls: "text-warn",
-            sub: "The label matches, with a visual confirmation needed.",
+            sub: boldGlanceOwed
+              ? "Every field matches and the warning wording is exact — just confirm “GOVERNMENT WARNING” looks bold on the label."
+              : "The label matches, with a visual confirmation needed.",
           }
         : {
             cls: "border-ok-line bg-ok-bg", iconCls: "bg-ok", icon: Icon.check,
