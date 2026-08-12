@@ -14,6 +14,14 @@
       4077
     ]
   },
+  "p1_warning_failure_path": {
+    "note": "Warning-failing labels pay a second independent reading (deliberate false-rejection-aversion trade-off, see approach.md); measured live against the production URL during the round-2 audit on 2026-08-11. Passing control included for comparison.",
+    "cases": [
+      { "label": "title-case-prefix.png", "outcome": "fail_prefix_case", "wall_ms": 8109, "server_ms": 7562 },
+      { "label": "word-swap.png", "outcome": "fail_wording", "wall_ms": 8280, "server_ms": 7933 },
+      { "label": "case-diff.png (passing control)", "outcome": "clean", "wall_ms": 3802, "server_ms": 3478 }
+    ]
+  },
   "p3_batch": {
     "rows": 250,
     "concurrency": 8,

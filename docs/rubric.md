@@ -2,7 +2,7 @@
 
 Every requirement extracted from [brief.md](brief.md), tracked with evidence. Vocabulary: **MET** (with evidence), **PARTIAL**, **MISSING**, **N/A-documented**. A claim only moves to MET with a file, test, measured number, or URL attached — never on "code written."
 
-Verification points: spec approval (done), post-build final gate, pre-submit.
+Verification points: spec approval (done), post-build final gate (done), pre-submit audit loop (done 2026-08-11): round 1 — 5 independent auditor lanes (clean-clone build, core claims, live app, brief-coverage adversary, docs-drift), 0 blockers / 9 minors, all fixed; round 2 — 4 lanes re-verifying live production behavior + docs, 0 blockers / 3 doc-accuracy minors, all fixed; round 3 — scoped re-check of the round-2 fixes found 3 residual doc findings (stale claims duplicated in the generator and decisions log; an unbacked latency number), fixed; round 4 — final re-check of the round-3 fixes, clean (loop exit).
 
 ## Hard requirements (miss one = auto-fail)
 
@@ -29,7 +29,7 @@ Verification points: spec approval (done), post-build final gate, pre-submit.
 - **C14 — MET** Jenny's evasion tactics all countered — *different wording*: exact canonical comparison + character diff (C7); *smaller font*: extractor reports warning size relative to the label, surfaces an advisory even when text is exact ([lib/vision/contract.ts](../lib/vision/contract.ts) `warning_text_size`; physical mm/characters-per-inch documented as not machine-checkable from an image, [approach.md](approach.md) §limitations); *buried in tiny text*: full-label transcription + tri-state presence — a warning anywhere on the label is found or its absence/illegibility flagged
 
 ### Performance
-- **P1 — MET** ~5s per label MEASURED on deployed URL (incl. evidence-band call): **p50 4.3s, worst 4.5s, n=6** — [measured-performance.json](measured-performance.json)
+- **P1 — MET** ~5s per label MEASURED on deployed URL (incl. evidence-band call): **p50 4.3s, worst 4.5s, n=6** — [measured-performance.json](measured-performance.json). Warning-*failing* labels take ~8s (measured 8.1–8.3s live, raw timings in the same evidence file) because they pay the deliberate second-reading confirmation pass — the false-rejection-aversion trade-off (U4); clean/typical labels stay under 5s
 - **P2 — MET** Batch 200–300 first-class — batch review page: CSV+files dropzone, loud pairing, filters/search/pagination, detail panel, sample batch
 - **P3 — MET** 250-label batch **135s wall-clock, 250/250 ok, 0 rate-limited, 0 errors** on deployed app — [measured-performance.json](measured-performance.json)
 

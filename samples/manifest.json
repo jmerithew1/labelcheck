@@ -47,7 +47,7 @@
       "ground_truth": "samples/labels/title-case-prefix.json",
       "template": "bourbon",
       "spike_case": "bold-accuracy",
-      "summary": "Warning body canonical, but prefix is title case (\"Government Warning:\") and not bold. Must FAIL the exact-warning check (27 CFR 16.21 requires ALL CAPS bold prefix).",
+      "summary": "Warning body canonical, but prefix is title case (\"Government Warning:\") and not bold. Must FAIL the exact-warning check (27 CFR 16.22(a) requires the ALL CAPS bold prefix).",
       "fields": {
         "brand_name": "OLD TOM DISTILLERY",
         "class_type": "Kentucky Straight Bourbon Whiskey",

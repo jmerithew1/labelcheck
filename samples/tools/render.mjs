@@ -205,7 +205,7 @@ const SPECS = [
     name: 'title-case-prefix', template: 'bourbon', ...OLD_TOM,
     warning: { prefix: 'Government Warning:', body: BODY, prefixBold: false },
     spike_case: 'bold-accuracy',
-    notes: 'Warning body canonical, but prefix is title case ("Government Warning:") and not bold. Must FAIL the exact-warning check (27 CFR 16.21 requires ALL CAPS bold prefix).',
+    notes: 'Warning body canonical, but prefix is title case ("Government Warning:") and not bold. Must FAIL the exact-warning check (27 CFR 16.22(a) requires the ALL CAPS bold prefix).',
   },
   {
     name: 'word-swap', template: 'bourbon', ...OLD_TOM,
