@@ -26,3 +26,13 @@ samples/tools/*-out/
 
 # tesseract language data (downloaded on first OCR run)
 eng.traineddata
+
+# hard-degradation renders (regenerate: samples/tools/degrade-hard.mjs)
+samples/degraded-hard/
+samples/robustness/
+
+# Real TTB COLA label images: public government records, but not ours to
+# redistribute, and regenerable via samples/tools/harvest-ttb.mjs. The scored
+# summary (docs/real-labels.json) and the COLA ID list ARE committed — that is
+# the evidence; the pixels are not.
+samples/real/

@@ -310,6 +310,216 @@
         "net_contents": "355 mL"
       },
       "warning_ok": true
+    },
+    {
+      "name": "wine-title-case",
+      "png": "samples/labels/wine-title-case.png",
+      "ground_truth": "samples/labels/wine-title-case.json",
+      "template": "wine",
+      "summary": "Cross-template violation coverage: prefix in title case (16.22(a)(2) requires ALL CAPS), on the wine template.",
+      "fields": {
+        "brand_name": "CHATEAU MERIDIAN",
+        "class_type": "Cabernet Sauvignon",
+        "alcohol_content": "13.5% Alc. by Vol.",
+        "net_contents": "750 mL"
+      },
+      "warning_ok": false
+    },
+    {
+      "name": "wine-word-swap",
+      "png": "samples/labels/wine-word-swap.png",
+      "ground_truth": "samples/labels/wine-word-swap.json",
+      "template": "wine",
+      "summary": "Cross-template violation coverage: one word altered in the warning body, on the wine template.",
+      "fields": {
+        "brand_name": "CHATEAU MERIDIAN",
+        "class_type": "Cabernet Sauvignon",
+        "alcohol_content": "13.5% Alc. by Vol.",
+        "net_contents": "750 mL"
+      },
+      "warning_ok": false
+    },
+    {
+      "name": "wine-word-drop",
+      "png": "samples/labels/wine-word-drop.png",
+      "ground_truth": "samples/labels/wine-word-drop.json",
+      "template": "wine",
+      "summary": "Cross-template violation coverage: words omitted from the warning body, on the wine template.",
+      "fields": {
+        "brand_name": "CHATEAU MERIDIAN",
+        "class_type": "Cabernet Sauvignon",
+        "alcohol_content": "13.5% Alc. by Vol.",
+        "net_contents": "750 mL"
+      },
+      "warning_ok": false
+    },
+    {
+      "name": "wine-punct-drift",
+      "png": "samples/labels/wine-punct-drift.png",
+      "ground_truth": "samples/labels/wine-punct-drift.json",
+      "template": "wine",
+      "summary": "Cross-template violation coverage: load-bearing comma dropped, on the wine template.",
+      "fields": {
+        "brand_name": "CHATEAU MERIDIAN",
+        "class_type": "Cabernet Sauvignon",
+        "alcohol_content": "13.5% Alc. by Vol.",
+        "net_contents": "750 mL"
+      },
+      "warning_ok": false
+    },
+    {
+      "name": "wine-non-bold",
+      "png": "samples/labels/wine-non-bold.png",
+      "ground_truth": "samples/labels/wine-non-bold.json",
+      "template": "wine",
+      "summary": "Cross-template violation coverage: prefix not bold (16.22(a)(2)), on the wine template.",
+      "fields": {
+        "brand_name": "CHATEAU MERIDIAN",
+        "class_type": "Cabernet Sauvignon",
+        "alcohol_content": "13.5% Alc. by Vol.",
+        "net_contents": "750 mL"
+      },
+      "warning_ok": false
+    },
+    {
+      "name": "can-title-case",
+      "png": "samples/labels/can-title-case.png",
+      "ground_truth": "samples/labels/can-title-case.json",
+      "template": "can",
+      "summary": "Cross-template violation coverage: prefix in title case (16.22(a)(2) requires ALL CAPS), on the can template.",
+      "fields": {
+        "brand_name": "STONE'S THROW BREWING",
+        "class_type": "India Pale Ale",
+        "alcohol_content": "6.2% Alc./Vol.",
+        "net_contents": "355 mL"
+      },
+      "warning_ok": false
+    },
+    {
+      "name": "can-word-swap",
+      "png": "samples/labels/can-word-swap.png",
+      "ground_truth": "samples/labels/can-word-swap.json",
+      "template": "can",
+      "summary": "Cross-template violation coverage: one word altered in the warning body, on the can template.",
+      "fields": {
+        "brand_name": "STONE'S THROW BREWING",
+        "class_type": "India Pale Ale",
+        "alcohol_content": "6.2% Alc./Vol.",
+        "net_contents": "355 mL"
+      },
+      "warning_ok": false
+    },
+    {
+      "name": "can-word-drop",
+      "png": "samples/labels/can-word-drop.png",
+      "ground_truth": "samples/labels/can-word-drop.json",
+      "template": "can",
+      "summary": "Cross-template violation coverage: words omitted from the warning body, on the can template.",
+      "fields": {
+        "brand_name": "STONE'S THROW BREWING",
+        "class_type": "India Pale Ale",
+        "alcohol_content": "6.2% Alc./Vol.",
+        "net_contents": "355 mL"
+      },
+      "warning_ok": false
+    },
+    {
+      "name": "can-punct-drift",
+      "png": "samples/labels/can-punct-drift.png",
+      "ground_truth": "samples/labels/can-punct-drift.json",
+      "template": "can",
+      "summary": "Cross-template violation coverage: load-bearing comma dropped, on the can template.",
+      "fields": {
+        "brand_name": "STONE'S THROW BREWING",
+        "class_type": "India Pale Ale",
+        "alcohol_content": "6.2% Alc./Vol.",
+        "net_contents": "355 mL"
+      },
+      "warning_ok": false
+    },
+    {
+      "name": "can-non-bold",
+      "png": "samples/labels/can-non-bold.png",
+      "ground_truth": "samples/labels/can-non-bold.json",
+      "template": "can",
+      "summary": "Cross-template violation coverage: prefix not bold (16.22(a)(2)), on the can template.",
+      "fields": {
+        "brand_name": "STONE'S THROW BREWING",
+        "class_type": "India Pale Ale",
+        "alcohol_content": "6.2% Alc./Vol.",
+        "net_contents": "355 mL"
+      },
+      "warning_ok": false
+    },
+    {
+      "name": "gin-title-case",
+      "png": "samples/labels/gin-title-case.png",
+      "ground_truth": "samples/labels/gin-title-case.json",
+      "template": "gin",
+      "summary": "Cross-template violation coverage: prefix in title case (16.22(a)(2) requires ALL CAPS), on the gin template.",
+      "fields": {
+        "brand_name": "HARBOR LIGHT GIN",
+        "class_type": "Distilled Gin",
+        "alcohol_content": "47% Alc./Vol. (94 Proof)",
+        "net_contents": "750 mL"
+      },
+      "warning_ok": false
+    },
+    {
+      "name": "gin-word-swap",
+      "png": "samples/labels/gin-word-swap.png",
+      "ground_truth": "samples/labels/gin-word-swap.json",
+      "template": "gin",
+      "summary": "Cross-template violation coverage: one word altered in the warning body, on the gin template.",
+      "fields": {
+        "brand_name": "HARBOR LIGHT GIN",
+        "class_type": "Distilled Gin",
+        "alcohol_content": "47% Alc./Vol. (94 Proof)",
+        "net_contents": "750 mL"
+      },
+      "warning_ok": false
+    },
+    {
+      "name": "gin-word-drop",
+      "png": "samples/labels/gin-word-drop.png",
+      "ground_truth": "samples/labels/gin-word-drop.json",
+      "template": "gin",
+      "summary": "Cross-template violation coverage: words omitted from the warning body, on the gin template.",
+      "fields": {
+        "brand_name": "HARBOR LIGHT GIN",
+        "class_type": "Distilled Gin",
+        "alcohol_content": "47% Alc./Vol. (94 Proof)",
+        "net_contents": "750 mL"
+      },
+      "warning_ok": false
+    },
+    {
+      "name": "gin-punct-drift",
+      "png": "samples/labels/gin-punct-drift.png",
+      "ground_truth": "samples/labels/gin-punct-drift.json",
+      "template": "gin",
+      "summary": "Cross-template violation coverage: load-bearing comma dropped, on the gin template.",
+      "fields": {
+        "brand_name": "HARBOR LIGHT GIN",
+        "class_type": "Distilled Gin",
+        "alcohol_content": "47% Alc./Vol. (94 Proof)",
+        "net_contents": "750 mL"
+      },
+      "warning_ok": false
+    },
+    {
+      "name": "gin-non-bold",
+      "png": "samples/labels/gin-non-bold.png",
+      "ground_truth": "samples/labels/gin-non-bold.json",
+      "template": "gin",
+      "summary": "Cross-template violation coverage: prefix not bold (16.22(a)(2)), on the gin template.",
+      "fields": {
+        "brand_name": "HARBOR LIGHT GIN",
+        "class_type": "Distilled Gin",
+        "alcohol_content": "47% Alc./Vol. (94 Proof)",
+        "net_contents": "750 mL"
+      },
+      "warning_ok": false
     }
   ]
 }

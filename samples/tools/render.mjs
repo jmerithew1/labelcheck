@@ -343,6 +343,81 @@ const SPECS = [
     spike_case: 'demo-case-diff',
     notes: 'Clean label used for the batch formatting-difference row — the APPLICATION supplies the same values in different letter case, which must read as a match with a formatting note.',
   },
+  {
+    name: 'wine-title-case', template: 'wine', brand: 'CHATEAU MERIDIAN', classType: 'Cabernet Sauvignon', abv: '13.5% Alc. by Vol.', net: '750 mL',
+    warning: { prefix: 'Government Warning:', body: BODY, prefixBold: false },
+    notes: 'Cross-template violation coverage: prefix in title case (16.22(a)(2) requires ALL CAPS), on the wine template.',
+  },
+  {
+    name: 'wine-word-swap', template: 'wine', brand: 'CHATEAU MERIDIAN', classType: 'Cabernet Sauvignon', abv: '13.5% Alc. by Vol.', net: '750 mL',
+    warning: { prefix: PREFIX, body: BODY_WORD_SWAP, prefixBold: true },
+    notes: 'Cross-template violation coverage: one word altered in the warning body, on the wine template.',
+  },
+  {
+    name: 'wine-word-drop', template: 'wine', brand: 'CHATEAU MERIDIAN', classType: 'Cabernet Sauvignon', abv: '13.5% Alc. by Vol.', net: '750 mL',
+    warning: { prefix: PREFIX, body: BODY_WORD_DROP, prefixBold: true },
+    notes: 'Cross-template violation coverage: words omitted from the warning body, on the wine template.',
+  },
+  {
+    name: 'wine-punct-drift', template: 'wine', brand: 'CHATEAU MERIDIAN', classType: 'Cabernet Sauvignon', abv: '13.5% Alc. by Vol.', net: '750 mL',
+    warning: { prefix: PREFIX, body: BODY_PUNCT_DRIFT, prefixBold: true },
+    notes: 'Cross-template violation coverage: load-bearing comma dropped, on the wine template.',
+  },
+  {
+    name: 'wine-non-bold', template: 'wine', brand: 'CHATEAU MERIDIAN', classType: 'Cabernet Sauvignon', abv: '13.5% Alc. by Vol.', net: '750 mL',
+    warning: { prefix: PREFIX, body: BODY, prefixBold: false },
+    notes: 'Cross-template violation coverage: prefix not bold (16.22(a)(2)), on the wine template.',
+  },
+  {
+    name: 'can-title-case', template: 'can', brand: "STONE'S THROW BREWING", classType: 'India Pale Ale', abv: '6.2% Alc./Vol.', net: '355 mL',
+    warning: { prefix: 'Government Warning:', body: BODY, prefixBold: false },
+    notes: 'Cross-template violation coverage: prefix in title case (16.22(a)(2) requires ALL CAPS), on the can template.',
+  },
+  {
+    name: 'can-word-swap', template: 'can', brand: "STONE'S THROW BREWING", classType: 'India Pale Ale', abv: '6.2% Alc./Vol.', net: '355 mL',
+    warning: { prefix: PREFIX, body: BODY_WORD_SWAP, prefixBold: true },
+    notes: 'Cross-template violation coverage: one word altered in the warning body, on the can template.',
+  },
+  {
+    name: 'can-word-drop', template: 'can', brand: "STONE'S THROW BREWING", classType: 'India Pale Ale', abv: '6.2% Alc./Vol.', net: '355 mL',
+    warning: { prefix: PREFIX, body: BODY_WORD_DROP, prefixBold: true },
+    notes: 'Cross-template violation coverage: words omitted from the warning body, on the can template.',
+  },
+  {
+    name: 'can-punct-drift', template: 'can', brand: "STONE'S THROW BREWING", classType: 'India Pale Ale', abv: '6.2% Alc./Vol.', net: '355 mL',
+    warning: { prefix: PREFIX, body: BODY_PUNCT_DRIFT, prefixBold: true },
+    notes: 'Cross-template violation coverage: load-bearing comma dropped, on the can template.',
+  },
+  {
+    name: 'can-non-bold', template: 'can', brand: "STONE'S THROW BREWING", classType: 'India Pale Ale', abv: '6.2% Alc./Vol.', net: '355 mL',
+    warning: { prefix: PREFIX, body: BODY, prefixBold: false },
+    notes: 'Cross-template violation coverage: prefix not bold (16.22(a)(2)), on the can template.',
+  },
+  {
+    name: 'gin-title-case', template: 'gin', brand: 'HARBOR LIGHT GIN', classType: 'Distilled Gin', abv: '47% Alc./Vol. (94 Proof)', net: '750 mL',
+    warning: { prefix: 'Government Warning:', body: BODY, prefixBold: false },
+    notes: 'Cross-template violation coverage: prefix in title case (16.22(a)(2) requires ALL CAPS), on the gin template.',
+  },
+  {
+    name: 'gin-word-swap', template: 'gin', brand: 'HARBOR LIGHT GIN', classType: 'Distilled Gin', abv: '47% Alc./Vol. (94 Proof)', net: '750 mL',
+    warning: { prefix: PREFIX, body: BODY_WORD_SWAP, prefixBold: true },
+    notes: 'Cross-template violation coverage: one word altered in the warning body, on the gin template.',
+  },
+  {
+    name: 'gin-word-drop', template: 'gin', brand: 'HARBOR LIGHT GIN', classType: 'Distilled Gin', abv: '47% Alc./Vol. (94 Proof)', net: '750 mL',
+    warning: { prefix: PREFIX, body: BODY_WORD_DROP, prefixBold: true },
+    notes: 'Cross-template violation coverage: words omitted from the warning body, on the gin template.',
+  },
+  {
+    name: 'gin-punct-drift', template: 'gin', brand: 'HARBOR LIGHT GIN', classType: 'Distilled Gin', abv: '47% Alc./Vol. (94 Proof)', net: '750 mL',
+    warning: { prefix: PREFIX, body: BODY_PUNCT_DRIFT, prefixBold: true },
+    notes: 'Cross-template violation coverage: load-bearing comma dropped, on the gin template.',
+  },
+  {
+    name: 'gin-non-bold', template: 'gin', brand: 'HARBOR LIGHT GIN', classType: 'Distilled Gin', abv: '47% Alc./Vol. (94 Proof)', net: '750 mL',
+    warning: { prefix: PREFIX, body: BODY, prefixBold: false },
+    notes: 'Cross-template violation coverage: prefix not bold (16.22(a)(2)), on the gin template.',
+  },
 ];
 
 function verbatimWarning(w) {
