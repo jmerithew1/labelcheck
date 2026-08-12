@@ -45,4 +45,27 @@ One vision call per label does **perception only**: Claude Haiku 4.5 transcribes
 
 ## Sample data
 
+
+### Measurement harnesses
+
+Thirteen of the fifteen scripts in `samples/tools` were undocumented; this is what each one is for. Generated images are gitignored and regenerable — the scored summaries in `docs/*.json` are the evidence. All default to `http://localhost:3000`; pass a URL to target a deployment.
+
+| Script | Measures | Writes |
+|---|---|---|
+| `render.mjs` | Generates the 35 ground-truthed labels + sidecars + the 12-row sample batch | `samples/labels`, `samples/batch` |
+| `robustness-matrix.mjs` | 34 scoreable labels × 40 degradation conditions; false rejections vs missed violations | `docs/robustness-matrix.json` |
+| `degrade.mjs` / `degrade-hard.mjs` | Smaller degradation sets (the original 15, and a harder 40) | `docs/degraded-hard.json` |
+| `harvest-ttb.mjs` | Downloads real approved labels from TTB's public COLA registry | `samples/real/` + its manifest |
+| `score-real.mjs` | Scores those real labels; an approved COLA is compliant, so any warning failure is a false rejection | `docs/real-labels.json` |
+| `contact-sheet.mjs` | Labelled grids so many images can be triaged by eye at once | `samples/real/_sheets` |
+| `bold-gate-rescore.mjs` | Re-scores bold through the shipped pixel gate offline, no API calls | `docs/bold-gate-rescore.json` |
+| `bold-densitometry-spike.mjs` | First pass at measuring bold from ink density | `docs/bold-densitometry-spike.json` |
+| `bold-densitometry-matrix.mjs` | Density across fonts — the run that showed typeface confounds weight | `matrix-out/` → `docs/bold-densitometry-matrix.json` |
+| `bold-multisignal-spike.mjs` | Round 1 of the bold gate loop | `multisignal-out/` → `docs/bold-multisignal-r1.json` |
+| `bold-multisignal-r2.mjs` | Round 2 — **the thresholds in `lib/compare/boldGate.ts` trace to this run** | `multisignal-r2-out/` → `docs/bold-multisignal-r2.json` |
+| `bold-multisignal-r3.mjs` | Round 3 — rejected as overfit; kept as the audit trail for why the gate stopped at r2 | `multisignal-r3-out/` → `docs/bold-multisignal-r3.json` |
+| `bold-croplens.mjs` | Crop-lens variant — rejected on a validation mistake | `croplens-out/` → `docs/bold-croplens-results.json` |
+
+The five `bold-*` rounds write into gitignored `*-out/` directories; their committed `docs/` copies were placed there by hand, so re-running one does not refresh the committed evidence.
+
 [samples/labels](samples/labels) holds 35 rendered test labels with exact ground-truth sidecars — including adversarial cases (swapped words, dropped words, punctuation drift, title-case prefix, non-bold prefix, printed prompt-injection text). [samples/batch](samples/batch) is a ready-to-run 12-row batch. To regenerate: `cd samples/tools && npm install && node render.mjs` (the generator has its own dependencies, including a browser download — not installed by the root `npm install`).

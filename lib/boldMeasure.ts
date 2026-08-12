@@ -169,6 +169,11 @@ export async function measureBoldSignals(
       swRatio: pm.sw / bm.sw,
       densRatio: pm.inkFrac / bm.inkFrac,
       sizeRatio: pm.capH / bm.capH,
+      // Absolute width of the BODY stroke in the source image's own pixels.
+      // Measured on a 3x upscale, so divide back out. The gate uses this to
+      // refuse a verdict when the image simply lacks the resolution to carry
+      // one — a ratio of small integers looks precise and is not.
+      swBodyNativePx: bm.sw / 3,
     };
   } catch {
     return null;

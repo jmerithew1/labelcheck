@@ -34,3 +34,28 @@ describe("applyBoldGate", () => {
     expect(applyBoldGate({ swRatio: (BOLD_GATE.swLo + BOLD_GATE.swHi) / 2, densRatio: 1.2, sizeRatio: 1.0 }, "bold")).toBe("human");
   });
 });
+
+/** Resolution floor. Measured on the round-2 corpus: 10 of 35 truly-regular
+ *  samples flip to a confident "bold" if the prefix measures one pixel wider,
+ *  and 18 of 91 sit below 2 native pixels of body stroke. Arithmetic on 1-2px
+ *  integers reads as precision it does not have. */
+describe("bold gate abstains when the image lacks the resolution", () => {
+  const strongBold = { swRatio: 1.5, densRatio: 1.4, sizeRatio: 1.0 };
+
+  it("still decides when strokes are thick enough", () => {
+    expect(applyBoldGate({ ...strongBold, swBodyNativePx: 3 }, "bold")).toBe("bold");
+  });
+
+  it("routes to a human below the floor, even with every other signal agreeing", () => {
+    expect(applyBoldGate({ ...strongBold, swBodyNativePx: 1.7 }, "bold")).toBe("human");
+  });
+
+  it("will not claim not_bold below the floor either", () => {
+    const thin = { swRatio: 0.8, densRatio: 1.0, sizeRatio: 1.0, swBodyNativePx: 1.2 };
+    expect(applyBoldGate(thin, "not_bold")).toBe("human");
+  });
+
+  it("stays backward compatible when the width is unavailable", () => {
+    expect(applyBoldGate(strongBold, "bold")).toBe("bold");
+  });
+});

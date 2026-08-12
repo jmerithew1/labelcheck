@@ -22,10 +22,20 @@ export interface BoldSignals {
   densRatio: number;
   /** cap-height ratio, prefix / body reference (sanity gate only) */
   sizeRatio: number;
+  /** body stroke width in the SOURCE image's pixels (not the upscale) */
+  swBodyNativePx?: number;
 }
 
 /** Round-2 tuned thresholds — frozen; re-tune only through the spike loop. */
-export const BOLD_GATE = { swHi: 1.225, swLo: 0.875, dHi: 1.0, dLo: 1.3, sizeMin: 0.6, sizeMax: 1.7 } as const;
+export const BOLD_GATE = {
+  swHi: 1.225, swLo: 0.875, dHi: 1.0, dLo: 1.3, sizeMin: 0.6, sizeMax: 1.7,
+  // Below this the measurement is arithmetic on 1-2 pixel integers. Measured
+  // on the round-2 corpus, 10 of 35 truly-REGULAR samples flip to a confident
+  // "bold" if the prefix measures a single pixel wider, and 18 of 91 samples
+  // sit under this floor. A ratio of small integers reads as precision it does
+  // not have, so below the floor the gate declines to decide.
+  minBodyStrokePx: 2,
+} as const;
 
 export type BoldGateResult = "bold" | "not_bold" | "human";
 
@@ -37,6 +47,8 @@ export function applyBoldGate(
   const { swRatio, densRatio, sizeRatio } = signals;
   if (!Number.isFinite(swRatio) || !Number.isFinite(densRatio) || !Number.isFinite(sizeRatio)) return "human";
   if (sizeRatio < BOLD_GATE.sizeMin || sizeRatio > BOLD_GATE.sizeMax) return "human";
+  // Resolution floor: not enough pixels to tell bold from regular at all.
+  if (signals.swBodyNativePx !== undefined && signals.swBodyNativePx < BOLD_GATE.minBodyStrokePx) return "human";
   if (swRatio >= BOLD_GATE.swHi && densRatio >= BOLD_GATE.dHi && aiAdvisory === "bold") return "bold";
   if (swRatio <= BOLD_GATE.swLo && densRatio <= BOLD_GATE.dLo) return "not_bold";
   return "human";

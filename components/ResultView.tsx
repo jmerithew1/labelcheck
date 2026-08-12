@@ -260,7 +260,7 @@ export function ResultView({
               boldHuman === "confirmed"
                 ? "All required fields match, the warning wording is exact, and you confirmed the bold type."
                 : boldAuto === "bold"
-                ? "All required fields match, the warning wording is exact, and bold type was verified by measuring the stroke width against the rest of the warning."
+                ? "All required fields match, the warning wording is exact, and the prefix strokes measure heavier than the warning body."
                 : "All required fields match and the warning wording is exact. One last step: glance at the label to confirm “GOVERNMENT WARNING” is in bold type — the computer can't be sure of bold.",
           };
 
@@ -293,7 +293,7 @@ export function ResultView({
         : boldHuman === "flagged"
         ? { chip: <Chip tone="bad">FAIL</Chip>, text: "You flagged “GOVERNMENT WARNING:” as not bold (bold is required by 27 CFR 16.22(a)(2))." }
         : boldAuto === "bold"
-        ? { chip: <Chip tone="ok">PASS</Chip>, text: "Bold type verified — the prefix strokes measure heavier than the warning body, and both readings of the label agree. This check is only trusted when it is certain; anything borderline is sent to you instead." }
+        ? { chip: <Chip tone="ok">PASS</Chip>, text: "The prefix strokes measure heavier than the warning body, and the visual reading agrees. Stroke width is measured from the image, so this is strong evidence rather than proof — anything borderline, or any image too low-resolution to measure, is sent to you instead." }
         : boldAuto === "not_bold"
           ? { chip: <Chip tone="warn">Review</Chip>, text: "The stroke-width measurement says “GOVERNMENT WARNING:” may NOT be bold (required by 27 CFR 16.22(a)(2)) — check the picture." }
           : {
