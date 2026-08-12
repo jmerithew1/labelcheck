@@ -171,7 +171,9 @@ export function ResultView({
       const stacked = o.top >= r.bottom - 2 || o.bottom <= r.top + 2;
       if (stacked) {
         const x2 = Math.min(o.right, v.right) - g.left + 2;
-        const bend = Math.max(x1, x2) + 10;
+        // Keep the bend inside the container — in the narrow batch panel a
+        // bend past the right edge is clipped and the line vanishes.
+        const bend = Math.min(Math.max(x1, x2) + 10, g.width - 3);
         setConnector({ path: `M ${x1} ${y1} L ${bend} ${y1} L ${bend} ${y2} L ${x2} ${y2}`, x1, y1, x2, y2 });
         return;
       }
@@ -246,7 +248,7 @@ export function ResultView({
             // unless the measurement gate resolved it.
             sub:
               boldAuto === "bold"
-                ? "All required fields match, the warning wording is exact, and bold type was verified by measurement (stroke width + AI agreement)."
+                ? "All required fields match, the warning wording is exact, and bold type was verified by measuring the stroke width against the rest of the warning."
                 : "All required fields match and the warning wording is exact. One last step: glance at the label to confirm “GOVERNMENT WARNING” is in bold type — the computer can't be sure of bold.",
           };
 
@@ -272,14 +274,14 @@ export function ResultView({
     wv === "fail_prefix_case"
       ? { chip: <Chip tone="bad">FAIL</Chip>, text: '"GOVERNMENT WARNING" must appear in capital letters (27 CFR 16.22(a)(2)).' }
       : boldAuto === "bold"
-        ? { chip: <Chip tone="ok">PASS</Chip>, text: "Bold type verified — the stroke-width measurement and the AI reading agree (measurement gate validated at zero false confirmations)." }
+        ? { chip: <Chip tone="ok">PASS</Chip>, text: "Bold type verified — the prefix strokes measure heavier than the warning body, and both readings of the label agree. This check is only trusted when it is certain; anything borderline is sent to you instead." }
         : boldAuto === "not_bold"
           ? { chip: <Chip tone="warn">Review</Chip>, text: "The stroke-width measurement says “GOVERNMENT WARNING:” may NOT be bold (required by 27 CFR 16.22(a)(2)) — check the picture." }
           : {
               chip: <Chip tone="warn">Review</Chip>,
               text:
                 extraction.warning_prefix_bold === "bold"
-                  ? "The computer can't reliably judge bold type (right on 16 of 17 test labels) — please confirm “GOVERNMENT WARNING:” is bold on the picture."
+                  ? "The computer can't be certain about bold type on this label — please confirm “GOVERNMENT WARNING:” is bold on the picture."
                   : extraction.warning_prefix_bold === "not_bold"
                     ? "The computer suggests the prefix may NOT be bold (bold is required by 27 CFR 16.22(a)(2)) — please check the picture."
                     : "The computer could not judge bold type — please check the picture.",
@@ -298,6 +300,10 @@ export function ResultView({
       data-conn-root
       className={`relative flex flex-col gap-5 ${compact ? "" : "rounded-xl border border-line bg-card p-6 md:px-7"}`}
     >
+      {/* No connector in the compact panel: the viewer sits directly under the
+          rows at full width, so the line would have nowhere to run but down
+          the right edge, crossing the warning block on its way. The panel
+          connects them by scrolling the highlight into view instead. */}
       {!compact && connector && focusedField && (
         <svg className="no-print pointer-events-none absolute inset-0 z-10 hidden h-full w-full lg:block" aria-hidden>
           <path

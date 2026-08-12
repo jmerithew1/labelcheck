@@ -139,11 +139,11 @@ export function checkWarning(input: {
   // bold). Never let a green verdict imply bold was verified — hedge on
   // EVERY outcome, including "bold" (fail-open guard, per red-team finding).
   if (input.boldAdvisory === "not_bold") {
-    notes.push('AI visual check suggests "GOVERNMENT WARNING" may NOT be in bold type (required by 27 CFR 16.22(a)(2)). Verify on the label image.');
+    notes.push('The visual check suggests "GOVERNMENT WARNING" may NOT be in bold type (required by 27 CFR 16.22(a)(2)). Verify on the label image.');
   } else if (input.boldAdvisory === "unclear") {
     notes.push("Could not determine whether the warning prefix is bold — verify on the label image.");
   } else {
-    notes.push("Text is exact. Bold type on “GOVERNMENT WARNING” is AI-judged only (right on 16 of 17 test labels; the miss was a non-bold prefix) — glance at the image to confirm boldness.");
+    notes.push("Text is exact. Bold type is judged visually and cannot be guaranteed on every label — glance at the image to confirm “GOVERNMENT WARNING” is bold.");
   }
 
   if (input.sizeAdvisory === "small" || input.sizeAdvisory === "illegibly_small") {

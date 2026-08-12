@@ -1020,7 +1020,7 @@ export function BatchReview() {
               <div className="mt-5 grid gap-8 rounded-xl bg-[#f0f2f5] px-7 py-6 md:grid-cols-3">
                 {[
                   { c: "bg-navy", t: "What it checks", d: <>Brand, class/type, alcohol content, net contents, and the exact government warning — each label against its own application row.</> },
-                  { c: "bg-green-dark", t: "How it decides", d: <>Fixed rules in the software make every pass or fail; the AI only reads the label. <b>Type size and physical checks stay manual.</b></> },
+                  { c: "bg-green-dark", t: "How it decides", d: <>Fixed rules in the software make every pass or fail; the computer only reads the label. <b>Type size and physical checks stay manual.</b></> },
                   { c: "bg-amber", t: "Working faster", d: <>Problems sort to the top when the run finishes. <b>Keyboard: ↑↓ move · Enter open · Esc close.</b></> },
                 ].map((l) => (
                   <span key={l.t} className="flex items-start gap-3.5">
@@ -1228,7 +1228,7 @@ function BoldCard({
       <span className="truncate text-[11.5px] font-semibold text-ink" title={row.filename}>{row.filename}</span>
       {!state && auto === "bold" && (
         <span className="rounded-[5px] bg-green-tint px-1.5 py-0.5 text-[10.5px] font-bold text-green">
-          ✓ Verified by measurement — stroke width + AI agree
+          ✓ Verified by measurement — prefix strokes are heavier
         </span>
       )}
       {!state && auto === "not_bold" && (
@@ -1266,7 +1266,7 @@ function AuditTrail({ row }: { row: BatchRow }) {
   const items: { t: string; d: string }[] = [
     { t: "Label uploaded", d: `${row.filename}${row.file ? ` (${(row.file.size / 1024 / 1024).toFixed(1)} MB)` : ""} — shrunk in your browser before sending.` },
     { t: "Text read from the label", d: `The computer read the label word for word, exactly as printed, and separately judged whether the warning is in bold type. Took ${row.ms ? (row.ms / 1000).toFixed(1) : "?"} seconds (readers: claude-haiku-4-5, claude-sonnet-5).` },
-    { t: "Compared to the application", d: "Fixed rules in the software — not the AI — decide every pass or fail: the warning must match the required text exactly (27 CFR 16.21), and the other fields are compared with sensible tolerance for formatting." },
+    { t: "Compared to the application", d: "Fixed rules in the software decide every pass or fail — the computer only reads the label. The warning must match the required text exactly (27 CFR 16.21); the other fields are compared with sensible tolerance for formatting." },
   ];
   if (confirmed) items.push({ t: "Second opinion", d: "Because the warning failed, a second independent reading was taken. It agreed — the failure stands." });
   if (overturned) items.push({ t: "Second opinion", d: "Two independent readings disagreed, so instead of asserting a failure this row was marked for a manual look." });
@@ -1289,7 +1289,7 @@ function AuditTrail({ row }: { row: BatchRow }) {
         ))}
       </ol>
       <p className="mt-4 border-t border-line-soft pt-3 text-[12px] text-muted-2">
-        The AI never decides pass or fail — it only reads. Nothing is stored: the evidence lives in this browser session only.
+        The computer never decides pass or fail — it only reads. Nothing is stored: the evidence lives in this browser session only.
       </p>
     </div>
   );

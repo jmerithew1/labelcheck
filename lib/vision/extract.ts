@@ -207,7 +207,7 @@ export async function extractLabel(
 export function failureMessage(f: ExtractionFailure): string {
   switch (f.kind) {
     case "refusal":
-      return "The AI reader declined to process this image. This usually means the image isn't a product label. Please check the file and try again.";
+      return "The reader declined to process this image. This usually means the image isn't a product label. Please check the file and try again.";
     case "rate_limited":
       return "The system is briefly at capacity. Wait a few seconds and try again.";
     case "timeout":
