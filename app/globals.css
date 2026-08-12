@@ -57,6 +57,12 @@ body {
   --color-muted-bg: #f2f4f6;
 }
 
+/* The zoomed label is moved by dragging it (grab cursor + hint), so the
+   scrollbars are hidden — they made a direct-manipulation surface read as a
+   scroll box. Wheel and keyboard scrolling still work. */
+.label-scroll { scrollbar-width: none; -ms-overflow-style: none; }
+.label-scroll::-webkit-scrollbar { width: 0; height: 0; }
+
 @media print {
   body { background: #fff; }
   .no-print { display: none !important; }

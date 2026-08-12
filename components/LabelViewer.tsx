@@ -43,6 +43,9 @@ export function LabelViewer({
   const [fullSize, setFullSize] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const focusedOverlayRef = useRef<HTMLDivElement>(null);
+  // Drag-to-pan while zoomed: without it, zoom shows one fixed window of the
+  // label and the controls are useless for inspecting a specific area.
+  const drag = useRef<{ x: number; y: number; sl: number; st: number } | null>(null);
 
   useEffect(() => {
     if (!fullSize) return;
@@ -154,11 +157,29 @@ export function LabelViewer({
       <div
         ref={scrollRef}
         data-viewer-card
-        className="label-scroll overflow-hidden rounded-[10px] border border-line bg-line-soft/40 p-3"
-        style={{ height: viewportHeight }}
+        onPointerDown={(e) => {
+          if (zoom <= 1) return;
+          const el = scrollRef.current;
+          if (!el) return;
+          drag.current = { x: e.clientX, y: e.clientY, sl: el.scrollLeft, st: el.scrollTop };
+          el.setPointerCapture(e.pointerId);
+        }}
+        onPointerMove={(e) => {
+          if (!drag.current || !scrollRef.current) return;
+          scrollRef.current.scrollLeft = drag.current.sl - (e.clientX - drag.current.x);
+          scrollRef.current.scrollTop = drag.current.st - (e.clientY - drag.current.y);
+        }}
+        onPointerUp={() => (drag.current = null)}
+        onPointerCancel={() => (drag.current = null)}
+        className={`label-scroll overflow-auto rounded-[10px] border border-line bg-line-soft/40 p-3 ${
+          zoom > 1 ? "cursor-grab active:cursor-grabbing" : ""
+        }`}
+        style={{ height: viewportHeight, touchAction: zoom > 1 ? "none" : undefined }}
       >
         <div
-          className="relative mx-auto origin-center transition-transform duration-200"
+          /* Zoomed content must not be centered by auto margins — a box wider
+             than its scroll container loses its left edge that way. */
+          className={`relative origin-center transition-transform duration-200 ${zoom > 1 ? "" : "mx-auto"}`}
           style={
             zoom === 1
               ? { width: "fit-content", height: "100%", transform: `rotate(${rotation}deg)` }
@@ -182,6 +203,7 @@ export function LabelViewer({
         {ctrl("Zoom in", () => setZoom((z) => Math.min(2.5, z + 0.25)), "+", zoom >= 2.5)}
         {ctrl("Rotate", () => setRotation((r) => (r + 90) % 360), "Rotate")}
         {ctrl("Fit", () => { setZoom(1); setRotation(0); }, "Fit")}
+        {zoom > 1 && <span className="text-[12px] text-muted-2">drag the label to move</span>}
         <button
           onClick={() => setFullSize(true)}
           className="ml-auto text-[12.5px] font-semibold text-navy hover:underline"

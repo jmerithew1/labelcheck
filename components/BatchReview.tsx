@@ -55,6 +55,10 @@ interface BatchRow {
    *  "bold" auto-resolves the glance, "not_bold" escalates to review,
    *  "human" = measured but inconclusive. A human decision always wins. */
   boldAuto?: BoldGateResult;
+  /** The agent's ruling after reviewing the row: "ok" re-files it as
+   *  Matched (shown as "Reviewed ✓"), "correction" keeps it in review as a
+   *  confirmed problem. Outranks every machine state. */
+  agentReview?: "ok" | "correction";
 }
 
 /** Rows where the warning text passed — bold is the one element left for a
@@ -66,6 +70,9 @@ const boldEligible = (r: BatchRow): boolean =>
 function bucketOf(r: BatchRow): Bucket {
   if (r.status === "error") return "error";
   if (r.status !== "done" || !r.result) return "pending";
+  // The agent's ruling on a reviewed row outranks every machine state.
+  if (r.agentReview === "ok") return "matched";
+  if (r.agentReview === "correction") return "review";
   // An agent's flag outranks the clean verdict — a human said "not bold."
   if (r.boldReview === "flagged") return "review";
   // A confident machine "not bold" escalates too, unless a human overruled it.
@@ -371,6 +378,58 @@ export function BatchReview() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rows]);
 
+  // "Your review" bar in the detail panel: the agent's durable ruling on a
+  // row (outranks machine triage; exports in the CSV), plus a changeable
+  // bold decision — any past decision can be revisited by opening the row.
+  const reviewBar = (r: BatchRow) => {
+    const setReview = (v: "ok" | "correction" | undefined) =>
+      setRows((rs) => rs.map((x) => (x.index === r.index ? { ...x, agentReview: v } : x)));
+    const boldLabel =
+      r.boldReview === "confirmed" ? "confirmed by you" : r.boldReview === "flagged" ? "flagged by you"
+        : r.boldAuto === "bold" ? "verified by measurement" : r.boldAuto === "not_bold" ? "measurement says check" : "not yet confirmed";
+    return (
+      <div className="mb-4 flex flex-col gap-2 rounded-[10px] border border-line bg-page px-3.5 py-3">
+        <span className="flex flex-wrap items-center gap-2">
+          <span className="text-[11px] font-bold uppercase tracking-[0.06em] text-muted">Your review</span>
+          <button
+            onClick={() => setReview(r.agentReview === "ok" ? undefined : "ok")}
+            className={`h-7 rounded-[6px] border px-2.5 text-[12px] font-bold transition ${
+              r.agentReview === "ok" ? "border-green bg-green text-white" : "border-line bg-card text-green hover:bg-green-tint"
+            }`}
+          >
+            Reviewed — OK ✓
+          </button>
+          <button
+            onClick={() => setReview(r.agentReview === "correction" ? undefined : "correction")}
+            className={`h-7 rounded-[6px] border px-2.5 text-[12px] font-bold transition ${
+              r.agentReview === "correction" ? "border-red bg-red text-white" : "border-line bg-card text-red hover:bg-red-tint"
+            }`}
+          >
+            Needs correction
+          </button>
+          {r.agentReview && <span className="text-[11.5px] text-muted-2">click again to clear</span>}
+        </span>
+        {boldEligible(r) && (
+          <span className="flex flex-wrap items-center gap-2 text-[12px] text-muted">
+            Bold type: <b className="text-ink">{boldLabel}</b>
+            <button
+              onClick={() => markBold(r.index, r.boldReview === "confirmed" ? undefined : "confirmed")}
+              className="h-6 rounded-[5px] border border-line bg-card px-2 text-[11.5px] font-bold text-green hover:bg-green-tint"
+            >
+              {r.boldReview === "confirmed" ? "Unconfirm" : "Looks bold"}
+            </button>
+            <button
+              onClick={() => markBold(r.index, r.boldReview === "flagged" ? undefined : "flagged")}
+              className="h-6 rounded-[5px] border border-line bg-card px-2 text-[11.5px] font-bold text-red hover:bg-red-tint"
+            >
+              {r.boldReview === "flagged" ? "Unflag" : "Not bold — flag"}
+            </button>
+          </span>
+        )}
+      </div>
+    );
+  };
+
   // Lazy bands for the open detail row.
   useEffect(() => {
     const row = rows.find((r) => r.index === openRow);
@@ -393,10 +452,10 @@ export function BatchReview() {
   }, [openRow]);
 
   function exportCsv() {
-    const header = ["filename", "overall", "government_warning", "bold_check", "brand_name", "class_type", "alcohol_content", "net_contents", "notes"];
+    const header = ["filename", "overall", "agent_review", "government_warning", "bold_check", "brand_name", "class_type", "alcohol_content", "net_contents", "notes"];
     const safe = (s: string) => (/^[=+\-@]/.test(s) ? `'${s}` : s);
     const lines = [...rows].sort((a, b) => a.index - b.index).map((r) => {
-      if (!r.result) return [safe(r.filename), r.status, "", "", "", "", "", "", r.error ? safe(`ERROR: ${r.error}`) : ""];
+      if (!r.result) return [safe(r.filename), r.status, "", "", "", "", "", "", "", r.error ? safe(`ERROR: ${r.error}`) : ""];
       const f = (n: string) => r.result!.fields.find((x) => x.field === n)?.verdict ?? "";
       // The bold record: a human decision wins; otherwise the machine gate's
       // result; otherwise unconfirmed. Only for labels whose text passed.
@@ -405,7 +464,7 @@ export function BatchReview() {
           (r.boldAuto === "bold" ? "auto_verified" : r.boldAuto === "not_bold" ? "auto_flagged" : "unconfirmed")
         : "";
       return [
-        safe(r.filename), r.result.overall, r.result.warning.verdict, bold,
+        safe(r.filename), r.result.overall, r.agentReview ?? "", r.result.warning.verdict, bold,
         f("brand_name"), f("class_type"), f("alcohol_content"), f("net_contents"),
         safe([...r.result.warning.notes, ...r.result.fields.map((x) => x.note).filter(Boolean)].join(" | ")),
       ];
@@ -510,12 +569,14 @@ export function BatchReview() {
     const isFail = r.result?.overall === "warning_failure" || r.result?.overall === "not_a_label" ||
       r.result?.fields.some((f) => f.verdict === "possible_mismatch");
     const cls =
-      b === "matched" ? "bg-green" : b === "error" || isFail ? "bg-red" : b === "review" ? "bg-amber" : "bg-na";
+      b === "matched" ? "bg-green" : b === "error" || (isFail && r.agentReview !== "ok") ? "bg-red" : b === "review" ? "bg-amber" : "bg-na";
     const labels: Record<Bucket, string> = {
       matched: "Matched", review: "Needs review", error: "Error", not_required: "Not required", pending: "Waiting",
     };
-    const label = b === "review" && isFail ? "Mismatch — needs review" : labels[b];
-    const glyph = b === "matched" ? "✓" : b === "error" || isFail ? "✕" : b === "review" ? "!" : "–";
+    const label =
+      r.agentReview === "ok" ? "Reviewed — OK" : r.agentReview === "correction" ? "Correction needed"
+        : b === "review" && isFail ? "Mismatch — needs review" : labels[b];
+    const glyph = b === "matched" ? "✓" : b === "error" || (isFail && r.agentReview !== "ok") ? "✕" : b === "review" ? "!" : "–";
     return (
       <span
         title={label}
@@ -532,8 +593,12 @@ export function BatchReview() {
     const b = bucketOf(r);
     const isFail = r.result?.overall === "warning_failure" || r.result?.overall === "not_a_label" ||
       r.result?.fields.some((f) => f.verdict === "possible_mismatch");
-    const label = b === "matched" ? "Matched" : b === "error" ? "Error" : b === "review" ? (isFail ? "Mismatch" : "Needs review") : b === "not_required" ? "Not required" : "Waiting";
-    const cls = b === "matched" ? "bg-green-tint text-green" : b === "error" || isFail ? "bg-red-tint text-red" : b === "review" ? "bg-amber-tint text-amber" : "bg-na-tint text-muted";
+    const label =
+      r.agentReview === "ok" ? "Reviewed ✓" : r.agentReview === "correction" ? "Correction needed"
+        : b === "matched" ? "Matched" : b === "error" ? "Error" : b === "review" ? (isFail ? "Mismatch" : "Needs review") : b === "not_required" ? "Not required" : "Waiting";
+    const cls =
+      r.agentReview === "ok" ? "bg-green-tint text-green" : r.agentReview === "correction" ? "bg-red-tint text-red"
+        : b === "matched" ? "bg-green-tint text-green" : b === "error" || isFail ? "bg-red-tint text-red" : b === "review" ? "bg-amber-tint text-amber" : "bg-na-tint text-muted";
     return <span className={`shrink-0 whitespace-nowrap rounded-[5px] px-2 py-0.5 text-[11.5px] font-bold ${cls}`}>{label}</span>;
   };
 
@@ -901,6 +966,8 @@ export function BatchReview() {
                 </div>
                 <div className="min-h-0 flex-1 overflow-auto px-6 py-4">
                   {tab === "overview" ? (
+                    <>
+                    {reviewBar(detail)}
                     <ResultView
                       result={detail.result!}
                       extraction={detail.extraction!}
@@ -911,6 +978,7 @@ export function BatchReview() {
                       isPdf={detail.filename.toLowerCase().endsWith(".pdf")}
                       compact
                     />
+                    </>
                   ) : (
                     <AuditTrail row={detail} />
                   )}
@@ -957,7 +1025,10 @@ export function BatchReview() {
           </div>
           <div className="min-h-0 flex-1 overflow-auto px-6 py-4">
             {tab === "overview" ? (
+              <>
+              {reviewBar(detail)}
               <ResultView result={detail.result} extraction={detail.extraction} imageUrl={detail.imageUrl} bands={detail.bands ?? {}} ms={detail.ms} boldAuto={detail.boldReview ? null : detail.boldAuto ?? null} isPdf={detail.filename.toLowerCase().endsWith(".pdf")} compact />
+              </>
             ) : (
               <AuditTrail row={detail} />
             )}
