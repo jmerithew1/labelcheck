@@ -30,7 +30,7 @@ Build a standalone prototype that helps TTB compliance agents verify alcohol bev
 
 ## TTB label elements (reference)
 
-Brand name · class/type designation · alcohol content · net contents · name/address of bottler/producer · country of origin (imports) · Government Health Warning Statement (mandatory on all). Requirements vary by beverage type (beer / wine / distilled spirits). See ttb.gov.
+Brand name · class/type designation · alcohol content (with some exceptions for certain wine/beer) · net contents · name/address of bottler/producer · country of origin (imports) · Government Health Warning Statement (mandatory on all). Requirements vary by beverage type (beer / wine / distilled spirits). See ttb.gov.
 
 **Sample distilled spirits label fields:**
 - Brand Name: "OLD TOM DISTILLERY"

@@ -9,7 +9,7 @@ Verification points: spec approval (done), post-build final gate, pre-submit.
 ### Deliverables
 - **D1 — MET** Source repo, buildable from clean clone — this repo; `npm install && npm run build` green
 - **D2 — MET** README with working setup/run — [README.md](../README.md)
-- **D3 — MET** Approach/assumptions doc with trade-offs — [approach.md](approach.md)
+- **D3 — MET** Approach doc covering all three required parts — approach ([approach.md](approach.md)), **tools used** (§tools-used: runtime stack, models, test/measurement harnesses, label generation, AI-assisted dev process), assumptions (§assumptions) — plus trade-offs
 - **D4 — MET** Deployed URL — https://labelcheck-production-8f22.up.railway.app (readiness probe `/api/ready`)
 
 ### Core function
@@ -26,6 +26,7 @@ Verification points: spec approval (done), post-build final gate, pre-submit.
 - **C11 — MET** Diffs/confidence visible; agent decides — char-level diffs ([components/CharDiff.tsx](../components/CharDiff.tsx)), similarity %, verdict language; only the warning uses FAIL language
 - **C12 — MET** Bottler name/address optional field — form + engine, skipped-when-blank shown
 - **C13 — MET** Country of origin optional field — same
+- **C14 — MET** Jenny's evasion tactics all countered — *different wording*: exact canonical comparison + character diff (C7); *smaller font*: extractor reports warning size relative to the label, surfaces an advisory even when text is exact ([lib/vision/contract.ts](../lib/vision/contract.ts) `warning_text_size`; physical mm/characters-per-inch documented as not machine-checkable from an image, [approach.md](approach.md) §limitations); *buried in tiny text*: full-label transcription + tri-state presence — a warning anywhere on the label is found or its absence/illegibility flagged
 
 ### Performance
 - **P1 — MET** ~5s per label MEASURED on deployed URL (incl. evidence-band call): **p50 4.3s, worst 4.5s, n=6** — [measured-performance.json](measured-performance.json)
@@ -36,6 +37,7 @@ Verification points: spec approval (done), post-build final gate, pre-submit.
 - **U1 — MET** Non-technical 50+ usable — 3-click demo verified in browser: sample → rendered verdict (single) and sample batch → triage, zero downloads/instructions; UX cold-read at final gate
 - **U2 — MET** Loud human-readable errors — type/size guards, refusal/timeout/429 copy ([lib/vision/extract.ts](../lib/vision/extract.ts) `failureMessage`), not-a-label card, CSV-format and pairing errors
 - **U3 — MET** Triage 250 without drowning — count-carrying filter chips (All / Matched / Need review / Not required), one-click **Need review** filter + search, master-detail table (row click opens the evidence panel with an Audit trail tab, Review next steps through), **Download report** (CSV), refresh guard; verified in browser on sample batch
+- **U4 — MET** Dave's "don't make my life harder" = false-rejection aversion, designed in — tri-state `unreadable` ≠ `missing` (glare → "check manually", never a fail); second-reading confirmation on warning failures (measured zero false rejections on the degraded set); verdict vocabulary surfaces, never auto-rejects; case/punct differences read "Match — formatting differs" ([approach.md](approach.md) §perception/verdict, [degraded-fidelity.json](degraded-fidelity.json))
 
 ### Constraints
 - **S1 — MET** Standalone, zero COLA integration — no integration code; stated in approach doc
