@@ -74,9 +74,12 @@ const boldEligible = (r: BatchRow): boolean =>
   (r.result.warning.verdict === "pass" || r.result.warning.verdict === "pass_formatting_note");
 
 /** Still owes a human glance: no ruling, no human bold decision, and the
- *  measurement gate did not confidently verify it. */
+ *  measurement gate has RUN and did not confidently verify it. Rows still
+ *  being measured are excluded so the dot, the chip and the strip always
+ *  describe the same set. */
 const boldPendingRow = (r: BatchRow): boolean =>
-  boldEligible(r) && !r.agentReview && !r.boldReview && r.boldAuto !== "bold";
+  boldEligible(r) && !r.agentReview && !r.boldReview &&
+  r.boldAuto !== undefined && r.boldAuto !== "bold";
 
 /** Shared control styles so every button in the table area reads as one
  *  system: chip-style toggles (tinted when active) and quiet secondaries. */
@@ -523,11 +526,12 @@ export function BatchReview() {
   const boldRows = useMemo(() => rows.filter(boldEligible), [rows]);
   // Machine-verified rows are resolved; machine-flagged and inconclusive
   // rows still need eyes — those are the only ones the strip shows.
-  const boldPendingRows = useMemo(
-    () => boldRows.filter((r) => !r.boldReview && r.boldAuto !== "bold" && r.boldAuto !== undefined),
-    [boldRows],
-  );
-  const boldPending = boldRows.filter((r) => !r.boldReview && r.boldAuto !== "bold").length;
+  const boldPendingRows = useMemo(() => boldRows.filter(boldPendingRow), [boldRows]);
+  // The chip counts the SAME rows the strip shows — counting not-yet-measured
+  // rows here made the chip promise more cards than the strip contained while
+  // the gate was still working.
+  const boldPending = boldPendingRows.length;
+  const boldMeasuring = boldRows.some((r) => !r.boldReview && r.boldAuto === undefined);
 
   const visible = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -842,9 +846,11 @@ export function BatchReview() {
                 <div className="flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-line-soft px-4 py-3">
                   <p className="text-[13.5px] font-bold text-ink">Confirm bold type</p>
                   <p className="text-[12px] text-muted">
-                    {boldRows.length - boldPendingRows.length > 0
-                      ? `${boldRows.length - boldPendingRows.length} of ${boldRows.length} verified by measurement — these ${boldPendingRows.length === 1 ? "is the one" : `are the ${boldPendingRows.length}`} that need your eyes. Hover a warning to magnify it, then confirm or flag.`
-                      : "Bold is the one check that needs your eyes. Hover a warning below to magnify it, then confirm the ones that look bold and flag any that don't."}
+                    {boldMeasuring
+                      ? "Measuring bold type across the batch — the ones below already need your eyes. Hover a warning to magnify it, then confirm or flag."
+                      : boldRows.length - boldPendingRows.length > 0
+                        ? `${boldRows.length - boldPendingRows.length} of ${boldRows.length} verified by measurement — these ${boldPendingRows.length === 1 ? "is the one" : `are the ${boldPendingRows.length}`} that need your eyes. Hover a warning to magnify it, then confirm or flag.`
+                        : "Bold is the one check that needs your eyes. Hover a warning below to magnify it, then confirm the ones that look bold and flag any that don't."}
                   </p>
                   <span className="ml-auto whitespace-nowrap rounded-[5px] bg-amber-tint px-2 py-0.5 text-[11.5px] font-bold text-amber">
                     {boldPendingRows.length} left

@@ -157,10 +157,12 @@ export function LabelViewer({
       <div
         ref={scrollRef}
         data-viewer-card
+        onDragStart={(e) => e.preventDefault()}
         onPointerDown={(e) => {
           if (zoom <= 1) return;
           const el = scrollRef.current;
           if (!el) return;
+          e.preventDefault(); // suppress the native image-drag gesture
           drag.current = { x: e.clientX, y: e.clientY, sl: el.scrollLeft, st: el.scrollTop };
           el.setPointerCapture(e.pointerId);
         }}
@@ -192,7 +194,12 @@ export function LabelViewer({
           <img
             src={imageUrl}
             alt="Submitted label"
-            className={zoom === 1 ? "h-full w-auto rounded" : "w-full rounded"}
+            /* Without this the browser starts a native image drag on the
+               first pointermove, which fires pointercancel and kills the
+               pan gesture after a few pixels. */
+            draggable={false}
+            className={`select-none ${zoom === 1 ? "h-full w-auto rounded" : "w-full rounded"}`}
+            style={{ WebkitUserDrag: "none" } as React.CSSProperties}
           />
           {!rotated && overlays(true)}
         </div>

@@ -13,3 +13,16 @@ out/
 next-env.d.ts
 samples/tools/node_modules/
 *.traineddata
+
+# spike/QA outputs — regenerate with samples/tools/*.mjs; the evidence
+# summaries that documents cite live in docs/*.json
+samples/tools/multisignal-out/
+samples/tools/multisignal-r2-out/
+samples/tools/multisignal-r3-out/
+samples/tools/croplens-out/
+samples/tools/matrix-out/
+samples/tools/locate-preview/
+samples/tools/*-out/
+
+# tesseract language data (downloaded on first OCR run)
+eng.traineddata

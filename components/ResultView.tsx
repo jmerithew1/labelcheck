@@ -62,6 +62,7 @@ export function ResultView({
   imageUrl,
   bands,
   ms,
+  confirmMs,
   onPrint,
   primaryAction,
   compact = false,
@@ -75,6 +76,9 @@ export function ResultView({
   imageUrl: string;
   bands: Bands;
   ms?: number;
+  /** background second-reading time, reported separately so the headline
+   *  "checked in" figure stays the time to the verdict on screen */
+  confirmMs?: number;
   onPrint?: () => void;
   primaryAction?: { label: string; onClick: () => void };
   /** stacked layout for narrow containers (batch detail panel) */
@@ -326,7 +330,10 @@ export function ResultView({
           </p>
         </div>
         {ms !== undefined && (
-          <span className="whitespace-nowrap text-[12.5px] text-muted-2">Checked in {(ms / 1000).toFixed(1)}s</span>
+          <span className="whitespace-nowrap text-[12.5px] text-muted-2">
+            Checked in {(ms / 1000).toFixed(1)}s
+            {confirmMs ? ` · second reading ${(confirmMs / 1000).toFixed(1)}s` : ""}
+          </span>
         )}
       </div>
 

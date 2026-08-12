@@ -1,7 +1,8 @@
 /**
  * Multi-signal bold gate — the ROUND-2 validated configuration from the
- * bounded measurement loop (see docs/bold-multisignal-loop.md and
- * samples/tools/bold-multisignal-*.mjs):
+ * bounded measurement loop (raw data docs/bold-multisignal-r{1,2,3}.json,
+ * harnesses samples/tools/bold-multisignal-*.mjs, rationale in
+ * docs/decisions.md 2026-08-11 "multi-signal bold gate ships"):
  *   train 32/57 auto-resolved, validation (6 never-seen fonts + degraded
  *   photos) 14/39 auto-resolved, ZERO confident mistakes on both.
  *

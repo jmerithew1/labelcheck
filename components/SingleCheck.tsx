@@ -30,7 +30,10 @@ interface OutcomeData {
   result: CheckResult;
   extraction: LabelExtraction;
   bands: Bands;
+  /** time to the verdict on screen */
   ms: number;
+  /** time the background second reading took, when one ran */
+  confirmMs?: number;
 }
 
 function outcomeSummary(o: OutcomeData | null): Outcome {
@@ -191,7 +194,10 @@ export function SingleCheck() {
             ? {
                 ...prev,
                 result: { ...prev.result, warning: body.warning, overall: body.overall },
-                ms: prev.ms + (typeof body.ms === "number" ? body.ms : 0),
+                // Keep `ms` as the time to the verdict on screen — folding the
+                // background confirmation into it made the headline number
+                // triple after the fact. The confirmation is reported apart.
+                confirmMs: typeof body.ms === "number" ? body.ms : undefined,
               }
             : prev,
         );
@@ -412,6 +418,7 @@ export function SingleCheck() {
             imageUrl={previewUrl}
             bands={outcome.bands}
             ms={outcome.ms}
+            confirmMs={outcome.confirmMs}
             confirming={confirming}
             boldAuto={boldAuto}
             isPdf={file?.type === "application/pdf"}
