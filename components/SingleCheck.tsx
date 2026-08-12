@@ -1,11 +1,13 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { CheckResult } from "@/lib/compare/index.ts";
 import type { LabelExtraction } from "@/lib/vision/contract.ts";
 import type { Bands } from "@/lib/vision/locate.ts";
 import { DEMO_SAMPLES, type DemoSample } from "@/lib/samples.ts";
 import { downscaleImage } from "@/lib/downscale.ts";
+import { applyBoldGate, type BoldGateResult } from "@/lib/compare/boldGate.ts";
+import { measureBoldSignals } from "@/lib/boldMeasure.ts";
 import { Shell } from "./Shell.tsx";
 import { Stepper, type StepPhase, type Outcome } from "./Stepper.tsx";
 import { CheckingCard } from "./CheckingCard.tsx";
@@ -61,6 +63,7 @@ export function SingleCheck() {
   const [checkDone, setCheckDone] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const [sampleLoading, setSampleLoading] = useState(false);
+  const [boldAuto, setBoldAuto] = useState<BoldGateResult | null>(null);
   // Guards the async confirmation against a stale merge: bumped whenever the
   // user starts a new check or resets, so a late /api/confirm response for a
   // previous label can never overwrite the current result.
@@ -89,8 +92,26 @@ export function SingleCheck() {
     setOutcome(null);
     setError(null);
     setConfirming(false);
+    setBoldAuto(null);
     setStep("form");
   }
+
+  // Multi-signal bold gate (validated, 0 confident mistakes): when a result
+  // with a passing warning and a located warning band renders, measure the
+  // crop and either resolve the bold glance or leave the advisory in place.
+  useEffect(() => {
+    const wv = outcome?.result.warning.verdict;
+    const band = outcome?.bands?.warning;
+    if (!outcome || !previewUrl || !band || (wv !== "pass" && wv !== "pass_formatting_note")) return;
+    if (file?.type === "application/pdf") return;
+    const token = runToken.current;
+    void (async () => {
+      const signals = await measureBoldSignals(previewUrl, band);
+      if (token !== runToken.current) return;
+      setBoldAuto(applyBoldGate(signals, outcome.result.warning.boldAdvisory));
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [outcome]);
 
   async function runCheck(f: AppFields, image: File) {
     const token = ++runToken.current;
@@ -99,6 +120,7 @@ export function SingleCheck() {
     setError(null);
     setOutcome(null);
     setConfirming(false);
+    setBoldAuto(null);
     try {
       const small = image.type === "application/pdf" ? image : await downscaleImage(image);
       const form = new FormData();
@@ -391,6 +413,7 @@ export function SingleCheck() {
             bands={outcome.bands}
             ms={outcome.ms}
             confirming={confirming}
+            boldAuto={boldAuto}
             isPdf={file?.type === "application/pdf"}
             appNumber={appNumber}
             onPrint={() => window.print()}

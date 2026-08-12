@@ -66,6 +66,7 @@ export function ResultView({
   primaryAction,
   compact = false,
   confirming = false,
+  boldAuto = null,
   isPdf = false,
   appNumber,
 }: {
@@ -80,6 +81,8 @@ export function ResultView({
   compact?: boolean;
   /** the second warning reading is still in flight — provisional verdict shown */
   confirming?: boolean;
+  /** multi-signal bold gate result (null/undefined = not run or pending) */
+  boldAuto?: "bold" | "not_bold" | "human" | null;
   /** the submitted file is a PDF — the viewer shows a placeholder, not <img> */
   isPdf?: boolean;
   /** optional TTB application number — shown on the printed report */
@@ -235,11 +238,15 @@ export function ResultView({
             title: "Label matches the application",
             titleCls: "text-ok",
             // The one thing the AI can't verify never hides behind the green
-            // headline — the bold confirm is named in the verdict itself.
-            sub: "All required fields match and the warning wording is exact. One last step: glance at the label to confirm “GOVERNMENT WARNING” is in bold type — the computer can't be sure of bold.",
+            // headline — the bold confirm is named in the verdict itself,
+            // unless the measurement gate resolved it.
+            sub:
+              boldAuto === "bold"
+                ? "All required fields match, the warning wording is exact, and bold type was verified by measurement (stroke width + AI agreement)."
+                : "All required fields match and the warning wording is exact. One last step: glance at the label to confirm “GOVERNMENT WARNING” is in bold type — the computer can't be sure of bold.",
           };
 
-  const boldConfirmPending = wvPasses(result.warning.verdict);
+  const boldConfirmPending = wvPasses(result.warning.verdict) && boldAuto !== "bold";
   // Count chips carry their tone (conformance #5): matched green, mismatch
   // red, review/confirm amber, not-required grey.
   const countBits = [
@@ -260,15 +267,19 @@ export function ResultView({
   const formattingRow =
     wv === "fail_prefix_case"
       ? { chip: <Chip tone="bad">FAIL</Chip>, text: '"GOVERNMENT WARNING" must appear in capital letters (27 CFR 16.22(a)(2)).' }
-      : {
-          chip: <Chip tone="warn">Review</Chip>,
-          text:
-            extraction.warning_prefix_bold === "bold"
-              ? "The computer can't reliably judge bold type (right on 16 of 17 test labels) — please confirm “GOVERNMENT WARNING:” is bold on the picture."
-              : extraction.warning_prefix_bold === "not_bold"
-                ? "The computer suggests the prefix may NOT be bold (bold is required by 27 CFR 16.22(a)(2)) — please check the picture."
-                : "The computer could not judge bold type — please check the picture.",
-        };
+      : boldAuto === "bold"
+        ? { chip: <Chip tone="ok">PASS</Chip>, text: "Bold type verified — the stroke-width measurement and the AI reading agree (measurement gate validated at zero false confirmations)." }
+        : boldAuto === "not_bold"
+          ? { chip: <Chip tone="warn">Review</Chip>, text: "The stroke-width measurement says “GOVERNMENT WARNING:” may NOT be bold (required by 27 CFR 16.22(a)(2)) — check the picture." }
+          : {
+              chip: <Chip tone="warn">Review</Chip>,
+              text:
+                extraction.warning_prefix_bold === "bold"
+                  ? "The computer can't reliably judge bold type (right on 16 of 17 test labels) — please confirm “GOVERNMENT WARNING:” is bold on the picture."
+                  : extraction.warning_prefix_bold === "not_bold"
+                    ? "The computer suggests the prefix may NOT be bold (bold is required by 27 CFR 16.22(a)(2)) — please check the picture."
+                    : "The computer could not judge bold type — please check the picture.",
+            };
   const sizeNote = result.warning.notes.find((n) => /small/i.test(n));
   const wasConfirmed = result.warning.notes.some((n) => n.startsWith("Confirmed by a second"));
   const singleReadingNote = result.warning.notes.find((n) => n.includes("from a single reading"));

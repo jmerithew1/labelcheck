@@ -6,6 +6,8 @@ import type { LabelExtraction } from "@/lib/vision/contract.ts";
 import type { Bands } from "@/lib/vision/locate.ts";
 import { parseCsv, toCsv } from "@/lib/csv.ts";
 import { downscaleImage } from "@/lib/downscale.ts";
+import { applyBoldGate, type BoldGateResult } from "@/lib/compare/boldGate.ts";
+import { measureBoldSignals } from "@/lib/boldMeasure.ts";
 import { ResultView } from "./ResultView.tsx";
 import { Shell } from "./Shell.tsx";
 
@@ -49,6 +51,10 @@ interface BatchRow {
   /** Human bold spot-check: confirmed = glanced and looks bold; flagged =
    *  glanced and does NOT look bold (moves the row to Needs review). */
   boldReview?: "confirmed" | "flagged";
+  /** Machine gate result (multi-signal, validated at 0 confident mistakes):
+   *  "bold" auto-resolves the glance, "not_bold" escalates to review,
+   *  "human" = measured but inconclusive. A human decision always wins. */
+  boldAuto?: BoldGateResult;
 }
 
 /** Rows where the warning text passed — bold is the one element left for a
@@ -62,6 +68,8 @@ function bucketOf(r: BatchRow): Bucket {
   if (r.status !== "done" || !r.result) return "pending";
   // An agent's flag outranks the clean verdict — a human said "not bold."
   if (r.boldReview === "flagged") return "review";
+  // A confident machine "not bold" escalates too, unless a human overruled it.
+  if (r.boldAuto === "not_bold" && r.boldReview !== "confirmed") return "review";
   if (r.result.overall === "clean") {
     const anyChecked = r.result.fields.some((f) => f.verdict !== "not_provided");
     return anyChecked ? "matched" : "not_required";
@@ -88,7 +96,9 @@ function rowSummary(r: BatchRow): React.ReactNode {
   // spot never hides behind a clean-looking row (behavioral audit finding).
   // It resolves only when a human glances: confirmed clears it, flagged
   // escalates it.
-  const boldState = boldEligible(r) ? (r.boldReview ?? "confirm") : null;
+  const boldState = boldEligible(r)
+    ? r.boldReview ?? (r.boldAuto === "bold" ? "auto" : r.boldAuto === "not_bold" ? "auto_flag" : "confirm")
+    : null;
   const sep = <span className="text-muted-2"> • </span>;
   return (
     <>
@@ -97,6 +107,8 @@ function rowSummary(r: BatchRow): React.ReactNode {
       {review > 0 && (<>{sep}<span className="font-semibold text-amber">{review} review</span></>)}
       {boldState === "confirm" && (<>{sep}<span className="text-amber">bold: confirm</span></>)}
       {boldState === "confirmed" && (<>{sep}<span className="text-green">bold ✓</span></>)}
+      {boldState === "auto" && (<>{sep}<span className="text-green">bold ✓ measured</span></>)}
+      {boldState === "auto_flag" && (<>{sep}<span className="font-semibold text-amber">bold: check</span></>)}
       {boldState === "flagged" && (<>{sep}<span className="font-semibold text-red">bold: flagged</span></>)}
       {notRequired > 0 && (<>{sep}<span className="text-muted-2">{notRequired} not required</span></>)}
     </>
@@ -302,6 +314,34 @@ export function BatchReview() {
   const setBoldReview = (index: number, v: "confirmed" | "flagged" | undefined) =>
     setRows((rs) => rs.map((r) => (r.index === index ? { ...r, boldReview: v } : r)));
 
+  // Multi-signal gate: whenever an eligible row has its warning band and no
+  // machine result yet, measure and gate it (validated at 0 confident
+  // mistakes — see lib/compare/boldGate.ts). Claim-on-start dedupe; the OCR
+  // worker serializes internally.
+  const gateRunning = useRef<Set<number>>(new Set());
+  useEffect(() => {
+    const targets = rows.filter(
+      (r) =>
+        boldEligible(r) && r.boldAuto === undefined && r.bands?.warning && r.imageUrl &&
+        r.file && r.file.type !== "application/pdf" && !gateRunning.current.has(r.index),
+    );
+    for (const t of targets) {
+      gateRunning.current.add(t.index);
+      void (async () => {
+        try {
+          const signals = await measureBoldSignals(t.imageUrl!, t.bands!.warning!);
+          const verdict = applyBoldGate(signals, t.result!.warning.boldAdvisory);
+          setRows((rs) => rs.map((r) => (r.index === t.index ? { ...r, boldAuto: verdict } : r)));
+        } catch {
+          setRows((rs) => rs.map((r) => (r.index === t.index ? { ...r, boldAuto: "human" } : r)));
+        } finally {
+          gateRunning.current.delete(t.index);
+        }
+      })();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rows]);
+
   // Lazy bands for the open detail row.
   useEffect(() => {
     const row = rows.find((r) => r.index === openRow);
@@ -329,9 +369,12 @@ export function BatchReview() {
     const lines = [...rows].sort((a, b) => a.index - b.index).map((r) => {
       if (!r.result) return [safe(r.filename), r.status, "", "", "", "", "", "", r.error ? safe(`ERROR: ${r.error}`) : ""];
       const f = (n: string) => r.result!.fields.find((x) => x.field === n)?.verdict ?? "";
-      // The agent's bold glance is part of the record: confirmed / flagged /
-      // unconfirmed for every label whose warning text passed.
-      const bold = boldEligible(r) ? (r.boldReview ?? "unconfirmed") : "";
+      // The bold record: a human decision wins; otherwise the machine gate's
+      // result; otherwise unconfirmed. Only for labels whose text passed.
+      const bold = boldEligible(r)
+        ? r.boldReview ??
+          (r.boldAuto === "bold" ? "auto_verified" : r.boldAuto === "not_bold" ? "auto_flagged" : "unconfirmed")
+        : "";
       return [
         safe(r.filename), r.result.overall, r.result.warning.verdict, bold,
         f("brand_name"), f("class_type"), f("alcohol_content"), f("net_contents"),
@@ -356,7 +399,9 @@ export function BatchReview() {
   }, [rows]);
   const done = rows.length - counts.pending;
   const boldRows = useMemo(() => rows.filter(boldEligible), [rows]);
-  const boldPending = boldRows.filter((r) => !r.boldReview).length;
+  // Machine-verified rows are resolved; machine-flagged and inconclusive
+  // rows still need eyes.
+  const boldPending = boldRows.filter((r) => !r.boldReview && r.boldAuto !== "bold").length;
 
   const visible = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -814,6 +859,7 @@ export function BatchReview() {
                       imageUrl={detail.imageUrl!}
                       bands={detail.bands ?? {}}
                       ms={detail.ms}
+                      boldAuto={detail.boldReview ? null : detail.boldAuto ?? null}
                       isPdf={detail.filename.toLowerCase().endsWith(".pdf")}
                       compact
                     />
@@ -863,7 +909,7 @@ export function BatchReview() {
           </div>
           <div className="min-h-0 flex-1 overflow-auto px-6 py-4">
             {tab === "overview" ? (
-              <ResultView result={detail.result} extraction={detail.extraction} imageUrl={detail.imageUrl} bands={detail.bands ?? {}} ms={detail.ms} isPdf={detail.filename.toLowerCase().endsWith(".pdf")} compact />
+              <ResultView result={detail.result} extraction={detail.extraction} imageUrl={detail.imageUrl} bands={detail.bands ?? {}} ms={detail.ms} boldAuto={detail.boldReview ? null : detail.boldAuto ?? null} isPdf={detail.filename.toLowerCase().endsWith(".pdf")} compact />
             ) : (
               <AuditTrail row={detail} />
             )}
@@ -906,11 +952,16 @@ function BoldCard({
   const top = band ? Math.max(0, band[0] / 10 - 1.5) : 0;
   const bh = band ? Math.max(4, Math.min(100, band[1] / 10 + 1.5) - top) : 0;
   const state = row.boldReview;
+  const auto = row.boldAuto;
   const cropReady = !isPdf && !!band && aspect !== null;
   return (
     <div
       className={`flex flex-col gap-2 rounded-[10px] border p-2.5 transition ${
-        state === "flagged" ? "border-bad-line bg-red-tint/40" : state === "confirmed" ? "border-ok-line bg-green-tint/30" : "border-line bg-card"
+        state === "flagged" ? "border-bad-line bg-red-tint/40"
+          : state === "confirmed" ? "border-ok-line bg-green-tint/30"
+          : auto === "bold" ? "border-ok-line bg-green-tint/20"
+          : auto === "not_bold" ? "border-warn-line bg-amber-tint/40"
+          : "border-line bg-card"
       }`}
     >
       <button
@@ -942,6 +993,16 @@ function BoldCard({
         ) : null}
       </button>
       <span className="truncate text-[11.5px] font-semibold text-ink" title={row.filename}>{row.filename}</span>
+      {!state && auto === "bold" && (
+        <span className="rounded-[5px] bg-green-tint px-1.5 py-0.5 text-[10.5px] font-bold text-green">
+          ✓ Verified by measurement — stroke width + AI agree
+        </span>
+      )}
+      {!state && auto === "not_bold" && (
+        <span className="rounded-[5px] bg-amber-tint px-1.5 py-0.5 text-[10.5px] font-bold text-amber">
+          Measurement says NOT bold — check this one
+        </span>
+      )}
       <span className="flex gap-1.5">
         <button
           onClick={() => onMark(row.index, state === "confirmed" ? undefined : "confirmed")}
