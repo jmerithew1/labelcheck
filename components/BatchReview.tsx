@@ -20,6 +20,11 @@ import { Shell } from "./Shell.tsx";
 
 const CONCURRENCY = 8;
 const PAGE_SIZE = 10;
+// The bold gate needs one warning-locate call per eligible label. On an
+// interactive-sized batch that's cheap and the strip is ready the moment the
+// run ends; on a 200-300 label surge dump it would be hundreds of extra
+// calls the agent may never use — so past this size the pass is opt-in.
+const BOLD_GATE_EAGER_MAX = 60;
 const REQUIRED_HEADERS = ["filename", "brand_name", "class_type", "alcohol_content", "net_contents"];
 
 const HEADER_SYNONYMS: Record<string, string> = {
@@ -168,7 +173,12 @@ export function BatchReview() {
   // human glance and disappears when nothing does. Dismiss hides it until
   // the pending set changes again.
   const [stripDismissed, setStripDismissed] = useState(false);
+  const [boldPassStarted, setBoldPassStarted] = useState(false);
   const boldFetching = useRef<Set<number>>(new Set());
+  // Below xl the detail panel renders inline BELOW the table, so opening a
+  // row from the strip (or a row far down the list) can land off-screen and
+  // look like nothing happened. Scroll it into view when it opens.
+  const inlinePanelRef = useRef<HTMLElement>(null);
   const filesInput = useRef<HTMLInputElement>(null);
   const [dragOver, setDragOver] = useState(false);
   const startedAt = useRef(0);
@@ -314,6 +324,8 @@ export function BatchReview() {
   // indexes are tracked in a ref so re-renders never duplicate a fetch.
   useEffect(() => {
     if (running) return;
+    // Large batches only start the pass once the agent asks for it.
+    if (rows.length > BOLD_GATE_EAGER_MAX && !boldPassStarted) return;
     const targets = rows.filter(
       (r) => boldEligible(r) && !r.bands && r.file && r.file.type !== "application/pdf" && !boldFetching.current.has(r.index),
     );
@@ -586,6 +598,22 @@ export function BatchReview() {
     if (openRow !== null) setVisited((v) => (v.has(openRow) ? v : new Set(v).add(openRow)));
   }, [openRow]);
 
+  // Bring the inline panel into view when it opens off-screen (it renders
+  // below the table under xl — including at browser zoom levels that put a
+  // wide monitor under 1280 CSS px).
+  useEffect(() => {
+    if (openRow === null) return;
+    const id = window.setTimeout(() => {
+      const el = inlinePanelRef.current;
+      if (!el || el.offsetParent === null) return; // docked variant is showing
+      const box = el.getBoundingClientRect();
+      if (box.top > window.innerHeight * 0.75 || box.bottom < 0) {
+        el.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    }, 60);
+    return () => window.clearTimeout(id);
+  }, [openRow]);
+
   const statusDot = (r: BatchRow, size = 22) => {
     const b = bucketOf(r);
     const isFail = r.result?.overall === "warning_failure" || r.result?.overall === "not_a_label" ||
@@ -843,13 +871,21 @@ export function BatchReview() {
                 {chip("matched", "Matched", counts.matched, "green")}
                 {chip("review", "Need review", counts.review + counts.error, "amber")}
                 {chip("not_required", "Not required", counts.not_required, "na")}
-                {boldPending > 0 && (
+                {rows.length > BOLD_GATE_EAGER_MAX && !boldPassStarted && boldRows.length > 0 && (
+                  <button
+                    onClick={() => { setBoldPassStarted(true); setStripDismissed(false); }}
+                    title="Measure bold type across this batch — one extra read per label, so it stays opt-in on large batches"
+                    className={`${CTRL_BASE} ${CTRL_IDLE}`}
+                  >
+                    Check bold type
+                    <span className="font-bold text-amber">{boldRows.length}</span>
+                  </button>
+                )}
+                {boldPending > 0 && (rows.length <= BOLD_GATE_EAGER_MAX || boldPassStarted) && (
                   <button
                     onClick={() => setStripDismissed((s) => !s)}
                     title="Bold checks that still need a human glance — the measurement gate resolved the rest"
-                    className={`flex h-8 items-center gap-1.5 rounded-[7px] border px-3 text-[12.5px] font-semibold transition ${
-                      !stripDismissed ? "border-amber bg-amber-tint text-amber" : "border-line bg-card text-ink-2 hover:bg-line-soft"
-                    }`}
+                    className={`${CTRL_BASE} ${!stripDismissed ? CTRL_ON.amber : CTRL_IDLE}`}
                   >
                     Confirm bold
                     <span className="font-bold text-amber">{boldPending}</span>
@@ -1057,7 +1093,7 @@ export function BatchReview() {
 
       {/* Below xl: the same panel renders inline under the table. */}
       {rows.length > 0 && detail?.result && detail.extraction && detail.imageUrl && (
-        <section className="mt-4 flex max-h-[80vh] flex-col rounded-xl border border-line bg-card xl:hidden">
+        <section ref={inlinePanelRef} className="mt-4 flex max-h-[80vh] flex-col rounded-xl border border-line bg-card xl:hidden">
           <div className="flex items-center gap-2.5 px-6 py-[18px]">
             <p className="min-w-0 flex-1 truncate text-[15px] font-bold text-ink">{detail.filename}</p>
             {statusPill(detail)}
