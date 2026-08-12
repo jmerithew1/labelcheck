@@ -1,0 +1,420 @@
+[
+  {
+    "name": "font-georgia-bold",
+    "group": "fonts",
+    "truthBold": true,
+    "note": "",
+    "ratio": 1.72,
+    "call": "bold",
+    "ok": true
+  },
+  {
+    "name": "font-georgia-reg",
+    "group": "fonts",
+    "truthBold": false,
+    "note": "",
+    "ratio": 1.53,
+    "call": "bold",
+    "ok": false
+  },
+  {
+    "name": "font-arial-bold",
+    "group": "fonts",
+    "truthBold": true,
+    "note": "",
+    "ratio": 1.93,
+    "call": "bold",
+    "ok": true
+  },
+  {
+    "name": "font-arial-reg",
+    "group": "fonts",
+    "truthBold": false,
+    "note": "",
+    "ratio": 1.28,
+    "call": "not-bold",
+    "ok": true
+  },
+  {
+    "name": "font-arial-narrow-bold",
+    "group": "fonts",
+    "truthBold": true,
+    "note": "",
+    "ratio": 1.93,
+    "call": "bold",
+    "ok": true
+  },
+  {
+    "name": "font-arial-narrow-reg",
+    "group": "fonts",
+    "truthBold": false,
+    "note": "",
+    "ratio": 1.28,
+    "call": "not-bold",
+    "ok": true
+  },
+  {
+    "name": "font-times-bold",
+    "group": "fonts",
+    "truthBold": true,
+    "note": "",
+    "ratio": 1.45,
+    "call": "not-bold",
+    "ok": false
+  },
+  {
+    "name": "font-times-reg",
+    "group": "fonts",
+    "truthBold": false,
+    "note": "",
+    "ratio": 1.23,
+    "call": "not-bold",
+    "ok": true
+  },
+  {
+    "name": "font-courier-bold",
+    "group": "fonts",
+    "truthBold": true,
+    "note": "",
+    "ratio": 1.93,
+    "call": "bold",
+    "ok": true
+  },
+  {
+    "name": "font-courier-reg",
+    "group": "fonts",
+    "truthBold": false,
+    "note": "",
+    "ratio": 1.44,
+    "call": "not-bold",
+    "ok": true
+  },
+  {
+    "name": "font-verdana-bold",
+    "group": "fonts",
+    "truthBold": true,
+    "note": "",
+    "ratio": 2.16,
+    "call": "bold",
+    "ok": true
+  },
+  {
+    "name": "font-verdana-reg",
+    "group": "fonts",
+    "truthBold": false,
+    "note": "",
+    "ratio": 1.53,
+    "call": "not-bold",
+    "ok": true
+  },
+  {
+    "name": "size-10px-bold",
+    "group": "type-size",
+    "truthBold": true,
+    "note": "",
+    "outcome": "unmeasurable"
+  },
+  {
+    "name": "size-10px-reg",
+    "group": "type-size",
+    "truthBold": false,
+    "note": "",
+    "outcome": "unmeasurable"
+  },
+  {
+    "name": "size-13px-bold",
+    "group": "type-size",
+    "truthBold": true,
+    "note": "",
+    "ratio": 1.72,
+    "call": "bold",
+    "ok": true
+  },
+  {
+    "name": "size-13px-reg",
+    "group": "type-size",
+    "truthBold": false,
+    "note": "",
+    "ratio": 1.53,
+    "call": "bold",
+    "ok": false
+  },
+  {
+    "name": "size-18px-bold",
+    "group": "type-size",
+    "truthBold": true,
+    "note": "",
+    "ratio": 1.92,
+    "call": "bold",
+    "ok": true
+  },
+  {
+    "name": "size-18px-reg",
+    "group": "type-size",
+    "truthBold": false,
+    "note": "",
+    "ratio": 1.54,
+    "call": "bold",
+    "ok": false
+  },
+  {
+    "name": "res-0.5x-bold",
+    "group": "resolution",
+    "truthBold": true,
+    "note": "",
+    "outcome": "unmeasurable"
+  },
+  {
+    "name": "res-0.5x-reg",
+    "group": "resolution",
+    "truthBold": false,
+    "note": "",
+    "outcome": "unmeasurable"
+  },
+  {
+    "name": "res-1x-bold",
+    "group": "resolution",
+    "truthBold": true,
+    "note": "",
+    "ratio": 1.72,
+    "call": "bold",
+    "ok": true
+  },
+  {
+    "name": "res-1x-reg",
+    "group": "resolution",
+    "truthBold": false,
+    "note": "",
+    "ratio": 1.53,
+    "call": "bold",
+    "ok": false
+  },
+  {
+    "name": "res-2x-bold",
+    "group": "resolution",
+    "truthBold": true,
+    "note": "",
+    "ratio": 1.92,
+    "call": "bold",
+    "ok": true
+  },
+  {
+    "name": "res-2x-reg",
+    "group": "resolution",
+    "truthBold": false,
+    "note": "",
+    "ratio": 1.58,
+    "call": "bold",
+    "ok": false
+  },
+  {
+    "name": "jpeg-q70-bold",
+    "group": "jpeg",
+    "truthBold": true,
+    "note": "",
+    "ratio": 1.76,
+    "call": "bold",
+    "ok": true
+  },
+  {
+    "name": "jpeg-q70-reg",
+    "group": "jpeg",
+    "truthBold": false,
+    "note": "",
+    "ratio": 1.45,
+    "call": "not-bold",
+    "ok": true
+  },
+  {
+    "name": "dark-bg-bold",
+    "group": "dark-bg",
+    "truthBold": true,
+    "note": "",
+    "ratio": 1.51,
+    "call": "not-bold",
+    "ok": false
+  },
+  {
+    "name": "dark-bg-reg",
+    "group": "dark-bg",
+    "truthBold": false,
+    "note": "",
+    "ratio": 1.27,
+    "call": "not-bold",
+    "ok": true
+  },
+  {
+    "name": "semibold-georgia",
+    "group": "semibold-600",
+    "truthBold": true,
+    "note": "boundary: is 600 \"bold type\"?",
+    "ratio": 1.72,
+    "call": "bold",
+    "ok": true
+  },
+  {
+    "name": "semibold-arial",
+    "group": "semibold-600",
+    "truthBold": true,
+    "note": "boundary: is 600 \"bold type\"?",
+    "ratio": 1.93,
+    "call": "bold",
+    "ok": true
+  },
+  {
+    "name": "semibold-arial-narrow",
+    "group": "semibold-600",
+    "truthBold": true,
+    "note": "boundary: is 600 \"bold type\"?",
+    "ratio": 1.93,
+    "call": "bold",
+    "ok": true
+  },
+  {
+    "name": "semibold-times",
+    "group": "semibold-600",
+    "truthBold": true,
+    "note": "boundary: is 600 \"bold type\"?",
+    "ratio": 1.45,
+    "call": "not-bold",
+    "ok": false
+  },
+  {
+    "name": "semibold-courier",
+    "group": "semibold-600",
+    "truthBold": true,
+    "note": "boundary: is 600 \"bold type\"?",
+    "ratio": 1.93,
+    "call": "bold",
+    "ok": true
+  },
+  {
+    "name": "semibold-verdana",
+    "group": "semibold-600",
+    "truthBold": true,
+    "note": "boundary: is 600 \"bold type\"?",
+    "ratio": 2.16,
+    "call": "bold",
+    "ok": true
+  },
+  {
+    "name": "allbold-georgia",
+    "group": "all-bold",
+    "truthBold": true,
+    "note": "VIOLATION: body bold (16.22(a)(2))",
+    "ratio": 1.44,
+    "call": "not-bold",
+    "ok": false
+  },
+  {
+    "name": "allbold-arial",
+    "group": "all-bold",
+    "truthBold": true,
+    "note": "VIOLATION: body bold",
+    "ratio": 1.58,
+    "call": "bold",
+    "ok": true
+  },
+  {
+    "name": "cola-georgia-bold",
+    "group": "cola-typical",
+    "truthBold": true,
+    "note": "",
+    "ratio": 1.26,
+    "call": "not-bold",
+    "ok": false
+  },
+  {
+    "name": "cola-georgia-reg",
+    "group": "cola-typical",
+    "truthBold": false,
+    "note": "",
+    "ratio": 1.08,
+    "call": "not-bold",
+    "ok": true
+  },
+  {
+    "name": "cola-arial-bold",
+    "group": "cola-typical",
+    "truthBold": true,
+    "note": "",
+    "ratio": 1.38,
+    "call": "not-bold",
+    "ok": false
+  },
+  {
+    "name": "cola-arial-reg",
+    "group": "cola-typical",
+    "truthBold": false,
+    "note": "",
+    "ratio": 1.15,
+    "call": "not-bold",
+    "ok": true
+  },
+  {
+    "name": "cola-arial-narrow-bold",
+    "group": "cola-typical",
+    "truthBold": true,
+    "note": "",
+    "ratio": 1.38,
+    "call": "not-bold",
+    "ok": false
+  },
+  {
+    "name": "cola-arial-narrow-reg",
+    "group": "cola-typical",
+    "truthBold": false,
+    "note": "",
+    "ratio": 1.15,
+    "call": "not-bold",
+    "ok": true
+  },
+  {
+    "name": "cola-times-bold",
+    "group": "cola-typical",
+    "truthBold": true,
+    "note": "",
+    "outcome": "unmeasurable"
+  },
+  {
+    "name": "cola-times-reg",
+    "group": "cola-typical",
+    "truthBold": false,
+    "note": "",
+    "ratio": 1.39,
+    "call": "not-bold",
+    "ok": true
+  },
+  {
+    "name": "cola-courier-bold",
+    "group": "cola-typical",
+    "truthBold": true,
+    "note": "",
+    "outcome": "unmeasurable"
+  },
+  {
+    "name": "cola-courier-reg",
+    "group": "cola-typical",
+    "truthBold": false,
+    "note": "",
+    "outcome": "unmeasurable"
+  },
+  {
+    "name": "cola-verdana-bold",
+    "group": "cola-typical",
+    "truthBold": true,
+    "note": "",
+    "ratio": 2.02,
+    "call": "bold",
+    "ok": true
+  },
+  {
+    "name": "cola-verdana-reg",
+    "group": "cola-typical",
+    "truthBold": false,
+    "note": "",
+    "ratio": 1.53,
+    "call": "bold",
+    "ok": false
+  }
+]
