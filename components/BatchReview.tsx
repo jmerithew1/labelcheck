@@ -131,7 +131,10 @@ export function BatchReview() {
   const [savedToast, setSavedToast] = useState(false);
   const [exportedSince, setExportedSince] = useState(false);
   const [visited, setVisited] = useState<Set<number>>(new Set());
-  const [boldStrip, setBoldStrip] = useState(false);
+  // The strip is attention-driven: it appears on its own when rows need a
+  // human glance and disappears when nothing does. Dismiss hides it until
+  // the pending set changes again.
+  const [stripDismissed, setStripDismissed] = useState(false);
   const boldFetching = useRef<Set<number>>(new Set());
   const filesInput = useRef<HTMLInputElement>(null);
   const [dragOver, setDragOver] = useState(false);
@@ -197,7 +200,7 @@ export function BatchReview() {
     setWallMs(null);
     setPage(0);
     setOpenRow(null);
-    setBoldStrip(false);
+    setStripDismissed(false);
     boldFetching.current.clear();
     return issues.length === 0 && newRows.length > 0;
   }
@@ -272,11 +275,12 @@ export function BatchReview() {
     setVisited(new Set());
   }
 
-  // Lazy warning bands for the bold spot-check strip: fetch for every
-  // eligible row without bands, a few at a time. In-flight indexes are
-  // tracked in a ref so re-renders never duplicate a fetch.
+  // Warning bands for the bold gate + strip: once the run settles, fetch for
+  // every eligible row without bands, a few at a time — the machine gate
+  // resolves what it can before anything is asked of the human. In-flight
+  // indexes are tracked in a ref so re-renders never duplicate a fetch.
   useEffect(() => {
-    if (!boldStrip) return;
+    if (running) return;
     const targets = rows.filter(
       (r) => boldEligible(r) && !r.bands && r.file && r.file.type !== "application/pdf" && !boldFetching.current.has(r.index),
     );
@@ -309,7 +313,7 @@ export function BatchReview() {
     void Promise.all(Array.from({ length: Math.min(4, targets.length) }, worker));
     return () => { alive = false; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [boldStrip, rows]);
+  }, [running, rows]);
 
   const setBoldReview = (index: number, v: "confirmed" | "flagged" | undefined) =>
     setRows((rs) => rs.map((r) => (r.index === index ? { ...r, boldReview: v } : r)));
@@ -320,6 +324,18 @@ export function BatchReview() {
   // worker serializes internally.
   const gateRunning = useRef<Set<number>>(new Set());
   useEffect(() => {
+    // Rows the machine can never measure (PDFs, no image, band lookup came
+    // back without a warning) go straight to "human" so the attention-only
+    // strip can show them.
+    const unmeasurable = rows.filter(
+      (r) =>
+        boldEligible(r) && r.boldAuto === undefined &&
+        (r.file?.type === "application/pdf" || !r.imageUrl || (r.bands !== undefined && !r.bands.warning)),
+    );
+    if (unmeasurable.length) {
+      const idx = new Set(unmeasurable.map((r) => r.index));
+      setRows((rs) => rs.map((r) => (idx.has(r.index) ? { ...r, boldAuto: "human" } : r)));
+    }
     const targets = rows.filter(
       (r) =>
         boldEligible(r) && r.boldAuto === undefined && r.bands?.warning && r.imageUrl &&
@@ -400,7 +416,11 @@ export function BatchReview() {
   const done = rows.length - counts.pending;
   const boldRows = useMemo(() => rows.filter(boldEligible), [rows]);
   // Machine-verified rows are resolved; machine-flagged and inconclusive
-  // rows still need eyes.
+  // rows still need eyes — those are the only ones the strip shows.
+  const boldPendingRows = useMemo(
+    () => boldRows.filter((r) => !r.boldReview && r.boldAuto !== "bold" && r.boldAuto !== undefined),
+    [boldRows],
+  );
   const boldPending = boldRows.filter((r) => !r.boldReview && r.boldAuto !== "bold").length;
 
   const visible = useMemo(() => {
@@ -643,24 +663,26 @@ export function BatchReview() {
               </div>
             )}
 
-            {/* Bold spot-check strip: zoomed warning crops for every label
-                whose text passed — the one element left for human eyes. A
-                page of "GOVERNMENT WARNING" snippets scans in seconds; no
-                per-row clicks. Decisions land in the row (and the CSV). */}
-            {boldStrip && !detail && boldRows.length > 0 && (
+            {/* Bold spot-check strip — attention-only: it appears by itself
+                when labels need a human glance (the measurement gate resolves
+                the rest silently) and disappears when nothing does. Only the
+                rows that need eyes are shown. */}
+            {!detail && !stripDismissed && boldPendingRows.length > 0 && (
               <div className="mb-4 rounded-xl border border-line bg-card">
                 <div className="flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-line-soft px-4 py-3">
                   <p className="text-[13.5px] font-bold text-ink">Confirm bold type</p>
                   <p className="text-[12px] text-muted">
-                    Bold is the one check that needs your eyes. Glance at each &ldquo;GOVERNMENT WARNING&rdquo; below — confirm the ones that look bold, flag any that don&rsquo;t.
+                    {boldRows.length - boldPendingRows.length > 0
+                      ? `${boldRows.length - boldPendingRows.length} of ${boldRows.length} verified by measurement — these ${boldPendingRows.length === 1 ? "is the one" : `are the ${boldPendingRows.length}`} that need your eyes. Confirm the ones that look bold, flag any that don't.`
+                      : "Bold is the one check that needs your eyes. Glance at each warning below — confirm the ones that look bold, flag any that don't."}
                   </p>
-                  <span className={`ml-auto whitespace-nowrap rounded-[5px] px-2 py-0.5 text-[11.5px] font-bold ${boldPending === 0 ? "bg-green-tint text-green" : "bg-amber-tint text-amber"}`}>
-                    {boldPending === 0 ? "All confirmed ✓" : `${boldPending} of ${boldRows.length} left`}
+                  <span className="ml-auto whitespace-nowrap rounded-[5px] bg-amber-tint px-2 py-0.5 text-[11.5px] font-bold text-amber">
+                    {boldPendingRows.length} left
                   </span>
-                  <button onClick={() => setBoldStrip(false)} aria-label="Close bold confirmation" className="flex h-7 w-7 items-center justify-center rounded-[6px] text-ink-2 hover:bg-line-soft">✕</button>
+                  <button onClick={() => setStripDismissed(true)} aria-label="Hide bold confirmation" className="flex h-7 w-7 items-center justify-center rounded-[6px] text-ink-2 hover:bg-line-soft">✕</button>
                 </div>
                 <div className="grid gap-3 p-4 [grid-template-columns:repeat(auto-fill,minmax(230px,1fr))]">
-                  {boldRows.map((r) => (
+                  {boldPendingRows.map((r) => (
                     <BoldCard
                       key={r.index}
                       row={r}
@@ -679,20 +701,16 @@ export function BatchReview() {
                 {chip("matched", "Matched", counts.matched, "green")}
                 {chip("review", "Need review", counts.review + counts.error, "amber")}
                 {chip("not_required", "Not required", counts.not_required, "na")}
-                {boldRows.length > 0 && (
+                {boldPending > 0 && (
                   <button
-                    onClick={() => setBoldStrip((s) => !s)}
-                    title="The one thing the computer can't verify — glance at each warning and confirm it looks bold"
+                    onClick={() => setStripDismissed((s) => !s)}
+                    title="Bold checks that still need a human glance — the measurement gate resolved the rest"
                     className={`flex h-8 items-center gap-1.5 rounded-[7px] border px-3 text-[12.5px] font-semibold transition ${
-                      boldStrip
-                        ? boldPending === 0 ? "border-green bg-green-tint text-green" : "border-amber bg-amber-tint text-amber"
-                        : "border-line bg-card text-ink-2 hover:bg-line-soft"
+                      !stripDismissed ? "border-amber bg-amber-tint text-amber" : "border-line bg-card text-ink-2 hover:bg-line-soft"
                     }`}
                   >
                     Confirm bold
-                    <span className={`font-bold ${boldPending === 0 ? "text-green" : "text-amber"}`}>
-                      {boldPending === 0 ? "✓" : boldPending}
-                    </span>
+                    <span className="font-bold text-amber">{boldPending}</span>
                   </button>
                 )}
                 <span className="ml-auto flex items-center gap-3">
