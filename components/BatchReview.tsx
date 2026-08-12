@@ -318,6 +318,19 @@ export function BatchReview() {
   const setBoldReview = (index: number, v: "confirmed" | "flagged" | undefined) =>
     setRows((rs) => rs.map((r) => (r.index === index ? { ...r, boldReview: v } : r)));
 
+  // Decided cards leave the attention-only strip immediately, so a misclick
+  // needs a way back: every decision offers a transient Undo that restores
+  // the previous state (and returns the card to the strip).
+  const [boldUndo, setBoldUndo] = useState<{ index: number; prev?: "confirmed" | "flagged"; next?: "confirmed" | "flagged"; filename: string } | null>(null);
+  const boldUndoTimer = useRef<number | null>(null);
+  const markBold = (index: number, v: "confirmed" | "flagged" | undefined) => {
+    const row = rows.find((r) => r.index === index);
+    setBoldUndo({ index, prev: row?.boldReview, next: v, filename: row?.filename ?? "" });
+    if (boldUndoTimer.current) window.clearTimeout(boldUndoTimer.current);
+    boldUndoTimer.current = window.setTimeout(() => setBoldUndo(null), 8000);
+    setBoldReview(index, v);
+  };
+
   // Multi-signal gate: whenever an eligible row has its warning band and no
   // machine result yet, measure and gate it (validated at 0 confident
   // mistakes — see lib/compare/boldGate.ts). Claim-on-start dedupe; the OCR
@@ -580,6 +593,20 @@ export function BatchReview() {
           Report saved to your Downloads folder.
         </div>
       )}
+      {boldUndo && (
+        <div className="no-print fixed bottom-6 left-1/2 z-50 flex -translate-x-1/2 items-center gap-3 rounded-[10px] border border-line bg-card px-4 py-3 text-[13px] shadow-lg" role="status">
+          <span className="max-w-[320px] truncate text-ink">
+            <b>{boldUndo.filename}</b>
+            {boldUndo.next === "confirmed" ? " — bold confirmed" : boldUndo.next === "flagged" ? " — flagged as not bold" : " — decision cleared"}
+          </span>
+          <button
+            onClick={() => { setBoldReview(boldUndo.index, boldUndo.prev); setBoldUndo(null); }}
+            className="whitespace-nowrap rounded-[7px] border border-line-input px-3 py-1 text-[12.5px] font-bold text-navy hover:bg-select"
+          >
+            Undo
+          </button>
+        </div>
+      )}
 
       {rows.length === 0 ? (
         /* Empty state (design §5) */
@@ -686,7 +713,7 @@ export function BatchReview() {
                     <BoldCard
                       key={r.index}
                       row={r}
-                      onMark={setBoldReview}
+                      onMark={markBold}
                       onOpen={(i) => { setSelectedRow(i); setOpenRow(i); setTab("overview"); }}
                     />
                   ))}
