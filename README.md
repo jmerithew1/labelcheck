@@ -45,4 +45,4 @@ One vision call per label does **perception only**: Claude Haiku 4.5 transcribes
 
 ## Sample data
 
-[samples/labels](samples/labels) holds 18 rendered test labels with exact ground-truth sidecars — including adversarial cases (swapped words, dropped words, punctuation drift, title-case prefix, non-bold prefix, printed prompt-injection text). [samples/batch](samples/batch) is a ready-to-run 12-row batch. Regenerate with `node samples/tools/render.mjs`.
+[samples/labels](samples/labels) holds 18 rendered test labels with exact ground-truth sidecars — including adversarial cases (swapped words, dropped words, punctuation drift, title-case prefix, non-bold prefix, printed prompt-injection text). [samples/batch](samples/batch) is a ready-to-run 12-row batch. To regenerate: `cd samples/tools && npm install && node render.mjs` (the generator has its own dependencies, including a browser download — not installed by the root `npm install`).

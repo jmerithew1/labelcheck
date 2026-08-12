@@ -4,7 +4,7 @@
 
 ## The task
 
-Build a standalone prototype that helps TTB compliance agents verify alcohol beverage label images against application data — does what's on the label match what's on the form? Free choice of languages/frameworks. Deliverables: source repo (README, setup/run instructions, approach/assumptions doc) **and a deployed application URL**.
+Build a standalone prototype that helps TTB compliance agents verify alcohol beverage label images against application data — does what's on the label match what's on the form? Free choice of languages/frameworks — "we want to see what kind of engineering, design, and integration decisions you make." Deliverables: source repo (all source code; README with setup and run instructions; brief documentation of approach, **tools used**, assumptions made) **and a deployed application URL**.
 
 ## Stakeholder requirements (from interview notes)
 

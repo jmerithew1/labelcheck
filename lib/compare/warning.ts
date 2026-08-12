@@ -147,6 +147,8 @@ export function checkWarning(input: {
   }
 
   if (input.sizeAdvisory === "small" || input.sizeAdvisory === "illegibly_small") {
+    // ResultView's "Size" row finds this note by matching /small/i on the
+    // text — keep the word "small" in any rewording.
     notes.push(
       `The warning text appears ${input.sizeAdvisory === "illegibly_small" ? "barely legible — extremely small" : "unusually small"} relative to the rest of the label. Type-size minimums (27 CFR 16.22(b)) can't be checked from an image — verify against the physical container.`,
     );

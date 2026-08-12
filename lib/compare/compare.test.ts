@@ -153,6 +153,14 @@ describe("fuzzy text fields (C10, C12, C13)", () => {
     expect(r.similarity).toBeLessThan(1);
   });
 
+  it("compares class/type through the same judgment path (C3)", () => {
+    const ok = compareTextField("class_type", "Kentucky Straight Bourbon Whiskey", found("KENTUCKY STRAIGHT BOURBON WHISKEY"));
+    expect(ok.verdict).toBe("match_formatting");
+    expect(ok.similarity).toBe(1);
+    const bad = compareTextField("class_type", "Kentucky Straight Bourbon Whiskey", found("Small Batch Bourbon Whiskey"));
+    expect(bad.verdict).toBe("possible_mismatch");
+  });
+
   it("skips blank optional fields (C12/C13)", () => {
     const r = compareTextField("country_of_origin", "", found("Product of France"), { optional: true });
     expect(r.verdict).toBe("not_provided");

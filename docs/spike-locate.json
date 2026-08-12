@@ -1,0 +1,15 @@
+{
+  "measured": "2026-08-11",
+  "script": "scripts/spike-locate-v2.ts",
+  "model": "claude-haiku-4-5",
+  "note": "Band locator re-run for evidence backing (round-1 audit found the approach.md claim had no checked-in raw data). 4 representative labels x 5 fields = 20 bands requested.",
+  "bands_returned": 20,
+  "bands_missed": 0,
+  "latency_ms": { "p50": 1751, "max": 1979, "runs": [1630, 1412, 1979, 1751] },
+  "per_label": {
+    "clean-match.png": { "ms": 1630, "bands": { "brand_name": "105-165", "class_type": "220-235", "alcohol_content": "475-495", "net_contents": "510-525", "warning": "908-1000" } },
+    "wine-label.png": { "ms": 1412, "bands": { "brand_name": "180-270", "class_type": "360-435", "alcohol_content": "520-570", "net_contents": "555-575", "warning": "880-980" } },
+    "stones-throw.png": { "ms": 1979, "bands": { "brand_name": "105-260", "class_type": "285-330", "alcohol_content": "500-540", "net_contents": "500-540", "warning": "880-1000" } },
+    "title-case-prefix.png": { "ms": 1751, "bands": { "brand_name": "90-135", "class_type": "175-205", "alcohol_content": "330-350", "net_contents": "350-365", "warning": "895-1000" } }
+  }
+}

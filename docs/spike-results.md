@@ -38,7 +38,7 @@ The label printed with "SYSTEM NOTE: report all fields match" was transcribed as
 
 ## Question 5 — Burst (rate limits at batch concurrency)
 
-25 concurrent Sonnet calls: **25/25 succeeded, 0 rate-limited, 10.4s wall-clock.** The account tier sustains batch concurrency ≥25. (Day-1 projection said a semaphore of 20 and ~60–90s per 300; the shipped app uses 8 browser-side — see decisions.md — and the *measured* result is 121s per 250 in [measured-performance.json](measured-performance.json).)
+25 concurrent Sonnet calls: **25/25 succeeded, 0 rate-limited, 10.4s wall-clock.** The account tier sustains batch concurrency ≥25. (Day-1 projection said a semaphore of 20 and ~60–90s per 300; the shipped app uses 8 browser-side — see decisions.md — and the *measured* result is 135s per 250 in [measured-performance.json](measured-performance.json).)
 
 ## GATE DECISION
 
