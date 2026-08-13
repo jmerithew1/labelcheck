@@ -95,6 +95,52 @@ function measureBox(rows: Float32Array[], bg: number): { capH: number; inkFrac: 
   return { capH, inkFrac: inkPx / totPx, sw: widths[Math.floor(widths.length / 2)] };
 }
 
+/**
+ * Find the warning band by reading the image, when the AI locator's band is
+ * missing or wrong.
+ *
+ * The locator is a single vision call returning approximate bands, and it does
+ * miss: on one sample it put the warning at 47% of a label whose warning sits
+ * at ~90%, and on another it returned no warning band at all. The crop drives
+ * both the strip's magnifier and the bold measurement, so a wrong band shows
+ * the agent the wrong part of the label and burns a human glance on a row the
+ * machine could have resolved. (It cannot cause a false "bold" — the
+ * measurement needs to actually find GOVERNMENT and a body word in the crop,
+ * and a wrong crop simply yields null → "human".)
+ *
+ * Returns permille [top, bottom] like the locator, or null if the warning
+ * genuinely isn't readable.
+ */
+export async function ocrWarningBand(imageUrl: string): Promise<[number, number] | null> {
+  try {
+    const img = await loadImage(imageUrl);
+    if (!img) return null;
+    const H = img.naturalHeight;
+    const recognized = await (ocrChain = ocrChain.then(async () => {
+      const worker = await sharedWorker();
+      return worker.recognize(imageUrl, {}, { blocks: true });
+    }).catch(() => null));
+    if (!recognized) return null;
+
+    const words: { text: string; y0: number; y1: number }[] = [];
+    for (const b of (recognized as { data: { blocks?: Array<{ paragraphs: Array<{ lines: Array<{ words: Array<{ text: string; bbox: Box }> }> }> }> } }).data.blocks ?? [])
+      for (const p of b.paragraphs)
+        for (const l of p.lines)
+          for (const w of l.words) words.push({ text: w.text.toUpperCase().replace(/[^A-Z]/g, ""), y0: w.bbox.y0, y1: w.bbox.y1 });
+
+    const start = words.find((w) => w.text.startsWith("GOVERNMENT"));
+    if (!start) return null;
+    // The statement ends at "problems." — take the last body keyword at or
+    // below the prefix so the band covers the whole block, not just line one.
+    const tail = words.filter((w) => w.y0 >= start.y0 && /^(PROBLEMS|MACHINERY|HEALTH|BIRTH|DEFECTS|IMPAIRS|ABILITY)/.test(w.text));
+    const bottom = tail.length ? Math.max(...tail.map((w) => w.y1)) : start.y1;
+    if (bottom <= start.y0) return null;
+    return [Math.round((start.y0 / H) * 1000), Math.round((bottom / H) * 1000)];
+  } catch {
+    return null;
+  }
+}
+
 /** band = [topPermille, bottomPermille] from the AI locator. */
 export async function measureBoldSignals(
   imageUrl: string,

@@ -25,13 +25,67 @@ export type FieldDecision = "accepted" | "confirmed";
 
 const isRedVerdict = (v: string) => v === "possible_mismatch" || v === "absent_on_label";
 
-/** Shared pill styles for inline decisions — same control language as the
- *  batch review bar, sized for a table row. */
-const PILL_BASE =
-  "flex h-7 items-center justify-center rounded-[6px] border px-2.5 text-[12px] font-semibold transition";
-const PILL_IDLE = "border-line-input bg-card text-ink-2 hover:bg-line-soft";
-const PILL_GREEN = "border-green bg-green-tint text-green";
-const PILL_RED = "border-red bg-red-tint text-red";
+/** Decision controls.
+ *
+ *  These sit in a fixed right-hand column, aligned across rows, because the
+ *  eye reads field → value → status → action and a control parked under the
+ *  sentence gets missed. They carry colour and weight for the same reason:
+ *  ghost-grey buttons on an already-tinted row disappear into it. */
+const DECIDE_BASE =
+  "flex h-[30px] w-full items-center justify-center gap-1 rounded-[7px] border-[1.5px] px-2 text-[12px] font-bold transition";
+const DECIDE_ACCEPT_IDLE =
+  "border-ok-line bg-card text-ok hover:bg-ok-bg";
+const DECIDE_ACCEPT_ON = "border-ok bg-ok text-white";
+const DECIDE_REJECT_IDLE =
+  "border-bad-line bg-card text-bad hover:bg-bad-bg";
+const DECIDE_REJECT_ON = "border-bad bg-bad text-white";
+
+const TICK = (
+  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.2" aria-hidden>
+    <path d="M4 12l5 5L20 6" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+const CROSS = (
+  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.2" aria-hidden>
+    <path d="M6 6l12 12M18 6L6 18" strokeLinecap="round" />
+  </svg>
+);
+
+/** The two-button decision control used by every surface that records one. */
+function DecidePair({
+  value,
+  onChange,
+  acceptLabel,
+  rejectLabel,
+  ariaPrefix,
+}: {
+  value: "accept" | "reject" | null;
+  onChange: (v: "accept" | "reject" | null) => void;
+  acceptLabel: string;
+  rejectLabel: string;
+  ariaPrefix: string;
+}) {
+  return (
+    <span className="no-print flex w-full flex-col gap-1.5">
+      <button
+        onClick={(e) => { e.stopPropagation(); onChange(value === "accept" ? null : "accept"); }}
+        aria-pressed={value === "accept"}
+        aria-label={`${ariaPrefix}: ${acceptLabel}`}
+        className={`${DECIDE_BASE} ${value === "accept" ? DECIDE_ACCEPT_ON : DECIDE_ACCEPT_IDLE}`}
+      >
+        {TICK}{acceptLabel}
+      </button>
+      <button
+        onClick={(e) => { e.stopPropagation(); onChange(value === "reject" ? null : "reject"); }}
+        aria-pressed={value === "reject"}
+        aria-label={`${ariaPrefix}: ${rejectLabel}`}
+        className={`${DECIDE_BASE} ${value === "reject" ? DECIDE_REJECT_ON : DECIDE_REJECT_IDLE}`}
+      >
+        {CROSS}{rejectLabel}
+      </button>
+    </span>
+  );
+}
 
 /** One row of the warning panel; stacks cleanly in compact containers. */
 function WarningRow({
@@ -68,14 +122,15 @@ function WarningRow({
   return (
     <div data-row={anchor} className="flex items-start gap-4 border-b border-hairline px-4 py-3 last:border-0">
       <span className="w-24 shrink-0 pt-0.5 text-[13px] font-semibold text-ink-soft">{label}</span>
-      <span className="min-w-0 flex-1 text-[13.5px] text-ink">
-        {text}
+      <span className="min-w-0 flex-1 text-[13.5px] text-ink">{text}</span>
+      {/* Fixed columns so every row's chip lands on the same vertical line,
+          whether or not the row carries an action. The decision control sits
+          in the action column with everything else that wants a click. */}
+      <span className="flex w-16 shrink-0 justify-end pt-0.5">{chip}</span>
+      <span className="flex w-[104px] shrink-0 flex-col items-end gap-1.5 pt-0.5">
+        {action ?? null}
         {extra}
       </span>
-      {/* Fixed columns so every row's chip lands on the same vertical line,
-          whether or not the row carries an action button. */}
-      <span className="flex w-16 shrink-0 justify-end pt-0.5">{chip}</span>
-      <span className="flex w-28 shrink-0 justify-end pt-0.5">{action ?? null}</span>
     </div>
   );
 }
@@ -426,14 +481,18 @@ export function ResultView({
                 decision === "accepted" ? <Chip tone="ok">{Icon.check} Accepted</Chip>
                   : decision === "confirmed" ? <Chip tone="bad">{Icon.x} Confirmed</Chip>
                   : fieldChip(f.verdict);
+              const decidable = red && onFieldReview;
               return (
-                <div key={f.field} className="border-b border-hairline last:border-0">
-                <button
+                <div
+                  key={f.field}
                   data-row={f.field}
+                  className={`flex items-start gap-3 border-b border-hairline px-4 py-3 last:border-0 ${rowBg} ${focusRing}`}
+                >
+                <button
                   disabled={!locatable}
                   onClick={() => setFocusedField(isFocused ? null : (f.field as BandField))}
                   aria-label={`${FIELD_LABELS[f.field]}: ${f.verdict.replace(/_/g, " ")}${locatable ? " — show on label" : ""}`}
-                  className={`flex w-full items-center gap-3 px-4 py-3 text-left ${rowBg} ${focusRing} ${locatable ? "cursor-pointer hover:bg-muted-bg/70" : "cursor-default"}`}
+                  className={`flex min-w-0 flex-1 items-center gap-3 text-left ${locatable ? "cursor-pointer" : "cursor-default"}`}
                 >
                   <span className="min-w-0 flex-1">
                     <span className="block text-[12px] font-semibold text-ink-soft">{FIELD_LABELS[f.field]}</span>
@@ -463,7 +522,6 @@ export function ResultView({
                       </span>
                     )}
                   </span>
-                  {chip}
                   {/* Magnifier only on flaggable rows (conformance #10) —
                       matched rows stay clickable but don't advertise it. */}
                   {locatable && tone !== "ok" && (
@@ -472,25 +530,21 @@ export function ResultView({
                     </svg>
                   )}
                 </button>
-                {/* Decision pills — only on flagged rows, only when the host
-                    surface records decisions. Toggles: clicking the active
-                    pill clears it (its own undo). */}
-                {red && onFieldReview && (
-                  <div className={`no-print flex flex-wrap items-center gap-2 px-4 pb-3 ${rowBg}`}>
-                    <span className="text-[11.5px] font-semibold uppercase tracking-wider text-ink-faint">Your call</span>
-                    <button
-                      onClick={() => onFieldReview(f.field, decision === "accepted" ? null : "accepted")}
-                      className={`${PILL_BASE} ${decision === "accepted" ? PILL_GREEN : PILL_IDLE}`}
-                    >
-                      {decision === "accepted" ? "Accepted ✓" : "Looks right — accept"}
-                    </button>
-                    <button
-                      onClick={() => onFieldReview(f.field, decision === "confirmed" ? null : "confirmed")}
-                      className={`${PILL_BASE} ${decision === "confirmed" ? PILL_RED : PILL_IDLE}`}
-                    >
-                      {decision === "confirmed" ? "Confirmed — real issue" : "Confirm mismatch"}
-                    </button>
-                  </div>
+                {/* Status, then decision — a fixed right column so the
+                    controls line up across rows and scan vertically. */}
+                <span className="flex shrink-0 justify-end pt-0.5">{chip}</span>
+                {decidable && (
+                  <span className="w-[104px] shrink-0">
+                    <DecidePair
+                      value={decision === "accepted" ? "accept" : decision === "confirmed" ? "reject" : null}
+                      onChange={(v) =>
+                        onFieldReview(f.field, v === "accept" ? "accepted" : v === "reject" ? "confirmed" : null)
+                      }
+                      acceptLabel="Accept"
+                      rejectLabel="Issue"
+                      ariaPrefix={FIELD_LABELS[f.field]}
+                    />
+                  </span>
                 )}
                 </div>
               );
@@ -558,23 +612,18 @@ export function ResultView({
             </button>
           }
           extra={
-            // The bold decision, decidable right where it's asked for — the
-            // same pill pair as the batch strip. Toggles clear themselves.
+            // The bold decision sits in the action column, under Show on
+            // label — the same control language as the comparison rows.
             onBoldReview && wvPasses(wv) && (boldHuman !== null || boldAuto !== "bold") ? (
-              <span className="no-print mt-2 flex flex-wrap items-center gap-2">
-                <button
-                  onClick={() => onBoldReview(boldHuman === "confirmed" ? null : "confirmed")}
-                  className={`${PILL_BASE} ${boldHuman === "confirmed" ? PILL_GREEN : PILL_IDLE}`}
-                >
-                  {boldHuman === "confirmed" ? "Confirmed ✓" : "Looks bold"}
-                </button>
-                <button
-                  onClick={() => onBoldReview(boldHuman === "flagged" ? null : "flagged")}
-                  className={`${PILL_BASE} ${boldHuman === "flagged" ? PILL_RED : PILL_IDLE}`}
-                >
-                  {boldHuman === "flagged" ? "Flagged — not bold" : "Not bold"}
-                </button>
-              </span>
+              <DecidePair
+                value={boldHuman === "confirmed" ? "accept" : boldHuman === "flagged" ? "reject" : null}
+                onChange={(v) =>
+                  onBoldReview(v === "accept" ? "confirmed" : v === "reject" ? "flagged" : null)
+                }
+                acceptLabel="Bold"
+                rejectLabel="Not bold"
+                ariaPrefix="Government warning bold type"
+              />
             ) : undefined
           }
         />
@@ -582,7 +631,12 @@ export function ResultView({
           <WarningRow compact={compact} label="Body type" chip={<Chip tone="warn">Review</Chip>} text={bodyBoldNote} />
         )}
         {sizeNote && (
-          <WarningRow compact={compact} label="Size" chip={<Chip tone="warn">Review</Chip>} text={sizeNote} />
+          // Not a "Review" chip: type size legally cannot be settled from an
+          // image (16.22(b) is a physical measurement), so an agent can never
+          // clear this row. Dressing an unclearable caveat as review work
+          // teaches people to ignore the amber chips that DO need them. It
+          // stays visible, as a note.
+          <WarningRow compact={compact} label="Size" chip={<Chip tone="muted">{Icon.dot} Note</Chip>} text={sizeNote} />
         )}
         {confirming && (
           <p className="flex items-center gap-2 border-t border-hairline px-4 py-2.5 text-[12px] font-semibold text-amber">

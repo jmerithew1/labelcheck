@@ -24,6 +24,8 @@ export interface Region {
 export interface OcrWord {
   text: string;
   x0: number; y0: number; x1: number; y1: number;
+  /** index into OcrIndex.lines — matching is line-scoped, see matchExact */
+  line: number;
 }
 export interface OcrLine extends OcrWord {}
 
@@ -63,8 +65,9 @@ async function ocrImage(imageUrl: string): Promise<OcrIndex | null> {
         for (const b of data.blocks ?? []) {
           for (const p of b.paragraphs) {
             for (const l of p.lines) {
-              lines.push({ text: l.text, ...l.bbox });
-              for (const w of l.words) words.push({ text: w.text, ...w.bbox });
+              const lineIdx = lines.length;
+              lines.push({ text: l.text, ...l.bbox, line: lineIdx });
+              for (const w of l.words) words.push({ text: w.text, ...w.bbox, line: lineIdx });
             }
           }
         }
@@ -80,34 +83,78 @@ async function ocrImage(imageUrl: string): Promise<OcrIndex | null> {
 const tokenize = (s: string) =>
   s.toUpperCase().replace(/[^A-Z0-9%.]/g, " ").split(/\s+/).filter((t) => t.length > 1);
 
-/** Union bbox of the OCR words matching the target's tokens. Sliding-window
- *  scoring, anchored on ANY matching token — a decorative first word that OCR
- *  garbles ("OLD" in display serif) must not force a fallback when the rest
- *  of the phrase ("TOM DISTILLERY") is readable. */
+/** Union bbox of the OCR words matching the target's tokens.
+ *
+ *  Matching is LINE-SCOPED. An earlier version scanned a flat word window and
+ *  anchored on any matching token, which let a token shared with another
+ *  field drag the box across lines: on a gin label, "Distilled Gin" matched
+ *  the GIN in "HARBOR LIGHT GIN" plus the DISTILLED below it, and the
+ *  highlight spanned the gap between them. Scoring each line on its own, then
+ *  extending only into adjacent lines that are themselves a good match (for
+ *  genuinely wrapped text), keeps a phrase's box on the phrase.
+ *
+ *  Still tolerant of a garbled word: a decorative first word OCR mangles
+ *  ("OLD" in display serif) must not force a band fallback when the rest of
+ *  the phrase is readable, so a line qualifies on a fraction of the tokens. */
 export function matchExact(index: OcrIndex, target: string): Region | null {
   const tokens = tokenize(target);
   if (!tokens.length) return null;
 
-  const wordTokens = index.words.map((w) => tokenize(w.text)[0] ?? "");
   const need = Math.max(1, Math.ceil(tokens.length * 0.6));
-  const windowSize = tokens.length * 2 + 4;
+  const byLine = new Map<number, typeof index.words>();
+  for (const w of index.words) {
+    const arr = byLine.get(w.line);
+    if (arr) arr.push(w);
+    else byLine.set(w.line, [w]);
+  }
 
-  let best: { matched: typeof index.words; score: number } | null = null;
-  for (let start = 0; start < index.words.length; start++) {
-    const budget = new Map<string, number>();
-    for (const t of tokens) budget.set(t, (budget.get(t) ?? 0) + 1);
-    const matched: typeof index.words = [];
-    for (let j = start; j < index.words.length && j < start + windowSize; j++) {
-      const wt = wordTokens[j];
+  /** Words on one line consuming the target's token budget, greedily. */
+  const matchLine = (lineWords: typeof index.words, budget: Map<string, number>) => {
+    const hit: typeof index.words = [];
+    for (const w of lineWords) {
+      const wt = tokenize(w.text)[0] ?? "";
       const left = budget.get(wt) ?? 0;
       if (left > 0) {
         budget.set(wt, left - 1);
-        matched.push(index.words[j]);
+        hit.push(w);
       }
     }
-    if (matched.length >= need && (!best || matched.length > best.score)) {
-      best = { matched, score: matched.length };
-      if (matched.length === tokens.length) break;
+    return hit;
+  };
+
+  const freshBudget = () => {
+    const b = new Map<string, number>();
+    for (const t of tokens) b.set(t, (b.get(t) ?? 0) + 1);
+    return b;
+  };
+
+  let best: { matched: typeof index.words; score: number; ratio: number } | null = null;
+  for (const [lineIdx, lineWords] of byLine) {
+    const budget = freshBudget();
+    const matched = matchLine(lineWords, budget);
+    if (!matched.length) continue;
+
+    // Extend into following lines only while they keep contributing AND are
+    // themselves mostly target text — that is what wrapped phrases look like,
+    // and what an unrelated line sharing one word does not.
+    let cursor = lineIdx;
+    while (matched.length < tokens.length) {
+      const nextWords = byLine.get(cursor + 1);
+      if (!nextWords) break;
+      const gained = matchLine(nextWords, budget);
+      if (!gained.length || gained.length / nextWords.length < 0.5) break;
+      matched.push(...gained);
+      cursor++;
+    }
+
+    // Ratio guards against a long unrelated line that happens to contain one
+    // of the tokens outscoring the short line that IS the phrase.
+    const spannedWords = lineWords.length +
+      (cursor > lineIdx ? Array.from({ length: cursor - lineIdx }, (_, k) => byLine.get(lineIdx + 1 + k)?.length ?? 0).reduce((a, b) => a + b, 0) : 0);
+    const ratio = matched.length / Math.max(1, spannedWords);
+    if (matched.length < need) continue;
+    if (!best || matched.length > best.score || (matched.length === best.score && ratio > best.ratio)) {
+      best = { matched, score: matched.length, ratio };
     }
   }
   if (!best) return null;

@@ -7,7 +7,7 @@ import type { Bands } from "@/lib/vision/locate.ts";
 import { parseCsv, toCsv } from "@/lib/csv.ts";
 import { prepareImage } from "@/lib/downscale.ts";
 import { applyBoldGate, type BoldGateResult } from "@/lib/compare/boldGate.ts";
-import { measureBoldSignals } from "@/lib/boldMeasure.ts";
+import { measureBoldSignals, ocrWarningBand } from "@/lib/boldMeasure.ts";
 import { ResultView, type FieldDecision } from "./ResultView.tsx";
 import { CheckingCard } from "./CheckingCard.tsx";
 import { Shell } from "./Shell.tsx";
@@ -73,6 +73,9 @@ interface BatchRow {
   /** imageUrl already points at the PREPARED (deskewed/downscaled) image —
    *  the geometry the located bands and bold measurement live in. */
   prepared?: boolean;
+  /** the warning band has had its one OCR correction attempt (whether or not
+   *  it succeeded) — stops the fallback from retrying forever */
+  bandFixed?: boolean;
 }
 
 /** Flagged comparison fields — the ones a per-field ruling can resolve. */
@@ -485,18 +488,45 @@ export function BatchReview() {
   // see lib/compare/boldGate.ts and rubric C9). Claim-on-start dedupe; the
   // OCR worker serializes internally.
   const gateRunning = useRef<Set<number>>(new Set());
+  const bandFixing = useRef<Set<number>>(new Set());
   useEffect(() => {
-    // Rows the machine can never measure (PDFs, no image, band lookup came
-    // back without a warning) go straight to "human" so the attention-only
-    // strip can show them.
+    // PDFs and rows with no image can never be measured — straight to "human"
+    // so the attention-only strip can show them. A missing warning band is NOT
+    // in that set any more: it gets one OCR attempt first (below), because the
+    // locator missing the warning is a locator problem, not an unreadable
+    // label, and it used to cost a human glance every time.
     const unmeasurable = rows.filter(
-      (r) =>
-        boldEligible(r) && r.boldAuto === undefined &&
-        (r.file?.type === "application/pdf" || !r.imageUrl || (r.bands !== undefined && !r.bands.warning)),
+      (r) => boldEligible(r) && r.boldAuto === undefined && (r.file?.type === "application/pdf" || !r.imageUrl),
     );
     if (unmeasurable.length) {
       const idx = new Set(unmeasurable.map((r) => r.index));
       setRows((rs) => rs.map((r) => (idx.has(r.index) ? { ...r, boldAuto: "human" } : r)));
+    }
+
+    // Locator returned no warning band: read the image for it once. Marked
+    // via bandFixed so a genuine miss settles to "human" instead of looping.
+    const needBand = rows.filter(
+      (r) =>
+        boldEligible(r) && r.boldAuto === undefined && r.imageUrl && r.file?.type !== "application/pdf" &&
+        r.bands !== undefined && !r.bands.warning && !r.bandFixed && !bandFixing.current.has(r.index),
+    );
+    const bandGen = batchGen.current;
+    for (const t of needBand) {
+      bandFixing.current.add(t.index);
+      void (async () => {
+        const found = await ocrWarningBand(t.imageUrl!);
+        if (bandGen !== batchGen.current) return;
+        setRows((rs) =>
+          rs.map((r) =>
+            r.index === t.index
+              ? found
+                ? { ...r, bands: { ...r.bands, warning: found }, bandFixed: true }
+                : { ...r, bandFixed: true, boldAuto: "human" as BoldGateResult }
+              : r,
+          ),
+        );
+        bandFixing.current.delete(t.index);
+      })();
     }
     const targets = rows.filter(
       (r) =>
@@ -508,7 +538,25 @@ export function BatchReview() {
       gateRunning.current.add(t.index);
       void (async () => {
         try {
-          const signals = await measureBoldSignals(t.imageUrl!, t.bands!.warning!);
+          let band = t.bands!.warning!;
+          let signals = await measureBoldSignals(t.imageUrl!, band);
+          // Null means the crop held no GOVERNMENT prefix + body word — most
+          // often a band pointing at the wrong part of the label. Read the
+          // image for the real one and try again before spending a human's
+          // attention, and keep the corrected band so the strip's magnifier
+          // shows the warning rather than whatever the locator picked.
+          if (!signals && !t.bandFixed) {
+            const found = await ocrWarningBand(t.imageUrl!);
+            if (gen !== batchGen.current) return;
+            if (found && (found[0] !== band[0] || found[1] !== band[1])) {
+              band = found;
+              signals = await measureBoldSignals(t.imageUrl!, band);
+            }
+            const fixedBand = band;
+            setRows((rs) =>
+              rs.map((r) => (r.index === t.index ? { ...r, bandFixed: true, bands: { ...r.bands, warning: fixedBand } } : r)),
+            );
+          }
           const verdict = applyBoldGate(signals, t.result!.warning.boldAdvisory);
           if (gen !== batchGen.current) return; // stale: a new batch reused these indexes
           setRows((rs) => rs.map((r) => (r.index === t.index ? { ...r, boldAuto: verdict } : r)));
@@ -684,14 +732,19 @@ export function BatchReview() {
   // wide monitor under 1280 CSS px).
   useEffect(() => {
     if (openRow === null) return;
+    // Wait out the re-render that unmounts the bold strip above the table —
+    // measuring before it collapses gives a stale position — then scroll the
+    // window itself. scrollIntoView on this element proved unreliable: opening
+    // a row from the strip at 1200px left the panel at y≈862 in an 800px
+    // viewport with the page still at scrollY 0, so the click read as a no-op.
     const id = window.setTimeout(() => {
       const el = inlinePanelRef.current;
       if (!el || el.offsetParent === null) return; // docked variant is showing
       const box = el.getBoundingClientRect();
-      if (box.top > window.innerHeight * 0.75 || box.bottom < 0) {
-        el.scrollIntoView({ behavior: "smooth", block: "start" });
+      if (box.top < 0 || box.top > window.innerHeight * 0.5) {
+        window.scrollTo({ top: Math.max(0, window.scrollY + box.top - 12), behavior: "smooth" });
       }
-    }, 60);
+    }, 140);
     return () => window.clearTimeout(id);
   }, [openRow]);
 
@@ -1180,7 +1233,13 @@ export function BatchReview() {
             return (
               /* Pinned within the viewport: header, tabs, scrollable body AND
                  the Review-next footer all stay on screen (conformance #3). */
-              <aside className="sticky top-3 ml-4 hidden h-[calc(100vh-24px)] w-[clamp(360px,34vw,480px)] flex-col overflow-hidden rounded-xl border border-line bg-card xl:flex">
+              /* Docks from lg (1024px), not xl. At xl the fallback caught every
+                 1280-and-under window — including a 1200px browser and any
+                 laptop at 125% scaling — and a panel appearing below the fold
+                 reads as a click that did nothing. The sidebar collapses to
+                 64px while this is open, so 1024px still leaves ~600px of
+                 table beside a 360px panel. */
+              <aside className="sticky top-3 ml-4 hidden h-[calc(100vh-24px)] w-[clamp(360px,32vw,480px)] flex-col overflow-hidden rounded-xl border border-line bg-card lg:flex">
                 {panelInner}
               </aside>
             );
@@ -1188,9 +1247,11 @@ export function BatchReview() {
         </div>
       )}
 
-      {/* Below xl: the same panel renders inline under the table. */}
+      {/* Below lg: the same panel renders inline under the table. Must match
+          the docked variant's breakpoint exactly — while these disagreed, both
+          rendered at 1024–1279px and the row opened twice. */}
       {rows.length > 0 && detail?.result && detail.extraction && detail.imageUrl && (
-        <section ref={inlinePanelRef} className="mt-4 flex max-h-[80vh] flex-col rounded-xl border border-line bg-card xl:hidden">
+        <section ref={inlinePanelRef} className="mt-4 flex max-h-[80vh] flex-col rounded-xl border border-line bg-card lg:hidden">
           <div className="flex items-center gap-2.5 px-6 py-[18px]">
             <p className="min-w-0 flex-1 truncate text-[15px] font-bold text-ink">{detail.filename}</p>
             {statusPill(detail)}

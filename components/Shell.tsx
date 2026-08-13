@@ -12,15 +12,29 @@ export function Shell({
   children,
   topBar,
   collapsed = false,
+  onReenterHome,
 }: {
   children: React.ReactNode;
   /** contextual content for the 64px top bar */
   topBar?: React.ReactNode;
   /** icons-only sidebar while a detail panel is open */
   collapsed?: boolean;
+  /** Clicking the brand or the current page's nav item is a request to start
+   *  over, but Next routes a same-route link to a no-op — so a result screen
+   *  sat there looking stuck unless the user found "Check another label".
+   *  The page passes its reset here. */
+  onReenterHome?: () => void;
 }) {
   const path = usePathname();
   const isBatch = path.startsWith("/batch");
+
+  const sameRouteReset = (href: string) => (e: React.MouseEvent) => {
+    const targetIsCurrent = href === "/" ? !isBatch : isBatch;
+    if (targetIsCurrent && onReenterHome) {
+      e.preventDefault();
+      onReenterHome();
+    }
+  };
 
   const icon = (d: string) => (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden className="shrink-0">
@@ -32,6 +46,7 @@ export function Shell({
     <Link
       href={href}
       title={label}
+      onClick={sameRouteReset(href)}
       className={`flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-[14px] transition ${
         active ? "bg-navy font-bold text-white" : "font-normal text-muted hover:bg-line-soft"
       } ${collapsed ? "justify-center px-2" : ""}`}
@@ -50,6 +65,7 @@ export function Shell({
       >
         <Link
           href="/"
+          onClick={sameRouteReset("/")}
           className={`flex h-16 items-center gap-2.5 border-b border-line-soft ${collapsed ? "justify-center" : ""}`}
         >
           <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-[6px] bg-navy" aria-hidden>
@@ -77,8 +93,8 @@ export function Shell({
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="no-print flex h-16 shrink-0 items-center gap-4 overflow-x-auto whitespace-nowrap border-b border-line bg-card px-7">
           <nav className="flex gap-4 md:hidden">
-            <Link href="/" className={`text-[14px] font-bold ${!isBatch ? "text-ink" : "text-muted-2"}`}>Single check</Link>
-            <Link href="/batch" className={`text-[14px] font-bold ${isBatch ? "text-ink" : "text-muted-2"}`}>Batch review</Link>
+            <Link href="/" onClick={sameRouteReset("/")} className={`text-[14px] font-bold ${!isBatch ? "text-ink" : "text-muted-2"}`}>Single check</Link>
+            <Link href="/batch" onClick={sameRouteReset("/batch")} className={`text-[14px] font-bold ${isBatch ? "text-ink" : "text-muted-2"}`}>Batch review</Link>
           </nav>
           {topBar}
         </header>

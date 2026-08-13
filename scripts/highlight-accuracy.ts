@@ -51,8 +51,10 @@ async function main() {
     for (const b of data.blocks ?? []) {
       for (const p of b.paragraphs) {
         for (const l of p.lines) {
-          index.lines.push({ text: l.text, ...l.bbox });
-          for (const w of l.words) index.words.push({ text: w.text, ...w.bbox });
+          // Same line tagging the app builds — matchExact is line-scoped.
+          const lineIdx = index.lines.length;
+          index.lines.push({ text: l.text, ...l.bbox, line: lineIdx });
+          for (const w of l.words) index.words.push({ text: w.text, ...w.bbox, line: lineIdx });
         }
       }
     }

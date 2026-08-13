@@ -276,7 +276,10 @@ export function SingleCheck() {
   );
 
   return (
-    <Shell topBar={<Stepper phase={step} outcome={outcomeSummary(outcome, fieldReview)} />}>
+    <Shell
+      topBar={<Stepper phase={step} outcome={outcomeSummary(outcome, fieldReview)} />}
+      onReenterHome={step === "form" ? undefined : resetAll}
+    >
       <div className="mx-auto max-w-[1120px]">
         {step === "form" && (
           <>
