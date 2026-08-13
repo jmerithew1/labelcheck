@@ -34,12 +34,15 @@ Everything else matches with judgment: alcohol content numerically (`45% Alc./Vo
 
 ## Measured performance (deployed app, not localhost)
 
-Measured against the production Railway deployment (single-check path re-measured 2026-08-13 after the deskew shipped: **p50 4.0–4.4s, worst 4.69s** end-to-end including client-side preparation, n=4 cards × 3 passes) (raw data: [measured-performance.json](measured-performance.json)):
+Measured 2026-08-11 against the production Railway deployment, and the single-label row re-measured 2026-08-13 after the deskew shipped (raw data: [measured-performance.json](measured-performance.json)):
 
 | Requirement | Measured | Bar |
 |---|---|---|
-| Single label end-to-end (incl. evidence-band call) | **p50 4.3 s, worst 4.5 s** (n=6) | ~5 s |
+| Single label end-to-end (incl. evidence-band call) | **p50 4.3 s, worst 4.5 s** (n=6, 2026-08-11) | ~5 s |
+| ⤷ re-measured post-deskew, **including client-side preparation** | **p50 4.0–4.4 s, worst 4.69 s** (4 cards × 3 passes) | ~5 s |
 | Batch of 250 labels | **135 s wall-clock (2 min 15 s)**, 250/250 succeeded, 0 rate-limited, 0 errors | usable for 200–300 dumps |
+
+Client-side preparation (deskew + any downscale) adds **26–197 ms**, measured in the same runs — small enough that it is not the lever on this bar. Two measurement traps are worth recording, because both produced numbers that looked real. Timing the dev server through a **hidden** browser pane inflates everything: background tabs clamp `toBlob` callbacks to ~1 s, so a 10×10 canvas encode timed identically to a full-size one. And posting to `/api/check` **without `async_confirm=1`** times the *batch* path, where the confirming second reading blocks — 7.1 s — rather than the single-check path the UI actually uses, which returns the provisional verdict first.
 
 The per-label p50 is three parallel model calls (Haiku transcription ~3.8 s ∥ Sonnet bold ~2.4 s ∥ Haiku locator ~1.8 s) plus network and upload — adding evidence highlighting cost ~0.2 s at p50 because the locator hides entirely inside the main call's window. The internal target was ≤3 s; the shipped p50 carries headroom against the requirement but not the aspiration — the remaining mechanism lever (documented, not built) is streaming the extraction call.
 
