@@ -34,7 +34,7 @@ Everything else matches with judgment: alcohol content numerically (`45% Alc./Vo
 
 ## Measured performance (deployed app, not localhost)
 
-Measured 2026-08-11 against the production Railway deployment (raw data: [measured-performance.json](measured-performance.json)):
+Measured against the production Railway deployment (single-check path re-measured 2026-08-13 after the deskew shipped: **p50 4.0–4.4s, worst 4.69s** end-to-end including client-side preparation, n=4 cards × 3 passes) (raw data: [measured-performance.json](measured-performance.json)):
 
 | Requirement | Measured | Bar |
 |---|---|---|

@@ -67,7 +67,7 @@ export const DEMO_SAMPLES: DemoSample[] = [
     id: "clean",
     title: "Clean match",
     blurb: "Everything lines up",
-    png: "clean-match--rot3.png",
+    png: "clean-match--rot2.png",
     application: OLD_TOM,
   },
   {

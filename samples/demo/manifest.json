@@ -1,16 +1,16 @@
 {
-  "generated": "2026-08-13T15:45:50.104Z",
+  "generated": "2026-08-13T15:58:19.124Z",
   "generator": "samples/tools/pick-demo-samples.mjs",
   "note": "Every entry was selected because its measured verdict in docs/robustness-matrix.json matches its label pristine baseline. Images degrade; verdicts do not.",
   "single_check": [
     {
       "card": "clean",
-      "file": "clean-match--rot3.png",
+      "file": "clean-match--rot2.png",
       "label": "clean-match",
-      "cond": "rot3",
+      "cond": "rot2",
       "family": "rotation",
       "verdict": "clean/pass",
-      "margin": "3/3"
+      "margin": "2/3"
     },
     {
       "card": "mismatch",

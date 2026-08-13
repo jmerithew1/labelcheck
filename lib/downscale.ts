@@ -41,6 +41,17 @@ export async function prepareImage(file: File, maxEdge = 1568): Promise<File> {
       canvas.width = out.width;
       canvas.height = out.height;
       ctx.putImageData(new ImageData(out.data, out.width, out.height), 0, 0);
+
+      // DO NOT scale the rotated result back down to the original footprint.
+      // It was tried, purely to claw back latency (rotation expands the canvas
+      // so no corner is clipped, and a 15deg skew turns 760x1090 into
+      // ~1017x1250 — more image tokens, ~1-2s slower). Measured on production,
+      // it moved a COMPLIANT label from `clean` to `warning_failure` on both
+      // passes: rotating and then scaling resamples the text twice, and the
+      // second pass blurs the warning enough to be misread. A false rejection
+      // is the costliest error this tool can make; ~1s of latency is not worth
+      // it. If the expansion ever needs paying back, do the scale INSIDE the
+      // rotation as a single bilinear pass — never as a second resample.
     }
   } catch {
     // A tainted canvas or an OOM must not cost the user their check — fall

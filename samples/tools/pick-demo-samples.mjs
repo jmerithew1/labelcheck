@@ -59,7 +59,7 @@ const DEMO_SPEC = [
   // whose entire claim is "everything lines up". clean-match preserves through
   // the FULL rotation range (margin 3/3) and tilts further, so it demonstrates
   // the deskew better and does it reliably.
-  { card: 'clean',    label: 'clean-match',       family: 'rotation'  },
+  { card: 'clean',    label: 'clean-match',       family: 'rotation', capCond: 'rot2' },
   { card: 'mismatch', label: 'harbor-gin',        family: 'lowlight'  },
   // glare2 was tried and rejected LIVE, despite margin 2/2 in the matrix: the
   // matrix never calls /api/confirm, so it cannot see the second independent
@@ -149,7 +149,7 @@ for (const r of rows) if (r.cond === 'pristine') pristine[r.label] = r;
  * whose every milder sibling also preserves — which maximises visible
  * degradation while keeping everything below it as headroom.
  */
-function pick(label, family) {
+function pick(label, family, capCond) {
   const base = pristine[label];
   if (!base) throw new Error(`no pristine baseline for "${label}"`);
   if (BANNED_FAMILIES.has(family)) throw new Error(`family "${family}" renders as .jpg and is unservable`);
@@ -165,6 +165,12 @@ function pick(label, family) {
   for (const r of inFamily) {
     if (!preserves(r)) break; // contiguity broken — everything past here is a gamble
     chosen = r;
+    // capCond stops at a named severity even when harsher ones also preserve.
+    // Used for rotation on the demo card: deskew expands the canvas to avoid
+    // clipping corners, so a 15deg tilt costs ~50% more pixels and 1-2s of
+    // vision latency against a ~5s bar. 8deg reads as obviously tilted at a
+    // fraction of the cost.
+    if (capCond && r.cond === capCond) break;
   }
   if (!chosen) {
     const any = inFamily.filter(preserves).map((r) => r.cond);
@@ -194,7 +200,7 @@ const familiesUsed = { single: new Set(), batch: new Set() };
 console.log(`${DRY ? 'DRY RUN — ' : ''}picking demo images from the measured corpus\n`);
 console.log('SINGLE-CHECK  (-> samples/demo/)');
 for (const spec of DEMO_SPEC) {
-  const p = pick(spec.label, spec.family);
+  const p = pick(spec.label, spec.family, spec.capCond);
   const name = `${p.label}--${p.cond}.png`;
   bytes += copyOut(name, DEMO, name);
   familiesUsed.single.add(p.family);
