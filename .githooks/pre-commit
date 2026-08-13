@@ -1,0 +1,65 @@
+#!/bin/sh
+# Tier 1 pre-commit gate: deterministic and fast (budget ~5s), so it can run on
+# every commit without anyone deciding to.
+#
+# Enable once per clone:   git config core.hooksPath .githooks
+#
+# Scope is deliberately narrow. Typecheck, tests and build are Tier 2 (CI on
+# push, `npm run verify`) — they are too slow for a commit hook, and a hook
+# people disable because it is slow protects nothing. This checks only the
+# mistakes that are painful or impossible to undo once they are in history.
+
+fail=0
+
+# 1. Secrets. The one mistake that cannot be undone by a later commit: once a
+#    live key is in history, rotation is the only remedy. Matches a real
+#    Anthropic key while deliberately allowing the .env.example placeholder.
+staged=$(git diff --cached --name-only --diff-filter=ACM)
+for f in $staged; do
+  [ -f "$f" ] || continue
+  if grep -nE 'sk-ant-[A-Za-z0-9_-]{20,}' "$f" 2>/dev/null | grep -v 'your-key-here' | head -3 | grep -q .; then
+    echo "BLOCKED: possible Anthropic API key in $f"
+    grep -nE 'sk-ant-[A-Za-z0-9_-]{20,}' "$f" | grep -v 'your-key-here' | head -3
+    fail=1
+  fi
+done
+
+# 2. A committed .env. .gitignore already covers it, but `git add -f` bypasses
+#    .gitignore and that is exactly how env files reach public repos.
+if echo "$staged" | grep -qE '^\.env$|^\.env\.local$|^\.env\..*\.local$'; then
+  echo "BLOCKED: refusing to commit an env file — .env.example is the tracked template"
+  fail=1
+fi
+
+# 3. Private keys, in any staged file.
+#    The pattern is assembled from two fragments on purpose: written as one
+#    literal, this file matches ITSELF and the hook blocks its own commit — which
+#    is exactly what happened the first time it ran. Adjacent quoted strings
+#    concatenate in sh, so the marker never appears contiguously in this source.
+priv_marker='-----BEGIN .*PRIVATE'' KEY-----'
+for f in $staged; do
+  [ -f "$f" ] || continue
+  if head -c 4000 "$f" 2>/dev/null | grep -q -- "$priv_marker"; then
+    echo "BLOCKED: private key material in $f"
+    fail=1
+  fi
+done
+
+# 4. Big files. This repo commits sample imagery on purpose, so the guard sits
+#    above the largest legitimate asset (sample-batch.zip, ~1MB) rather than at
+#    a token value that would fire constantly and train people to use --no-verify.
+for f in $staged; do
+  [ -f "$f" ] || continue
+  size=$(wc -c < "$f" 2>/dev/null | tr -d ' ')
+  if [ -n "$size" ] && [ "$size" -gt 5242880 ]; then
+    echo "BLOCKED: $f is $((size / 1048576))MB (>5MB). Generated corpora belong in .gitignore."
+    fail=1
+  fi
+done
+
+if [ "$fail" -ne 0 ]; then
+  echo ""
+  echo "Commit blocked by .githooks/pre-commit. Fix the above, or --no-verify if you are certain."
+  exit 1
+fi
+exit 0
