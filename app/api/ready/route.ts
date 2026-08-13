@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import fs from "node:fs";
 import path from "node:path";
+import { RATE_LIMITS } from "@/lib/rateLimit.ts";
 
 // Readiness: asserts the runtime actually has what it needs — env present and
 // bundled assets shipped in the image (openemr shipped an empty corpus once;
@@ -56,5 +57,16 @@ export async function GET(req: Request) {
   }
 
   const ready = Object.values(checks).every(Boolean);
-  return NextResponse.json({ ready, checks, ...(detail ? { detail } : {}), ts: new Date().toISOString() });
+  return NextResponse.json({
+    ready,
+    checks,
+    // The abuse guard's counters are per-process, so its ceilings only mean
+    // what they say while this runs as a single instance (railway.json pins
+    // numReplicas: 1). Reporting them makes that posture checkable on the
+    // running app instead of taken on faith from a source comment — and if
+    // someone scales out, the per-instance figures are what you divide.
+    rate_limit: { ...RATE_LIMITS, scope: "per-instance (in-memory)" },
+    ...(detail ? { detail } : {}),
+    ts: new Date().toISOString(),
+  });
 }

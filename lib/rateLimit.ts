@@ -10,17 +10,29 @@
  * trip this. The per-IP ceiling is set well above that, and the global
  * ceiling above the per-IP one, so honest traffic never sees a 429.
  *
- * In-memory is correct for this deploy (single container, nothing stored). On
- * a multi-instance deploy the effective limit multiplies — noted rather than
- * solved, because a shared store is not worth a prototype's complexity.
+ * SINGLE-INSTANCE BY CONTRACT. The counters live in this process's memory, so
+ * N instances would enforce N× the intended ceiling. That is not solved with a
+ * shared store — Redis is not worth a prototype's complexity — it is solved by
+ * declaring the assumption instead of leaving it implicit: `railway.json` pins
+ * `numReplicas: 1`, and `/api/ready` reports the ceilings so the posture is
+ * verifiable on the running app rather than inferred from this comment.
+ *
+ * If this is ever scaled out, divide the ceilings by the replica count via the
+ * env vars below, or move the counters to a shared store. The failure mode of
+ * getting it wrong is spend, not incorrect verdicts.
  */
 
+const num = (name: string, fallback: number) => {
+  const v = Number(process.env[name]);
+  return Number.isFinite(v) && v > 0 ? v : fallback;
+};
+
 const WINDOW_MS = 60_000;
-const PER_IP_LIMIT = 240;
+const PER_IP_LIMIT = num("RATE_LIMIT_PER_IP", 240);
 // A spoofed client IP still has to get past this. Sized so the whole batch
 // path (300 labels, 2-3 calls each, spread over minutes) stays clear, while a
 // scripted drain loop hits a wall in seconds.
-const GLOBAL_LIMIT = 900;
+const GLOBAL_LIMIT = num("RATE_LIMIT_GLOBAL", 900);
 
 const perIp = new Map<string, number[]>();
 let globalHits: number[] = [];

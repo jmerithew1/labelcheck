@@ -1,0 +1,29 @@
+{
+  "measured_at": "2026-08-13T19:59:00Z",
+  "base": "https://labelcheck-production-8f22.up.railway.app",
+  "what": "250 labels driven through the REAL batch UI in a browser — CSV + 250 image files handed to the page's own file input, so the client path runs end to end: prepareImage (downscale + deskew) per image, 250 object URLs, filename pairing, streaming table.",
+  "why": "docs/rubric.md P3 was previously evidenced only by scripts/measure.ts, which posts to /api/check from node and therefore skips everything the browser does per row. An audit correctly noted that no 250-row run through the actual UI was evidenced. This is that run.",
+  "rows": 250,
+  "csv_rows": 250,
+  "files_uploaded": 250,
+  "concurrency": 8,
+  "wall_ms": 146500,
+  "wall_source": "the app's own footer figure (performance.now around the run)",
+  "completed": 250,
+  "errors": 0,
+  "rate_limited": 0,
+  "pairing_issues": 0,
+  "per_row_ms_observed": [3800, 3500, 3700, 7000],
+  "bucket_after_run": {
+    "matched": 0,
+    "needs_review": 250,
+    "not_required": 0,
+    "note": "Every row lands in Needs review because the batch exceeds BOLD_GATE_EAGER_MAX (60), so the bold measurement pass is opt-in and had not been run. 228 rows were offered under 'Check bold type'. This is the documented, deliberate behaviour — a row whose bold was never examined must not show a green tick — but it is also the real cost of that choice, and on the brief's headline 250-label case it means 'review exceptions only' starts as 'review everything'. Recorded here rather than left as a claim in prose."
+  },
+  "row_verdicts_sampled": "each sampled row read '4 matched • 2 not required', i.e. the field comparisons themselves succeeded",
+  "caveats": [
+    "The browser pane running this was not composited for part of the run. Timers throttle in that state, so treat 146.5s as an upper bound on wall-clock rather than a tuned figure; the count-and-error results are unaffected because they are fetch-driven.",
+    "Images are 12 distinct sample labels replicated to 250 rows with distinct filenames, the same replication scripts/measure.ts uses. Upload bytes are therefore representative; label VARIETY is not.",
+    "The rate limiter was not tripped once (0 of 250), which also exercises the shared guard added the same day under real batch load."
+  ]
+}
