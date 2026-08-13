@@ -87,50 +87,69 @@ function DecidePair({
   );
 }
 
-/** One row of the warning panel; stacks cleanly in compact containers. */
+/** One row of the warning panel; stacks cleanly in compact containers.
+ *
+ *  A row that can be located on the label is itself the click target, exactly
+ *  like the comparison rows — one gesture for one job. It used to carry a
+ *  separate "Show on label" button, which meant the same action wore two
+ *  different affordances on one screen and the caption had to explain both.
+ *  The decision controls stay OUTSIDE that target: real buttons must not nest
+ *  inside another button (508). */
 function WarningRow({
   compact,
   label,
   chip,
   text,
-  action,
   anchor,
   extra,
+  onSelect,
 }: {
   compact: boolean;
   label: string;
   chip: React.ReactNode;
   text: string;
-  action?: React.ReactNode;
   anchor?: string;
   /** optional decision controls rendered under the sentence (e.g. the bold
-   *  confirm pills) — kept out of the action column, which fits one button */
+   *  confirm pills) — kept out of the click target */
   extra?: React.ReactNode;
+  /** present = clicking the row shows this row's subject on the label */
+  onSelect?: () => void;
 }) {
+  const targetCls = onSelect ? "cursor-pointer" : "cursor-default";
   if (compact) {
+    const Target = onSelect ? "button" : "div";
     return (
       <div data-row={anchor} className="flex flex-col gap-1.5 border-b border-hairline px-4 py-3 last:border-0">
-        <div className="flex items-center justify-between gap-3">
-          <span className="text-[13px] font-semibold text-ink-soft">{label}</span>
-          <span className="flex items-center gap-2">{chip}{action}</span>
-        </div>
-        <p className="text-[13.5px] leading-snug text-ink">{text}</p>
+        <Target
+          onClick={onSelect}
+          aria-label={onSelect ? `${label} — show on label` : undefined}
+          className={`flex w-full flex-col gap-1.5 text-left ${targetCls}`}
+        >
+          <span className="flex items-center justify-between gap-3">
+            <span className="text-[13px] font-semibold text-ink-soft">{label}</span>
+            {chip}
+          </span>
+          <span className="text-[13.5px] leading-snug text-ink">{text}</span>
+        </Target>
         {extra}
       </div>
     );
   }
+  const Target = onSelect ? "button" : "span";
   return (
     <div data-row={anchor} className="flex items-start gap-4 border-b border-hairline px-4 py-3 last:border-0">
-      <span className="w-24 shrink-0 pt-0.5 text-[13px] font-semibold text-ink-soft">{label}</span>
-      <span className="min-w-0 flex-1 text-[13.5px] text-ink">{text}</span>
+      <Target
+        onClick={onSelect}
+        aria-label={onSelect ? `${label} — show on label` : undefined}
+        className={`flex min-w-0 flex-1 items-start gap-4 text-left ${targetCls}`}
+      >
+        <span className="w-24 shrink-0 pt-0.5 text-[13px] font-semibold text-ink-soft">{label}</span>
+        <span className="min-w-0 flex-1 text-[13.5px] text-ink">{text}</span>
+      </Target>
       {/* Fixed columns so every row's chip lands on the same vertical line,
-          whether or not the row carries an action. The decision control sits
-          in the action column with everything else that wants a click. */}
+          whether or not the row carries a decision control. */}
       <span className="flex w-16 shrink-0 justify-end pt-0.5">{chip}</span>
-      <span className="flex w-[104px] shrink-0 flex-col items-end gap-1.5 pt-0.5">
-        {action ?? null}
-        {extra}
-      </span>
+      <span className="flex w-[104px] shrink-0 flex-col items-end gap-1.5 pt-0.5">{extra}</span>
     </div>
   );
 }
@@ -352,7 +371,7 @@ export function ResultView({
             // unless the measurement gate resolved it.
             sub:
               boldHuman === "confirmed"
-                ? "All required fields match, the warning wording is exact, and you confirmed the bold type."
+                ? "All required fields match, the warning wording is exact, and you accepted the bold type."
                 : boldAuto === "bold"
                 ? "All required fields match, the warning wording is exact, and the prefix strokes measure heavier than the warning body."
                 : "All required fields match and the warning wording is exact. One last step: glance at the label to confirm “GOVERNMENT WARNING” is in bold type — the computer can't be sure of bold.",
@@ -384,9 +403,9 @@ export function ResultView({
     wv === "fail_prefix_case"
       ? { chip: <Chip tone="bad">FAIL</Chip>, text: '"GOVERNMENT WARNING" must appear in capital letters (27 CFR 16.22(a)(2)).' }
       : boldHuman === "confirmed"
-        ? { chip: <Chip tone="ok">PASS</Chip>, text: "Bold type confirmed by you." }
+        ? { chip: <Chip tone="ok">PASS</Chip>, text: "You accepted the bold type." }
         : boldHuman === "flagged"
-        ? { chip: <Chip tone="bad">FAIL</Chip>, text: "You flagged “GOVERNMENT WARNING:” as not bold (bold is required by 27 CFR 16.22(a)(2))." }
+        ? { chip: <Chip tone="bad">FAIL</Chip>, text: "You rejected the bold type — “GOVERNMENT WARNING:” is not bold (required by 27 CFR 16.22(a)(2))." }
         : boldAuto === "bold"
         ? { chip: <Chip tone="ok">PASS</Chip>, text: "The prefix strokes measure heavier than the warning body, and the visual reading agrees. Stroke width is measured from the image, so this is strong evidence rather than proof — anything borderline, or any image too low-resolution to measure, is sent to you instead." }
         : boldAuto === "not_bold"
@@ -405,6 +424,26 @@ export function ResultView({
   const wasConfirmed = result.warning.notes.some((n) => n.startsWith("Confirmed by a second"));
   const singleReadingNote = result.warning.notes.find((n) => n.includes("from a single reading"));
   const showWarningDiff = wv === "fail_wording";
+
+  // The warning panel is a section, not a row, so when it is the selected
+  // thing the WHOLE section carries the tint + ring that a selected comparison
+  // row carries. Before this it was the only click target on the screen that
+  // gave no sign it had been clicked — the connector drew out to the image
+  // while the thing you just acted on sat there looking untouched. The tone
+  // matches the box drawn on the label (see shownFields).
+  const warningFocused = focusedField === "warning";
+  const warningTone: Tone = issueTones.warning ?? "warn";
+  // Full-strength tint tokens, not new /40 opacity variants: the tints are
+  // already near-white (#fdf6e7), and every one of these classes is used
+  // elsewhere, so the panel can't end up untinted because a fresh utility
+  // failed to generate.
+  const warningPanelCls = !warningFocused
+    ? "border-hairline bg-card"
+    : warningTone === "bad"
+      ? "border-bad-line bg-bad-bg shadow-[inset_0_0_0_1.5px_#b3261e]"
+      : warningTone === "warn"
+        ? "border-warn-line bg-warn-bg shadow-[inset_0_0_0_1.5px_#b25e09]"
+        : "border-ok-line bg-ok-bg shadow-[inset_0_0_0_1.5px_#167c3d]";
 
   const rowTone = (v: string): Tone =>
     v === "possible_mismatch" || v === "absent_on_label" ? "bad" : v === "unreadable" ? "warn" : "ok";
@@ -477,22 +516,31 @@ export function ResultView({
               const focusRing = isFocused
                 ? tone === "bad" ? "shadow-[inset_0_0_0_1.5px_#b3261e]" : tone === "warn" ? "shadow-[inset_0_0_0_1.5px_#b25e09]" : "shadow-[inset_0_0_0_1.5px_#167c3d]"
                 : "";
+              // Every locatable row is a click target and nothing else says so
+              // (the magnifier used to say it on flagged rows only, so on a
+              // clean match — every row matched — it appeared nowhere at all
+              // while the caption still told people to click). An inset ring
+              // on hover reads through the tinted backgrounds that a hover
+              // background colour would fight with.
+              const hoverRing = locatable && !isFocused ? "transition hover:shadow-[inset_0_0_0_1.5px_#c3cad3]" : "";
               const chip =
                 decision === "accepted" ? <Chip tone="ok">{Icon.check} Accepted</Chip>
-                  : decision === "confirmed" ? <Chip tone="bad">{Icon.x} Confirmed</Chip>
+                  : decision === "confirmed" ? <Chip tone="bad">{Icon.x} Rejected</Chip>
                   : fieldChip(f.verdict);
               const decidable = red && onFieldReview;
               return (
                 <div
                   key={f.field}
                   data-row={f.field}
-                  className={`flex items-start gap-3 border-b border-hairline px-4 py-3 last:border-0 ${rowBg} ${focusRing}`}
+                  className={`flex items-start gap-3 border-b border-hairline px-4 py-3 last:border-0 ${rowBg} ${focusRing} ${hoverRing}`}
                 >
                 <button
                   disabled={!locatable}
                   onClick={() => setFocusedField(isFocused ? null : (f.field as BandField))}
                   aria-label={`${FIELD_LABELS[f.field]}: ${f.verdict.replace(/_/g, " ")}${locatable ? " — show on label" : ""}`}
-                  className={`flex min-w-0 flex-1 items-center gap-3 text-left ${locatable ? "cursor-pointer" : "cursor-default"}`}
+                  className={`flex min-w-0 flex-1 items-center gap-3 rounded text-left ${
+                    locatable ? "cursor-pointer" : "cursor-default"
+                  }`}
                 >
                   <span className="min-w-0 flex-1">
                     <span className="block text-[12px] font-semibold text-ink-soft">{FIELD_LABELS[f.field]}</span>
@@ -518,17 +566,10 @@ export function ResultView({
                       <span className="block text-[12px] italic text-ink-faint">
                         {decision === "accepted"
                           ? "The computer flagged this — you reviewed it and accepted the label."
-                          : "You confirmed this as a real mismatch."}
+                          : "You rejected this — a real mismatch."}
                       </span>
                     )}
                   </span>
-                  {/* Magnifier only on flaggable rows (conformance #10) —
-                      matched rows stay clickable but don't advertise it. */}
-                  {locatable && tone !== "ok" && (
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="shrink-0 text-ink-faint" aria-hidden>
-                      <circle cx="11" cy="11" r="7" /><path d="M21 21l-5-5" strokeLinecap="round" />
-                    </svg>
-                  )}
                 </button>
                 {/* Status, then decision — a fixed right column so the
                     controls line up across rows and scan vertically. */}
@@ -541,7 +582,7 @@ export function ResultView({
                         onFieldReview(f.field, v === "accept" ? "accepted" : v === "reject" ? "confirmed" : null)
                       }
                       acceptLabel="Accept"
-                      rejectLabel="Issue"
+                      rejectLabel="Reject"
                       ariaPrefix={FIELD_LABELS[f.field]}
                     />
                   </span>
@@ -584,7 +625,7 @@ export function ResultView({
             viewportHeight={compact ? 300 : 340}
           />
           <p className="mt-1.5 text-[12px] text-ink-faint">
-            Click a row (or “Show on label”) to see where it sits on the label. Locations are found automatically and may be approximate.
+            Click any row to see where it sits on the label. Locations are found automatically and may be approximate.
           </p>
         </section>
       </div>
@@ -592,7 +633,7 @@ export function ResultView({
       {/* Government warning panel. In compact containers each row stacks —
           label + chip on top, sentence below — instead of four columns
           fighting over 400px. */}
-      <section className="rounded-xl border border-hairline bg-card">
+      <section className={`rounded-xl border transition-colors ${warningPanelCls}`}>
         <p className="border-b border-hairline px-4 py-2.5 text-[11.5px] font-semibold uppercase tracking-wider text-ink-faint">
           Government warning
         </p>
@@ -603,25 +644,18 @@ export function ResultView({
           anchor="warning-gov"
           chip={formattingRow.chip}
           text={formattingRow.text}
-          action={
-            <button
-              onClick={() => setFocusedField(focusedField === "warning" ? null : "warning")}
-              className="no-print whitespace-nowrap rounded-lg border border-hairline px-2.5 py-1 text-[12px] font-semibold text-ink-soft hover:bg-muted-bg"
-            >
-              Show on label
-            </button>
-          }
+          onSelect={() => setFocusedField(focusedField === "warning" ? null : "warning")}
           extra={
-            // The bold decision sits in the action column, under Show on
-            // label — the same control language as the comparison rows.
+            // The bold decision uses the same control, in the same column,
+            // with the same two words as the comparison rows.
             onBoldReview && wvPasses(wv) && (boldHuman !== null || boldAuto !== "bold") ? (
               <DecidePair
                 value={boldHuman === "confirmed" ? "accept" : boldHuman === "flagged" ? "reject" : null}
                 onChange={(v) =>
                   onBoldReview(v === "accept" ? "confirmed" : v === "reject" ? "flagged" : null)
                 }
-                acceptLabel="Bold"
-                rejectLabel="Not bold"
+                acceptLabel="Accept"
+                rejectLabel="Reject"
                 ariaPrefix="Government warning bold type"
               />
             ) : undefined

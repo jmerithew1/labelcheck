@@ -695,7 +695,7 @@ export function BatchReview() {
       const f = (n: string) => {
         const v = r.result!.fields.find((x) => x.field === n)?.verdict ?? "";
         const d = r.fieldReview?.[n];
-        return d ? `${v} (${d === "accepted" ? "accepted by agent" : "confirmed by agent"})` : v;
+        return d ? `${v} (${d === "accepted" ? "accepted by agent" : "rejected by agent"})` : v;
       };
       // The bold record: a human decision wins; otherwise the machine gate's
       // result; otherwise unconfirmed. Only for labels whose text passed.
