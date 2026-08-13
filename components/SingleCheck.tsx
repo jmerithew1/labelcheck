@@ -110,15 +110,27 @@ export function SingleCheck() {
     setStep("form");
   }
 
-  // Multi-signal bold gate (validated, 0 confident mistakes): when a result
-  // with a passing warning and a located warning band renders, measure the
-  // crop and either resolve the bold glance or leave the advisory in place.
+  // Multi-signal bold gate: when a result with a passing warning and a located
+  // warning band renders, measure the crop and either resolve the bold glance
+  // or leave the advisory in place.
+  //
+  // The effect depends on `outcome` and also WRITES to it (the band
+  // correction below), so it must be idempotent per band or it feeds itself.
+  // It did: a corrected band that still could not be measured re-entered here,
+  // failed the "did the band change?" test, wrote an identical-but-new outcome
+  // object, and looped — two tesseract passes per lap, forever, while the
+  // verdict sat on screen looking finished. Keying on (run, band) makes a
+  // repeat a no-op, which bounds the whole path at one correction attempt.
+  const boldRunKey = useRef<string | null>(null);
   useEffect(() => {
     const wv = outcome?.result.warning.verdict;
     const band = outcome?.bands?.warning;
     if (!outcome || !previewUrl || !band || (wv !== "pass" && wv !== "pass_formatting_note")) return;
     if (file?.type === "application/pdf") return;
     const token = runToken.current;
+    const key = `${token}:${band[0]},${band[1]}`;
+    if (boldRunKey.current === key) return; // already measured this exact band
+    boldRunKey.current = key;
     void (async () => {
       let signals = await measureBoldSignals(previewUrl, band);
       // Same correction the batch path makes: no GOVERNMENT prefix in the

@@ -19,5 +19,5 @@
 
 ## Measured, on the deployed URL
 
-- Single label (with evidence highlighting): **p50 4.3 s** (worst 4.5 s, n=6) — requirement ~5 s
-- 250-label batch: **2 min 15 s**, 250/250 succeeded, zero rate limits, zero errors
+- Single label (with evidence highlighting): **p50 4.06 s**, worst **5.32 s** (n=6, current build) — requirement ~5 s. The median clears it; one run of six did not, and that is stated rather than rounded away.
+- 250-label batch, **through the browser UI**: **2 min 26 s** (146.5 s), 250/250 completed, zero rate limits, zero errors, zero pairing issues. The server path alone measures 2 min 15 s. One honest caveat: past 60 rows the bold pass is opt-in, so all 250 rows land in *Needs review* until the agent clicks **Check bold type** — a row whose bold was never examined must not show a green tick.

@@ -54,6 +54,28 @@ describe("rateLimited", () => {
     expect(rateLimited(spoof(999))).toBe(true);
   });
 
+  it("does not let one abuser spend the whole global budget", () => {
+    // The DoS this ordering exists to prevent: while the global counter was
+    // incremented before the per-IP decision, requests that were ALREADY being
+    // rejected kept the shared window full, so one IP locked everyone out.
+    const abuser = reqWith({ "x-forwarded-for": "203.0.113.99" });
+    for (let i = 0; i < RATE_LIMITS.GLOBAL_LIMIT * 2; i++) rateLimited(abuser);
+    const bystander = reqWith({ "x-forwarded-for": "198.51.100.5" });
+    expect(rateLimited(bystander)).toBe(false);
+  });
+
+  it("caps any single IP's contribution to the global window", () => {
+    // Even sustained abuse may only ever put PER_IP_LIMIT into the shared
+    // bucket, so it takes several distinct sources to exhaust it.
+    const abuser = reqWith({ "x-forwarded-for": "203.0.113.99" });
+    for (let i = 0; i < 5000; i++) rateLimited(abuser);
+    let survived = 0;
+    for (let i = 0; i < RATE_LIMITS.GLOBAL_LIMIT - RATE_LIMITS.PER_IP_LIMIT; i++) {
+      if (!rateLimited(reqWith({ "x-forwarded-for": `198.51.100.${i % 250}` }))) survived++;
+    }
+    expect(survived).toBeGreaterThan(RATE_LIMITS.GLOBAL_LIMIT - RATE_LIMITS.PER_IP_LIMIT - 1);
+  });
+
   it("still stops a distributed drain via the global ceiling", () => {
     // Every request from a genuinely different proxy hop — per-IP never
     // trips, so only the global ceiling stands between this and the bill.

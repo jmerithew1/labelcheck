@@ -490,7 +490,27 @@ export function BatchReview() {
           // {} marks "tried, nothing found" so the card can say so honestly.
           setRows((rs) => rs.map((r) => (r.index === t.index ? { ...r, bands: body?.bands ?? {}, locateError: undefined } : r)));
         } catch {
-          /* retryable on the next effect run */
+          // A thrown fetch/decode is NOT "nothing found" either, and a silent
+          // catch here stranded rows: it changed no state, so the effect — which
+          // re-runs on `rows` — was never re-triggered, leaving `bands`
+          // undefined forever. Both the OCR repair and the gate require a
+          // defined `bands`, so those rows sat at boldAuto undefined, showed a
+          // green tick, exported as bold_check: unconfirmed, and kept the strip
+          // claiming "Measuring bold type…" for the rest of the session. It also
+          // retried with no attempt ceiling. Same accounting as an HTTP failure.
+          if (gen !== batchGen.current) return;
+          const tries = (locateAttempts.current.get(t.index) ?? 0) + 1;
+          locateAttempts.current.set(t.index, tries);
+          if (tries >= MAX_LOCATE_TRIES) {
+            setRows((rs) => rs.map((r) => (r.index === t.index ? { ...r, bands: {}, locateError: undefined } : r)));
+          } else {
+            setRows((rs) => rs.map((r) => (r.index === t.index ? { ...r, locateError: "failed" as const } : r)));
+            locateCooldown.current.add(t.index);
+            window.setTimeout(() => {
+              locateCooldown.current.delete(t.index);
+              if (gen === batchGen.current) setRows((rs) => rs.map((r) => (r.index === t.index ? { ...r } : r)));
+            }, 2000 * tries);
+          }
         } finally {
           boldFetching.current.delete(t.index);
         }
@@ -498,8 +518,16 @@ export function BatchReview() {
     }
     void Promise.all(Array.from({ length: Math.min(4, targets.length) }, worker));
     return () => { alive = false; };
+    // boldPassStarted MUST be a dependency: the guard above reads it, and
+    // "Check bold type" sets only it and stripDismissed — neither touches
+    // `rows`. Without it this effect never re-ran, so clicking the button on a
+    // batch over BOLD_GATE_EAGER_MAX fired no /api/locate call at all, while
+    // gateRuns flipped true and re-filed every unmeasured row as Matched with
+    // a green tick. That is precisely the "Matched means checked on small
+    // batches and not-checked on the large ones" failure bucketOf's comment
+    // was written to prevent, on the batch size the brief calls first-class.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [running, rows]);
+  }, [running, rows, boldPassStarted]);
 
   const setBoldReview = (index: number, v: "confirmed" | "flagged" | undefined) =>
     setRows((rs) => rs.map((r) => (r.index === index ? { ...r, boldReview: v } : r)));

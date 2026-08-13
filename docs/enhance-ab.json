@@ -7657,6 +7657,12 @@
   "reanalysis": {
     "note": "Recomputed from the SAME committed rows by scripts/reanalyze-enhance-ab.mjs. The top-level verdict/violation fields above come from an older harness that counted every missed violation together, including bold-only labels the gate deliberately routes to a human; DO_NOT_SHIP is that aggregate speaking, and it is retained unedited rather than overwritten. The split below is what the ship decision actually rested on.",
     "definition": "missed = the run ended on an overall verdict of clean, i.e. nothing was surfaced to the agent",
+    "reconciliation": "This definition is STRICTER than the aggregate's, so the two do NOT sum to the same total, and an audit was right to flag that they had been presented as if they did: 2 -> 5 here versus the 3 -> 6 in the `violation` block above. The rows cannot reconcile them exactly, because the old harness's missedViolation flag was only ever written to the `after` side of each row -- there is no per-row before-flag in this file to split, which is why only the after side is broken out below. What both definitions agree on, and what the ship decision rested on, is the direction: the text-defect leak went to zero, and every leak that appeared is a bold-only label the gate routes to a human.",
+    "by_old_harness_flag_after_only": {
+      "text_defect": 0,
+      "bold_only": 6,
+      "note": "sums to the aggregate's missed_after (6); no before-side flag exists in these rows"
+    },
     "text_defect_violations_missed": {
       "before": 1,
       "after": 0

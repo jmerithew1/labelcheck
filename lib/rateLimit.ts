@@ -54,21 +54,36 @@ export function clientIp(req: Request): string {
   return req.headers.get("x-real-ip")?.trim() || "local";
 }
 
-/** True when this request should be rejected with a 429. */
+/**
+ * True when this request should be rejected with a 429.
+ *
+ * ORDER MATTERS, and getting it wrong turned this guard into the attack.
+ * The first version spent global budget on every request including the ones
+ * it was already rejecting, so a single IP past its own ceiling kept the
+ * shared window topped up and locked every other user out indefinitely — a
+ * denial of service costing the attacker nothing, introduced by the fix for a
+ * cost-amplification bypass. Per-IP is decided FIRST and returns early, so
+ * rejected traffic buys nothing: one IP can contribute at most PER_IP_LIMIT
+ * to the shared window, and locking everyone out needs
+ * ceil(GLOBAL/PER_IP) genuinely distinct sources rather than one.
+ */
 export function rateLimited(req: Request): boolean {
   const now = Date.now();
-
-  globalHits = globalHits.filter((t) => now - t < WINDOW_MS);
-  globalHits.push(now);
-  const overGlobal = globalHits.length > GLOBAL_LIMIT;
 
   const ip = clientIp(req);
   const hits = (perIp.get(ip) ?? []).filter((t) => now - t < WINDOW_MS);
   hits.push(now);
   perIp.set(ip, hits);
-  if (perIp.size > 10_000) perIp.clear(); // unbounded-growth guard
+  // Prune expired buckets rather than wiping every counter — the old
+  // all-or-nothing clear() handed an amnesty to whoever triggered it.
+  if (perIp.size > 10_000) {
+    for (const [k, v] of perIp) if (!v.some((t) => now - t < WINDOW_MS)) perIp.delete(k);
+  }
+  if (hits.length > PER_IP_LIMIT) return true; // rejected: costs no global budget
 
-  return overGlobal || hits.length > PER_IP_LIMIT;
+  globalHits = globalHits.filter((t) => now - t < WINDOW_MS);
+  globalHits.push(now);
+  return globalHits.length > GLOBAL_LIMIT;
 }
 
 /** The 429 every guarded route returns, so the copy stays identical. */

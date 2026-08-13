@@ -29,6 +29,10 @@ const missed = (side) => side.overall === "clean";
 const count = (pred, side) =>
   violations.filter((r) => pred(r.label) && missed(r[side])).length;
 
+// The old harness's own flag, so the split can be reported against the SAME
+// definition as the aggregate it claims to decompose.
+const flagged = (side) => side.missedViolation === true;
+
 j.reanalysis = {
   note:
     "Recomputed from the SAME committed rows by scripts/reanalyze-enhance-ab.mjs. " +
@@ -38,6 +42,20 @@ j.reanalysis = {
     "than overwritten. The split below is what the ship decision actually rested on.",
   definition:
     "missed = the run ended on an overall verdict of clean, i.e. nothing was surfaced to the agent",
+  reconciliation:
+    "This definition is STRICTER than the aggregate's, so the two do NOT sum to the same total, " +
+    "and an audit was right to flag that they had been presented as if they did: 2 -> 5 here " +
+    "versus the 3 -> 6 in the `violation` block above. The rows cannot reconcile them exactly, " +
+    "because the old harness's missedViolation flag was only ever written to the `after` side " +
+    "of each row -- there is no per-row before-flag in this file to split, which is why only " +
+    "the after side is broken out below. What both definitions agree on, and what the ship " +
+    "decision rested on, is the direction: the text-defect leak went to zero, and every leak " +
+    "that appeared is a bold-only label the gate routes to a human.",
+  by_old_harness_flag_after_only: {
+    text_defect: violations.filter((r) => !isBoldOnly(r.label) && flagged(r.after)).length,
+    bold_only: violations.filter((r) => isBoldOnly(r.label) && flagged(r.after)).length,
+    note: "sums to the aggregate's missed_after (6); no before-side flag exists in these rows",
+  },
   text_defect_violations_missed: {
     before: count((l) => !isBoldOnly(l), "before"),
     after: count((l) => !isBoldOnly(l), "after"),
