@@ -8,7 +8,7 @@ import { parseCsv, toCsv } from "@/lib/csv.ts";
 import { prepareImage } from "@/lib/downscale.ts";
 import { applyBoldGate, type BoldGateResult } from "@/lib/compare/boldGate.ts";
 import { measureBoldSignals } from "@/lib/boldMeasure.ts";
-import { ResultView } from "./ResultView.tsx";
+import { ResultView, type FieldDecision } from "./ResultView.tsx";
 import { CheckingCard } from "./CheckingCard.tsx";
 import { Shell } from "./Shell.tsx";
 
@@ -65,7 +65,30 @@ interface BatchRow {
    *  Matched (shown as "Reviewed ✓"), "correction" keeps it in review as a
    *  confirmed problem. Outranks every machine state. */
   agentReview?: "ok" | "correction";
+  /** Per-field rulings on flagged comparison rows (rendered by ResultView).
+   *  When every flagged field is accepted, the row resolves on its own —
+   *  the explicit agentReview above still outranks. */
+  fieldReview?: Partial<Record<string, FieldDecision>>;
+  /** imageUrl already points at the PREPARED (deskewed/downscaled) image —
+   *  the geometry the located bands and bold measurement live in. */
+  prepared?: boolean;
 }
+
+/** Flagged comparison fields — the ones a per-field ruling can resolve. */
+const redFields = (r: BatchRow) =>
+  r.result ? r.result.fields.filter((f) => f.verdict === "possible_mismatch" || f.verdict === "absent_on_label") : [];
+
+/** A needs-review row whose every flagged field the agent has accepted (and
+ *  nothing else is outstanding) is resolved — it earns the same treatment as
+ *  a clean row without a second "Reviewed — OK" click. Warning failures are
+ *  never resolvable this way: those are regulatory hard fails. */
+const resolvedByFieldReview = (r: BatchRow): boolean => {
+  if (!r.result || r.result.overall !== "needs_review") return false;
+  if (r.result.warning.verdict.startsWith("fail") || r.result.warning.verdict === "unreadable") return false;
+  if (r.result.fields.some((f) => f.verdict === "unreadable")) return false;
+  const reds = redFields(r);
+  return reds.length > 0 && reds.every((f) => r.fieldReview?.[f.field] === "accepted");
+};
 
 /** Rows where the warning text passed — bold is the one element left for a
  *  human glance (the AI advisory never decides). */
@@ -108,9 +131,10 @@ function bucketOf(r: BatchRow, gateStarted: boolean): Bucket {
   // Matched filter mean "checked" on small batches and "not checked" on the
   // large ones the brief actually targets. When the pass has not started, the
   // glance is genuinely owed, so the row is review work.
+  const cleanEnough = r.result.overall === "clean" || resolvedByFieldReview(r);
   if (boldEligible(r) && r.boldAuto === undefined && !r.boldReview) {
     if (!gateStarted) return "review";
-    return r.result.overall === "clean" ? "matched" : "review";
+    return cleanEnough ? "matched" : "review";
   }
   // An agent's flag outranks the clean verdict — a human said "not bold."
   if (r.boldReview === "flagged") return "review";
@@ -120,7 +144,7 @@ function bucketOf(r: BatchRow, gateStarted: boolean): Bucket {
   // passing label owed one, which would have made this filter useless; the
   // gate resolves most of them, so the few left belong here honestly.)
   if (boldPendingRow(r)) return "review";
-  if (r.result.overall === "clean") {
+  if (cleanEnough) {
     const anyChecked = r.result.fields.some((f) => f.verdict !== "not_provided");
     return anyChecked ? "matched" : "not_required";
   }
@@ -133,10 +157,13 @@ const fmtTime = (d: Date) =>
 function rowSummary(r: BatchRow): React.ReactNode {
   if (r.status === "error") return <span className="font-semibold text-red">{r.error ?? "Error"}</span>;
   if (!r.result) return <span className="text-muted-2">{r.status === "checking" ? "Checking…" : "Waiting"}</span>;
-  let matched = 0, mismatch = 0, review = 0, notRequired = 0;
+  let matched = 0, mismatch = 0, review = 0, notRequired = 0, accepted = 0;
   for (const f of r.result.fields) {
     if (f.verdict === "match" || f.verdict === "match_formatting") matched++;
-    else if (f.verdict === "possible_mismatch" || f.verdict === "absent_on_label") mismatch++;
+    else if (f.verdict === "possible_mismatch" || f.verdict === "absent_on_label") {
+      if (r.fieldReview?.[f.field] === "accepted") accepted++;
+      else mismatch++;
+    }
     else if (f.verdict === "unreadable") review++;
     else notRequired++;
   }
@@ -157,6 +184,7 @@ function rowSummary(r: BatchRow): React.ReactNode {
   return (
     <>
       <span>{matched} matched</span>
+      {accepted > 0 && (<>{sep}<span className="font-semibold text-green">{accepted} accepted by you</span></>)}
       {mismatch > 0 && (<>{sep}<span className="font-semibold text-red">{mismatch} mismatch{mismatch === 1 ? "" : "es"}</span></>)}
       {review > 0 && (<>{sep}<span className="font-semibold text-amber">{review} review</span></>)}
       {boldState === "confirm" && (<>{sep}<span className="text-amber">bold: confirm</span></>)}
@@ -228,6 +256,7 @@ export function BatchReview() {
     batchGen.current++;
     boldFetching.current.clear();
     gateRunning.current.clear();
+    preparedIdx.current.clear();
     setBoldPassStarted(false);
     setStripDismissed(false);
     setBoldUndo(null);
@@ -332,6 +361,7 @@ export function BatchReview() {
         update(row.index, { status: "checking", error: undefined });
         try {
           const small = row.file!.type === "application/pdf" ? row.file! : await prepareImage(row.file!);
+          swapPreparedUrl(row.index, small, row.file);
           const form = new FormData();
           form.set("image", small);
           form.set("skip_locate", "1");
@@ -379,6 +409,8 @@ export function BatchReview() {
         boldFetching.current.add(t.index);
         try {
           const small = await prepareImage(t.file!);
+          if (gen !== batchGen.current) return;
+          swapPreparedUrl(t.index, small, t.file);
           const form = new FormData();
           form.set("image", small);
           const res = await fetch("/api/locate", { method: "POST", body: form });
@@ -400,6 +432,39 @@ export function BatchReview() {
 
   const setBoldReview = (index: number, v: "confirmed" | "flagged" | undefined) =>
     setRows((rs) => rs.map((r) => (r.index === index ? { ...r, boldReview: v } : r)));
+
+  // Swap a row's preview to the PREPARED (deskewed/downscaled) image — the
+  // geometry every located band and bold measurement lives in. Overlays drawn
+  // on the original tilted upload landed in the wrong place (user-reported).
+  // Guarded by a ref so the several call sites (check, locate, detail) swap
+  // at most once per row; the old blob URL is revoked after the re-render.
+  const preparedIdx = useRef<Set<number>>(new Set());
+  const swapPreparedUrl = (index: number, small: File, original?: File) => {
+    if (small === original || preparedIdx.current.has(index)) return;
+    preparedIdx.current.add(index);
+    const url = URL.createObjectURL(small);
+    setRows((rs) =>
+      rs.map((r) => {
+        if (r.index !== index) return r;
+        const old = r.imageUrl;
+        if (old) window.setTimeout(() => URL.revokeObjectURL(old), 3000);
+        return { ...r, imageUrl: url, prepared: true };
+      }),
+    );
+  };
+
+  // Per-field ruling from the detail panel's comparison rows. Toggling off
+  // removes the key so "no decision" and "decided" never blur together.
+  const setFieldDecision = (index: number, field: string, d: FieldDecision | null) =>
+    setRows((rs) =>
+      rs.map((r) => {
+        if (r.index !== index) return r;
+        const next = { ...r.fieldReview };
+        if (d) next[field] = d;
+        else delete next[field];
+        return { ...r, fieldReview: next };
+      }),
+    );
 
   // Decided cards leave the attention-only strip immediately, so a misclick
   // needs a way back: every decision offers a transient Undo that restores
@@ -461,6 +526,7 @@ export function BatchReview() {
     <ReviewBar gateRuns={gateRuns} row={r}
       onReview={(v) => setRows((rs) => rs.map((x) => (x.index === r.index ? { ...x, agentReview: v } : x)))}
       onMarkBold={markBold}
+      onClearFields={() => setRows((rs) => rs.map((x) => (x.index === r.index ? { ...x, fieldReview: undefined } : x)))}
     />
   );
 
@@ -472,6 +538,8 @@ export function BatchReview() {
     (async () => {
       try {
         const small = await prepareImage(row.file!);
+        if (!alive) return;
+        swapPreparedUrl(row.index, small, row.file);
         const form = new FormData();
         form.set("image", small);
         const res = await fetch("/api/locate", { method: "POST", body: form });
@@ -490,7 +558,13 @@ export function BatchReview() {
     const safe = (s: string) => (/^[=+\-@]/.test(s) ? `'${s}` : s);
     const lines = [...rows].sort((a, b) => a.index - b.index).map((r) => {
       if (!r.result) return [safe(r.filename), r.status, "", "", "", "", "", "", "", r.error ? safe(`ERROR: ${r.error}`) : ""];
-      const f = (n: string) => r.result!.fields.find((x) => x.field === n)?.verdict ?? "";
+      // Per-field cells carry the agent's ruling alongside the machine
+      // verdict — the export is the audit record, so both survive.
+      const f = (n: string) => {
+        const v = r.result!.fields.find((x) => x.field === n)?.verdict ?? "";
+        const d = r.fieldReview?.[n];
+        return d ? `${v} (${d === "accepted" ? "accepted by agent" : "confirmed by agent"})` : v;
+      };
       // The bold record: a human decision wins; otherwise the machine gate's
       // result; otherwise unconfirmed. Only for labels whose text passed.
       const bold = boldEligible(r)
@@ -518,7 +592,9 @@ export function BatchReview() {
     const c: Record<Bucket, number> = { matched: 0, review: 0, not_required: 0, error: 0, pending: 0 };
     for (const r of rows) c[bucketOf(r, gateRuns)]++;
     return c;
-  }, [rows]);
+    // gateRuns changes rebucket every unmeasured row — omitting it left the
+    // chips contradicting the table right after "Check bold type" (audit).
+  }, [rows, gateRuns]);
   const done = rows.length - counts.pending;
   const boldRows = useMemo(() => rows.filter(boldEligible), [rows]);
   // Machine-verified rows are resolved; machine-flagged and inconclusive
@@ -543,7 +619,7 @@ export function BatchReview() {
       return [...filtered].sort((a, b) => rank[bucketOf(a, gateRuns)] - rank[bucketOf(b, gateRuns)] || a.index - b.index);
     }
     return filtered;
-  }, [rows, filter, search, running]);
+  }, [rows, filter, search, running, gateRuns]);
   const pages = Math.max(1, Math.ceil(visible.length / PAGE_SIZE));
   const pageRows = visible.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
   const detail = rows.find((r) => r.index === openRow);
@@ -621,7 +697,7 @@ export function BatchReview() {
   const statusDot = (r: BatchRow, size = 22) => {
     const b = bucketOf(r, gateRuns);
     const isFail = r.result?.overall === "warning_failure" || r.result?.overall === "not_a_label" ||
-      r.result?.fields.some((f) => f.verdict === "possible_mismatch");
+      r.result?.fields.some((f) => f.verdict === "possible_mismatch" && r.fieldReview?.[f.field] !== "accepted");
     // A green tick must mean FINISHED. While a bold glance is still owed,
     // the row reads amber "!" even though it sits in the Matched bucket.
     const boldOwed = boldPendingRow(r);
@@ -655,7 +731,7 @@ export function BatchReview() {
   const statusPill = (r: BatchRow) => {
     const b = bucketOf(r, gateRuns);
     const isFail = r.result?.overall === "warning_failure" || r.result?.overall === "not_a_label" ||
-      r.result?.fields.some((f) => f.verdict === "possible_mismatch");
+      r.result?.fields.some((f) => f.verdict === "possible_mismatch" && r.fieldReview?.[f.field] !== "accepted");
     const boldOwed = boldPendingRow(r);
     const label =
       r.agentReview === "ok" ? "Reviewed ✓" : r.agentReview === "correction" ? "Correction needed"
@@ -1076,6 +1152,8 @@ export function BatchReview() {
                       bands={detail.bands ?? {}}
                       ms={detail.ms}
                       boldAuto={detail.boldAuto ?? null} boldHuman={detail.boldReview ?? null}
+                      fieldReview={detail.fieldReview}
+                      onFieldReview={(field, d) => setFieldDecision(detail.index, field, d)}
                       isPdf={detail.filename.toLowerCase().endsWith(".pdf")}
                       compact
                     />
@@ -1128,7 +1206,7 @@ export function BatchReview() {
             {tab === "overview" ? (
               <>
               {reviewBar(detail)}
-              <ResultView result={detail.result} extraction={detail.extraction} imageUrl={detail.imageUrl} bands={detail.bands ?? {}} ms={detail.ms} boldAuto={detail.boldAuto ?? null} boldHuman={detail.boldReview ?? null} isPdf={detail.filename.toLowerCase().endsWith(".pdf")} compact />
+              <ResultView result={detail.result} extraction={detail.extraction} imageUrl={detail.imageUrl} bands={detail.bands ?? {}} ms={detail.ms} boldAuto={detail.boldAuto ?? null} boldHuman={detail.boldReview ?? null} fieldReview={detail.fieldReview} onFieldReview={(field, d) => setFieldDecision(detail.index, field, d)} isPdf={detail.filename.toLowerCase().endsWith(".pdf")} compact />
               </>
             ) : (
               <AuditTrail row={detail} />
@@ -1166,17 +1244,21 @@ function ReviewBar({
   gateRuns,
   onReview,
   onMarkBold,
+  onClearFields,
 }: {
   row: BatchRow;
   /** has the bold measurement pass begun for this batch? */
   gateRuns: boolean;
   onReview: (v: "ok" | "correction" | undefined) => void;
   onMarkBold: (index: number, v: "confirmed" | "flagged" | undefined) => void;
+  /** clears the per-field rulings made on the comparison rows below */
+  onClearFields: () => void;
 }) {
   const [open, setOpen] = useState(false);
   const bucket = bucketOf(r, gateRuns);
   const boldOwed = boldPendingRow(r);
-  const decided = !!r.agentReview || !!r.boldReview;
+  const fieldsDecided = Object.keys(r.fieldReview ?? {}).length > 0;
+  const decided = !!r.agentReview || !!r.boldReview || fieldsDecided;
   const show = open || decided || bucket === "review" || bucket === "error" || boldOwed;
 
   // Bold controls appear only when the glance is actually owed or a human
@@ -1210,7 +1292,7 @@ function ReviewBar({
         <p className="flex-1 text-[11.5px] font-semibold uppercase tracking-wider text-ink-faint">Your review</p>
         {decided && (
           <button
-            onClick={() => { onReview(undefined); onMarkBold(r.index, undefined); }}
+            onClick={() => { onReview(undefined); onMarkBold(r.index, undefined); onClearFields(); }}
             className="text-[11.5px] font-semibold text-muted hover:text-ink hover:underline"
           >
             Clear

@@ -17,6 +17,22 @@ const LOCATABLE = new Set(["brand_name", "class_type", "alcohol_content", "net_c
 
 const wvPasses = (v: string) => v === "pass" || v === "pass_formatting_note";
 
+/** The agent's ruling on one flagged field: "accepted" = looked at it and the
+ *  label is fine (re-files the row as matched); "confirmed" = a real problem.
+ *  The machine's verdict is never erased — the decision sits on top of it,
+ *  the same way the bold confirm sits on top of the measurement gate. */
+export type FieldDecision = "accepted" | "confirmed";
+
+const isRedVerdict = (v: string) => v === "possible_mismatch" || v === "absent_on_label";
+
+/** Shared pill styles for inline decisions — same control language as the
+ *  batch review bar, sized for a table row. */
+const PILL_BASE =
+  "flex h-7 items-center justify-center rounded-[6px] border px-2.5 text-[12px] font-semibold transition";
+const PILL_IDLE = "border-line-input bg-card text-ink-2 hover:bg-line-soft";
+const PILL_GREEN = "border-green bg-green-tint text-green";
+const PILL_RED = "border-red bg-red-tint text-red";
+
 /** One row of the warning panel; stacks cleanly in compact containers. */
 function WarningRow({
   compact,
@@ -25,6 +41,7 @@ function WarningRow({
   text,
   action,
   anchor,
+  extra,
 }: {
   compact: boolean;
   label: string;
@@ -32,6 +49,9 @@ function WarningRow({
   text: string;
   action?: React.ReactNode;
   anchor?: string;
+  /** optional decision controls rendered under the sentence (e.g. the bold
+   *  confirm pills) — kept out of the action column, which fits one button */
+  extra?: React.ReactNode;
 }) {
   if (compact) {
     return (
@@ -41,13 +61,17 @@ function WarningRow({
           <span className="flex items-center gap-2">{chip}{action}</span>
         </div>
         <p className="text-[13.5px] leading-snug text-ink">{text}</p>
+        {extra}
       </div>
     );
   }
   return (
     <div data-row={anchor} className="flex items-start gap-4 border-b border-hairline px-4 py-3 last:border-0">
       <span className="w-24 shrink-0 pt-0.5 text-[13px] font-semibold text-ink-soft">{label}</span>
-      <span className="min-w-0 flex-1 text-[13.5px] text-ink">{text}</span>
+      <span className="min-w-0 flex-1 text-[13.5px] text-ink">
+        {text}
+        {extra}
+      </span>
       {/* Fixed columns so every row's chip lands on the same vertical line,
           whether or not the row carries an action button. */}
       <span className="flex w-16 shrink-0 justify-end pt-0.5">{chip}</span>
@@ -71,6 +95,9 @@ export function ResultView({
   boldHuman = null,
   isPdf = false,
   appNumber,
+  fieldReview,
+  onFieldReview,
+  onBoldReview,
 }: {
   result: CheckResult;
   extraction: LabelExtraction;
@@ -94,36 +121,48 @@ export function ResultView({
   isPdf?: boolean;
   /** optional TTB application number — shown on the printed report */
   appNumber?: string;
+  /** the agent's per-field rulings — layered over the machine verdicts */
+  fieldReview?: Partial<Record<string, FieldDecision>>;
+  /** present = flagged rows grow Accept / Confirm pills (null clears) */
+  onFieldReview?: (field: string, d: FieldDecision | null) => void;
+  /** present = the bold glance can be decided right here (null clears) */
+  onBoldReview?: (d: "confirmed" | "flagged" | null) => void;
 }) {
   const gridRef = useRef<HTMLDivElement>(null);
   const overlayRef = useRef<HTMLElement | null>(null);
   const [connector, setConnector] = useState<{ path: string; x1: number; y1: number; x2: number; y2: number } | null>(null);
 
   const counts = useMemo(() => {
-    let matched = 0, mismatch = 0, review = 0, notRequired = 0;
+    let matched = 0, mismatch = 0, review = 0, notRequired = 0, accepted = 0;
     for (const f of result.fields) {
       if (f.verdict === "match" || f.verdict === "match_formatting") matched++;
-      else if (f.verdict === "possible_mismatch" || f.verdict === "absent_on_label") mismatch++;
+      else if (isRedVerdict(f.verdict)) {
+        // An accepted row is resolved: it counts as matched (and is named in
+        // its own chip so the ruling stays visible in the headline).
+        if (fieldReview?.[f.field] === "accepted") { matched++; accepted++; }
+        else mismatch++;
+      }
       else if (f.verdict === "unreadable") review++;
       else notRequired++;
     }
     const warningFails = result.warning.verdict.startsWith("fail");
     const warningReview = result.warning.verdict === "unreadable";
-    return { matched, mismatch, review, notRequired, warningFails, warningReview };
-  }, [result]);
+    return { matched, mismatch, review, notRequired, accepted, warningFails, warningReview };
+  }, [result, fieldReview]);
 
   // Issue fields keep their highlight on the label at all times (mockups 3-5).
   const issueTones = useMemo(() => {
     const tones: Partial<Record<BandField, Tone>> = {};
     for (const f of result.fields) {
       if (!LOCATABLE.has(f.field)) continue;
-      if (f.verdict === "possible_mismatch") tones[f.field as BandField] = "bad";
+      if (f.verdict === "possible_mismatch")
+        tones[f.field as BandField] = fieldReview?.[f.field] === "accepted" ? "ok" : "bad";
       else if (f.verdict === "unreadable") tones[f.field as BandField] = "warn";
     }
     if (counts.warningFails && result.warning.verdict !== "fail_missing") tones.warning = "bad";
     else if (counts.warningReview) tones.warning = "warn";
     return tones;
-  }, [result, counts]);
+  }, [result, counts, fieldReview]);
 
   const [focusedField, setFocusedField] = useState<BandField | null>(null);
   // v2 interaction spec: highlights appear ONLY on selection (row click or
@@ -272,6 +311,7 @@ export function ResultView({
   // red, review/confirm amber, not-required grey.
   const countBits = [
     { text: `${counts.matched} matched`, cls: "text-green" },
+    counts.accepted > 0 ? { text: `${counts.accepted} accepted by you`, cls: "text-green font-semibold" } : null,
     issueCount > 0 ? { text: `${issueCount} mismatch${issueCount === 1 ? "" : "es"}`, cls: "text-red font-semibold" } : null,
     confirmCount > 0 ? { text: `${confirmCount} review`, cls: "text-amber font-semibold" } : null,
     boldConfirmPending ? { text: "1 to confirm (bold)", cls: "text-amber" } : null,
@@ -371,20 +411,29 @@ export function ResultView({
             {result.fields.map((f) => {
               const locatable = LOCATABLE.has(f.field) && f.verdict !== "not_provided" && f.verdict !== "absent_on_label";
               const isFocused = focusedField === f.field;
-              const tone = rowTone(f.verdict);
+              const red = isRedVerdict(f.verdict);
+              const decision = red ? fieldReview?.[f.field] ?? null : null;
+              // An accepted row reads resolved (green) — the machine's flag
+              // stays visible in the note line, never in the row's tone.
+              const tone = decision === "accepted" ? "ok" : rowTone(f.verdict);
+              const valueCls = decision === "accepted" ? "text-ink" : "text-red";
               const rowBg =
-                tone === "bad" ? "bg-bad-bg/70" : tone === "warn" ? "bg-warn-bg/70" : isFocused ? "bg-ok-bg/70" : "";
+                tone === "bad" ? "bg-bad-bg/70" : tone === "warn" ? "bg-warn-bg/70" : isFocused ? "bg-ok-bg/70" : decision === "accepted" ? "bg-ok-bg/40" : "";
               const focusRing = isFocused
                 ? tone === "bad" ? "shadow-[inset_0_0_0_1.5px_#b3261e]" : tone === "warn" ? "shadow-[inset_0_0_0_1.5px_#b25e09]" : "shadow-[inset_0_0_0_1.5px_#167c3d]"
                 : "";
+              const chip =
+                decision === "accepted" ? <Chip tone="ok">{Icon.check} Accepted</Chip>
+                  : decision === "confirmed" ? <Chip tone="bad">{Icon.x} Confirmed</Chip>
+                  : fieldChip(f.verdict);
               return (
+                <div key={f.field} className="border-b border-hairline last:border-0">
                 <button
-                  key={f.field}
                   data-row={f.field}
                   disabled={!locatable}
                   onClick={() => setFocusedField(isFocused ? null : (f.field as BandField))}
                   aria-label={`${FIELD_LABELS[f.field]}: ${f.verdict.replace(/_/g, " ")}${locatable ? " — show on label" : ""}`}
-                  className={`flex w-full items-center gap-3 border-b border-hairline px-4 py-3 text-left last:border-0 ${rowBg} ${focusRing} ${locatable ? "cursor-pointer hover:bg-muted-bg/70" : "cursor-default"}`}
+                  className={`flex w-full items-center gap-3 px-4 py-3 text-left ${rowBg} ${focusRing} ${locatable ? "cursor-pointer hover:bg-muted-bg/70" : "cursor-default"}`}
                 >
                   <span className="min-w-0 flex-1">
                     <span className="block text-[12px] font-semibold text-ink-soft">{FIELD_LABELS[f.field]}</span>
@@ -392,8 +441,8 @@ export function ResultView({
                       // v2: mismatch value STACKS "On label:" underneath —
                       // never a second column (overlaps at narrow widths).
                       <span className="block text-[12.5px]">
-                        <span className="block text-red">{f.applicationValue}</span>
-                        <span className="block font-semibold text-red">On label: {f.labelValue || "—"}</span>
+                        <span className={`block ${valueCls}`}>{f.applicationValue}</span>
+                        <span className={`block font-semibold ${valueCls}`}>On label: {f.labelValue || "—"}</span>
                       </span>
                     ) : (
                       <span className="block truncate text-[14px] text-ink">
@@ -403,8 +452,18 @@ export function ResultView({
                     {f.note && f.verdict !== "not_provided" && (
                       <span className="block text-[12px] text-ink-faint">{f.note}</span>
                     )}
+                    {/* The ruling never hides the machine's finding — the
+                        record of who decided what stays on the row (and on
+                        the printed report). */}
+                    {decision && (
+                      <span className="block text-[12px] italic text-ink-faint">
+                        {decision === "accepted"
+                          ? "The computer flagged this — you reviewed it and accepted the label."
+                          : "You confirmed this as a real mismatch."}
+                      </span>
+                    )}
                   </span>
-                  {fieldChip(f.verdict)}
+                  {chip}
                   {/* Magnifier only on flaggable rows (conformance #10) —
                       matched rows stay clickable but don't advertise it. */}
                   {locatable && tone !== "ok" && (
@@ -413,6 +472,27 @@ export function ResultView({
                     </svg>
                   )}
                 </button>
+                {/* Decision pills — only on flagged rows, only when the host
+                    surface records decisions. Toggles: clicking the active
+                    pill clears it (its own undo). */}
+                {red && onFieldReview && (
+                  <div className={`no-print flex flex-wrap items-center gap-2 px-4 pb-3 ${rowBg}`}>
+                    <span className="text-[11.5px] font-semibold uppercase tracking-wider text-ink-faint">Your call</span>
+                    <button
+                      onClick={() => onFieldReview(f.field, decision === "accepted" ? null : "accepted")}
+                      className={`${PILL_BASE} ${decision === "accepted" ? PILL_GREEN : PILL_IDLE}`}
+                    >
+                      {decision === "accepted" ? "Accepted ✓" : "Looks right — accept"}
+                    </button>
+                    <button
+                      onClick={() => onFieldReview(f.field, decision === "confirmed" ? null : "confirmed")}
+                      className={`${PILL_BASE} ${decision === "confirmed" ? PILL_RED : PILL_IDLE}`}
+                    >
+                      {decision === "confirmed" ? "Confirmed — real issue" : "Confirm mismatch"}
+                    </button>
+                  </div>
+                )}
+                </div>
               );
             })}
             {(counts.warningFails || counts.warningReview) && (
@@ -476,6 +556,26 @@ export function ResultView({
             >
               Show on label
             </button>
+          }
+          extra={
+            // The bold decision, decidable right where it's asked for — the
+            // same pill pair as the batch strip. Toggles clear themselves.
+            onBoldReview && wvPasses(wv) && (boldHuman !== null || boldAuto !== "bold") ? (
+              <span className="no-print mt-2 flex flex-wrap items-center gap-2">
+                <button
+                  onClick={() => onBoldReview(boldHuman === "confirmed" ? null : "confirmed")}
+                  className={`${PILL_BASE} ${boldHuman === "confirmed" ? PILL_GREEN : PILL_IDLE}`}
+                >
+                  {boldHuman === "confirmed" ? "Confirmed ✓" : "Looks bold"}
+                </button>
+                <button
+                  onClick={() => onBoldReview(boldHuman === "flagged" ? null : "flagged")}
+                  className={`${PILL_BASE} ${boldHuman === "flagged" ? PILL_RED : PILL_IDLE}`}
+                >
+                  {boldHuman === "flagged" ? "Flagged — not bold" : "Not bold"}
+                </button>
+              </span>
+            ) : undefined
           }
         />
         {bodyBoldNote && (

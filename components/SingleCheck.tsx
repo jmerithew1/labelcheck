@@ -11,7 +11,7 @@ import { measureBoldSignals } from "@/lib/boldMeasure.ts";
 import { Shell } from "./Shell.tsx";
 import { Stepper, type StepPhase, type Outcome } from "./Stepper.tsx";
 import { CheckingCard } from "./CheckingCard.tsx";
-import { ResultView } from "./ResultView.tsx";
+import { ResultView, type FieldDecision } from "./ResultView.tsx";
 
 interface AppFields {
   brand_name: string;
@@ -36,10 +36,14 @@ interface OutcomeData {
   confirmMs?: number;
 }
 
-function outcomeSummary(o: OutcomeData | null): Outcome {
+function outcomeSummary(o: OutcomeData | null, fieldReview: Partial<Record<string, FieldDecision>>): Outcome {
   if (!o) return null;
   const r = o.result;
-  const fieldMismatches = r.fields.filter((f) => f.verdict === "possible_mismatch" || f.verdict === "absent_on_label").length;
+  // Accepted rows are resolved — the stepper mirrors the banner, not the
+  // machine's original tally.
+  const fieldMismatches = r.fields.filter(
+    (f) => (f.verdict === "possible_mismatch" || f.verdict === "absent_on_label") && fieldReview[f.field] !== "accepted",
+  ).length;
   const warningFails = r.warning.verdict.startsWith("fail");
   const reviews =
     r.fields.filter((f) => f.verdict === "unreadable").length + (r.warning.verdict === "unreadable" ? 1 : 0);
@@ -67,6 +71,11 @@ export function SingleCheck() {
   const [confirming, setConfirming] = useState(false);
   const [sampleLoading, setSampleLoading] = useState(false);
   const [boldAuto, setBoldAuto] = useState<BoldGateResult | null>(null);
+  // The agent's decisions on this result: per-field rulings on flagged rows
+  // and the bold glance. Layered over the machine verdicts, never replacing
+  // them — ResultView renders both.
+  const [fieldReview, setFieldReview] = useState<Partial<Record<string, FieldDecision>>>({});
+  const [boldHuman, setBoldHuman] = useState<"confirmed" | "flagged" | null>(null);
   // Guards the async confirmation against a stale merge: bumped whenever the
   // user starts a new check or resets, so a late /api/confirm response for a
   // previous label can never overwrite the current result.
@@ -96,6 +105,8 @@ export function SingleCheck() {
     setError(null);
     setConfirming(false);
     setBoldAuto(null);
+    setFieldReview({});
+    setBoldHuman(null);
     setStep("form");
   }
 
@@ -124,8 +135,21 @@ export function SingleCheck() {
     setOutcome(null);
     setConfirming(false);
     setBoldAuto(null);
+    setFieldReview({});
+    setBoldHuman(null);
     try {
       const small = image.type === "application/pdf" ? image : await prepareImage(image);
+      // Show the image the machine actually reads. prepareImage may deskew
+      // (rotate) the upload, and the located bands are in the PREPARED
+      // image's geometry — drawing them over the original tilted preview put
+      // every highlight in the wrong place (user-reported). Same fix aligns
+      // the client-side bold measurement's crop.
+      if (small !== image) {
+        setPreviewUrl((old) => {
+          if (old) URL.revokeObjectURL(old);
+          return URL.createObjectURL(small);
+        });
+      }
       const form = new FormData();
       form.set("image", small);
       for (const [k, v] of Object.entries(f)) form.set(k, v);
@@ -252,7 +276,7 @@ export function SingleCheck() {
   );
 
   return (
-    <Shell topBar={<Stepper phase={step} outcome={outcomeSummary(outcome)} />}>
+    <Shell topBar={<Stepper phase={step} outcome={outcomeSummary(outcome, fieldReview)} />}>
       <div className="mx-auto max-w-[1120px]">
         {step === "form" && (
           <>
@@ -421,6 +445,17 @@ export function SingleCheck() {
             confirmMs={outcome.confirmMs}
             confirming={confirming}
             boldAuto={boldAuto}
+            boldHuman={boldHuman}
+            onBoldReview={setBoldHuman}
+            fieldReview={fieldReview}
+            onFieldReview={(field, d) =>
+              setFieldReview((fr) => {
+                const next = { ...fr };
+                if (d) next[field] = d;
+                else delete next[field];
+                return next;
+              })
+            }
             isPdf={file?.type === "application/pdf"}
             appNumber={appNumber}
             onPrint={() => window.print()}

@@ -152,8 +152,20 @@ export function LabelViewer({
     </button>
   );
 
+  // The locator is best-effort: when the focused field has no resolvable
+  // region, say so instead of doing nothing — a click that changes nothing
+  // reads as a broken button (user-reported).
+  const focusedUnlocated = focusedField !== null && !regions[focusedField];
+
   return (
-    <div className="flex flex-col gap-2.5">
+    <div className="relative flex flex-col gap-2.5">
+      {focusedUnlocated && (
+        <div className="pointer-events-none absolute inset-x-0 top-2 z-20 flex justify-center">
+          <span className="rounded-full border border-warn-line bg-warn-bg px-3 py-1 text-[12px] font-semibold text-warn shadow-sm">
+            Couldn&rsquo;t pinpoint this on the image — check the label by eye.
+          </span>
+        </div>
+      )}
       <div
         ref={scrollRef}
         data-viewer-card
