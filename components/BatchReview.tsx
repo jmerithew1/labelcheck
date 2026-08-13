@@ -621,9 +621,23 @@ export function BatchReview() {
               band = found;
               signals = await measureBoldSignals(t.imageUrl!, band);
             }
-            const fixedBand = band;
+            const corrected = found;
             setRows((rs) =>
-              rs.map((r) => (r.index === t.index ? { ...r, bandFixed: true, bands: { ...r.bands, warning: fixedBand } } : r)),
+              rs.map((r) => {
+                if (r.index !== t.index) return r;
+                const bands = { ...r.bands };
+                // Measurement found no warning in the located band, and reading
+                // the image found no warning either: we do not know where it
+                // is. DROP the band rather than keep it. Keeping it produced
+                // the worst available state — a confident zoom into an
+                // arbitrary strip of the label, and a "show on label"
+                // highlight over the wrong section, while asking a human to
+                // judge bold from it. An honest "couldn't locate it, open the
+                // row" is worth more than a precise-looking wrong answer.
+                if (corrected) bands.warning = corrected;
+                else delete bands.warning;
+                return { ...r, bandFixed: true, bands };
+              }),
             );
           }
           const verdict = applyBoldGate(signals, t.result!.warning.boldAdvisory);

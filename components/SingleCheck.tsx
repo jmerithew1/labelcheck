@@ -7,7 +7,7 @@ import type { Bands } from "@/lib/vision/locate.ts";
 import { DEMO_SAMPLES, DOWNLOAD_SAMPLES, type DemoSample } from "@/lib/samples.ts";
 import { prepareImage } from "@/lib/downscale.ts";
 import { applyBoldGate, type BoldGateResult } from "@/lib/compare/boldGate.ts";
-import { measureBoldSignals } from "@/lib/boldMeasure.ts";
+import { measureBoldSignals, ocrWarningBand } from "@/lib/boldMeasure.ts";
 import { Shell } from "./Shell.tsx";
 import { Stepper, type StepPhase, type Outcome } from "./Stepper.tsx";
 import { CheckingCard } from "./CheckingCard.tsx";
@@ -120,7 +120,28 @@ export function SingleCheck() {
     if (file?.type === "application/pdf") return;
     const token = runToken.current;
     void (async () => {
-      const signals = await measureBoldSignals(previewUrl, band);
+      let signals = await measureBoldSignals(previewUrl, band);
+      // Same correction the batch path makes: no GOVERNMENT prefix in the
+      // located band usually means the band is wrong, not that the label is
+      // unreadable. Read the image for the warning and retry once.
+      if (!signals) {
+        const found = await ocrWarningBand(previewUrl);
+        if (token !== runToken.current) return;
+        if (found && (found[0] !== band[0] || found[1] !== band[1])) {
+          signals = await measureBoldSignals(previewUrl, found);
+        }
+        if (token !== runToken.current) return;
+        // Still nothing: we do not know where the warning is, so stop drawing
+        // a highlight over a band we have just disproved. The viewer says it
+        // couldn't pinpoint it instead of pointing at the wrong place.
+        setOutcome((prev) => {
+          if (!prev) return prev;
+          const bands = { ...prev.bands };
+          if (found) bands.warning = found;
+          else delete bands.warning;
+          return { ...prev, bands };
+        });
+      }
       if (token !== runToken.current) return;
       setBoldAuto(applyBoldGate(signals, outcome.result.warning.boldAdvisory));
     })();
