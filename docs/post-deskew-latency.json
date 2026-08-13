@@ -1,0 +1,48 @@
+{
+  "measured_at": "2026-08-13T18:22:12.434Z",
+  "base": "https://labelcheck-production-8f22.up.railway.app",
+  "what": "single-label server path (upload → verdict JSON), post-deskew, async_confirm=1",
+  "excludes": "client-side prepareImage (downscale + deskew), measured separately at 26–197ms",
+  "note": "Measured from node. A browser-side end-to-end number requires a foregrounded tab; a hidden pane throttles timers and inflates it.",
+  "n": 6,
+  "p50_ms": 4055,
+  "worst_ms": 5317,
+  "runs": [
+    {
+      "ms": 4055,
+      "server_ms": 3739,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "ms": 5317,
+      "server_ms": 5112,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "ms": 4386,
+      "server_ms": 4174,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "ms": 3699,
+      "server_ms": 3506,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "ms": 3915,
+      "server_ms": 3808,
+      "ok": true,
+      "status": 200
+    },
+    {
+      "ms": 3661,
+      "server_ms": 3539,
+      "ok": true,
+      "status": 200
+    }
+  ]
+}

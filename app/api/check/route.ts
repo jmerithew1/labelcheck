@@ -8,6 +8,7 @@ import {
 import { locateBands, type LocatableMedia, type Bands } from "@/lib/vision/locate.ts";
 import { applySecondReading } from "@/lib/compare/warning.ts";
 import { compareLabel, type ApplicationData } from "@/lib/compare/index.ts";
+import { rateLimited, RATE_LIMIT_MESSAGE } from "@/lib/rateLimit.ts";
 
 export const maxDuration = 60;
 
@@ -15,33 +16,14 @@ const MAX_IMAGE_BYTES = 8 * 1024 * 1024; // images are downscaled client-side; t
 const MAX_PDF_BYTES = 10 * 1024 * 1024; // PDFs can't be downscaled in-browser
 const MEDIA_TYPES = new Set(["image/png", "image/jpeg", "image/webp", "application/pdf"]);
 
-// Prototype abuse guard: the endpoint is public and each call spends real
-// API credit. Sliding-window per-IP limit sized so a full-speed 300-label
-// batch (8 concurrent, ~2 checks/s) never trips it. In-memory is correct
-// here: single container, nothing sensitive stored.
-const RATE_LIMIT = 240; // requests per minute per IP
-const rateWindow = new Map<string, number[]>();
-function rateLimited(ip: string): boolean {
-  const now = Date.now();
-  const hits = (rateWindow.get(ip) ?? []).filter((t) => now - t < 60_000);
-  hits.push(now);
-  rateWindow.set(ip, hits);
-  if (rateWindow.size > 10_000) rateWindow.clear(); // unbounded-growth guard
-  return hits.length > RATE_LIMIT;
-}
-
 /**
  * POST /api/check — one label against one application.
  * multipart/form-data: image (file), brand_name, class_type, alcohol_content,
  * net_contents, bottler_name_address?, country_of_origin?
  */
 export async function POST(req: Request) {
-  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "local";
-  if (rateLimited(ip)) {
-    return NextResponse.json(
-      { error: "Too many requests from this connection — wait a minute and try again." },
-      { status: 429 },
-    );
+  if (rateLimited(req)) {
+    return NextResponse.json({ error: RATE_LIMIT_MESSAGE }, { status: 429 });
   }
 
   let form: FormData;

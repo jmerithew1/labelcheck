@@ -57,9 +57,10 @@ interface BatchRow {
   /** Human bold spot-check: confirmed = glanced and looks bold; flagged =
    *  glanced and does NOT look bold (moves the row to Needs review). */
   boldReview?: "confirmed" | "flagged";
-  /** Machine gate result (multi-signal, validated at 0 confident mistakes):
-   *  "bold" auto-resolves the glance, "not_bold" escalates to review,
-   *  "human" = measured but inconclusive. A human decision always wins. */
+  /** Machine gate result (multi-signal; worst case 3 silent misses in 160
+   *  re-scored samples — see rubric C9, not zero): "bold" auto-resolves the
+   *  glance, "not_bold" escalates to review, "human" = measured but
+   *  inconclusive. A human decision always wins. */
   boldAuto?: BoldGateResult;
   /** The agent's ruling after reviewing the row: "ok" re-files it as
    *  Matched (shown as "Reviewed ✓"), "correction" keeps it in review as a
@@ -480,9 +481,9 @@ export function BatchReview() {
   };
 
   // Multi-signal gate: whenever an eligible row has its warning band and no
-  // machine result yet, measure and gate it (validated at 0 confident
-  // mistakes — see lib/compare/boldGate.ts). Claim-on-start dedupe; the OCR
-  // worker serializes internally.
+  // machine result yet, measure and gate it (worst case 1.9% silent misses —
+  // see lib/compare/boldGate.ts and rubric C9). Claim-on-start dedupe; the
+  // OCR worker serializes internally.
   const gateRunning = useRef<Set<number>>(new Set());
   useEffect(() => {
     // Rows the machine can never measure (PDFs, no image, band lookup came

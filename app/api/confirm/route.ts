@@ -2,25 +2,13 @@ import { NextResponse } from "next/server";
 import { confirmWarningTranscription, type ExtractableMedia } from "@/lib/vision/extract.ts";
 import { applySecondReading, type OverallVerdict } from "@/lib/compare/warning.ts";
 import type { WarningResult } from "@/lib/compare/types.ts";
+import { rateLimited, RATE_LIMIT_MESSAGE } from "@/lib/rateLimit.ts";
 
 export const maxDuration = 30;
 
 const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
 const MAX_PDF_BYTES = 10 * 1024 * 1024;
 const MEDIA_TYPES = new Set(["image/png", "image/jpeg", "image/webp", "application/pdf"]);
-
-// Same prototype abuse guard as /api/check (module-local is fine: confirms
-// are 1:1 with warning-failing checks, which already passed that limiter).
-const RATE_LIMIT = 240;
-const rateWindow = new Map<string, number[]>();
-function rateLimited(ip: string): boolean {
-  const now = Date.now();
-  const hits = (rateWindow.get(ip) ?? []).filter((t) => now - t < 60_000);
-  hits.push(now);
-  rateWindow.set(ip, hits);
-  if (rateWindow.size > 10_000) rateWindow.clear();
-  return hits.length > RATE_LIMIT;
-}
 
 const OVERALLS = new Set<OverallVerdict>(["clean", "needs_review", "warning_failure", "not_a_label"]);
 const VERDICTS = new Set(["pass", "pass_formatting_note", "fail_wording", "fail_prefix_case", "fail_missing", "unreadable"]);
@@ -36,12 +24,8 @@ const SIZE = new Set(["normal", "small", "illegibly_small"]);
  * overall, bold_advisory, size_advisory?
  */
 export async function POST(req: Request) {
-  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "local";
-  if (rateLimited(ip)) {
-    return NextResponse.json(
-      { error: "Too many requests from this connection — wait a minute and try again." },
-      { status: 429 },
-    );
+  if (rateLimited(req)) {
+    return NextResponse.json({ error: RATE_LIMIT_MESSAGE }, { status: 429 });
   }
 
   let form: FormData;

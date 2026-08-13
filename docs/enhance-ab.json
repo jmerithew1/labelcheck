@@ -7653,5 +7653,25 @@
         "silentMiss": false
       }
     }
-  ]
+  ],
+  "reanalysis": {
+    "note": "Recomputed from the SAME committed rows by scripts/reanalyze-enhance-ab.mjs. The top-level verdict/violation fields above come from an older harness that counted every missed violation together, including bold-only labels the gate deliberately routes to a human; DO_NOT_SHIP is that aggregate speaking, and it is retained unedited rather than overwritten. The split below is what the ship decision actually rested on.",
+    "definition": "missed = the run ended on an overall verdict of clean, i.e. nothing was surfaced to the agent",
+    "text_defect_violations_missed": {
+      "before": 1,
+      "after": 0
+    },
+    "bold_only_violations_missed": {
+      "before": 1,
+      "after": 5
+    },
+    "bold_only_rows_after": [
+      "non-bold-prefix/rot1",
+      "wine-non-bold/angle1",
+      "wine-non-bold/rot1",
+      "wine-non-bold/crease1",
+      "gin-non-bold/rot2"
+    ],
+    "reading": "Deskew removed the one text-defect leak and added bold-only leaks. Bold is never a hard fail and every unresolved bold glance goes to a human, so the added leaks are deferral the gate already covers; the removed leak was a real violation reaching a clean verdict."
+  }
 }
