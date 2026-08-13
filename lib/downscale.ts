@@ -1,20 +1,59 @@
-/** Client-side downscale before upload: ≤1568px long edge (vision models see
- *  nothing extra above this; phone photos upload 10× faster downscaled —
- *  upload bandwidth was a measured batch bottleneck on prior projects). */
-export async function downscaleImage(file: File, maxEdge = 1568): Promise<File> {
+import { enhanceImage } from "./enhance.ts";
+
+/**
+ * Client-side upload preparation: downscale, then deskew + normalise.
+ *
+ * Downscale first (≤1568px long edge — vision models see nothing extra above
+ * this, and upload bandwidth was a measured batch bottleneck), then enhance the
+ * smaller buffer. Enhancing first would rotate millions of pixels that are
+ * about to be thrown away.
+ *
+ * Both steps live in ONE function on purpose. Enhancement has four call sites
+ * across the single-check and batch paths, and a step that must be remembered
+ * at four call sites is a step that eventually gets missed at one.
+ *
+ * Non-images (PDFs) pass through untouched — Claude reads those as document
+ * blocks, where a raster rotation would be meaningless.
+ */
+export async function prepareImage(file: File, maxEdge = 1568): Promise<File> {
   if (!file.type.startsWith("image/")) return file;
   const bitmap = await createImageBitmap(file).catch(() => null);
-  if (!bitmap) return file; // unreadable as image — let the server reject loudly
-  const { width, height } = bitmap;
-  const longEdge = Math.max(width, height);
-  if (longEdge <= maxEdge) return file;
-  const scale = maxEdge / longEdge;
+  if (!bitmap) return file; // unreadable as an image — let the server reject loudly
+
+  const longEdge = Math.max(bitmap.width, bitmap.height);
+  const scale = longEdge > maxEdge ? maxEdge / longEdge : 1;
+  const w = Math.round(bitmap.width * scale);
+  const h = Math.round(bitmap.height * scale);
+
   const canvas = document.createElement("canvas");
-  canvas.width = Math.round(width * scale);
-  canvas.height = Math.round(height * scale);
-  const ctx = canvas.getContext("2d");
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext("2d", { willReadFrequently: true });
   if (!ctx) return file;
-  ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+  ctx.drawImage(bitmap, 0, 0, w, h);
+
+  let rotated = false;
+  try {
+    const src = ctx.getImageData(0, 0, w, h);
+    const out = enhanceImage(src.data, w, h);
+    rotated = out.skewDeg !== 0;
+    if (rotated) {
+      canvas.width = out.width;
+      canvas.height = out.height;
+      ctx.putImageData(new ImageData(out.data, out.width, out.height), 0, 0);
+    }
+  } catch {
+    // A tainted canvas or an OOM must not cost the user their check — fall
+    // back to the plain downscale, which is what shipped before enhancement.
+    rotated = false;
+  }
+
+  // Nothing to fix and nothing to shrink: return the ORIGINAL bytes rather than
+  // a JPEG re-encode. Routing every upload through canvas.toBlob() would add a
+  // lossy generation to labels that never needed touching — a silent quality
+  // regression on the clean path, paid by every user to help a minority.
+  if (!rotated && scale === 1) return file;
+
   const blob = await new Promise<Blob | null>((resolve) =>
     canvas.toBlob(resolve, "image/jpeg", 0.92),
   );

@@ -1,0 +1,7657 @@
+{
+  "measured_layer": "shipped_pipeline (prepareImage: downscale + lib/enhance.ts)",
+  "families": [
+    "angle",
+    "rotation"
+  ],
+  "base": "http://localhost:3000",
+  "n": 424,
+  "errors": 0,
+  "compliant": {
+    "n": 174,
+    "clean_before": 13,
+    "clean_after": 31,
+    "false_rejections_before": 5,
+    "false_rejections_after": 3
+  },
+  "violation": {
+    "n": 250,
+    "missed_before": 3,
+    "missed_after": 6
+  },
+  "verdict": "DO_NOT_SHIP",
+  "results": [
+    {
+      "label": "clean-match",
+      "cond": "angle1",
+      "family": "angle",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -6,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "clean-match",
+      "cond": "angle3",
+      "family": "angle",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -20,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "clean-match",
+      "cond": "angle2",
+      "family": "angle",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -13,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "clean-match",
+      "cond": "angle4",
+      "family": "angle",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -20,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "clean-match",
+      "cond": "rot1",
+      "family": "rotation",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "clean",
+        "warning": "pass",
+        "skew": 3,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "clean-match",
+      "cond": "rot2",
+      "family": "rotation",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "clean",
+        "warning": "pass",
+        "skew": 8,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "clean-match",
+      "cond": "rot3",
+      "family": "rotation",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "clean",
+        "warning": "pass",
+        "skew": 15,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "clean-match",
+      "cond": "crease2",
+      "family": "crease",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": 2,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "clean-match",
+      "cond": "curved1",
+      "family": "curvature",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -16,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "clean-match",
+      "cond": "crease1",
+      "family": "crease",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "clean",
+        "warning": "pass",
+        "skew": -1,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "case-diff",
+      "cond": "angle1",
+      "family": "angle",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -6,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "clean-match",
+      "cond": "curved2",
+      "family": "curvature",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -20,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "case-diff",
+      "cond": "angle2",
+      "family": "angle",
+      "expected": "clean",
+      "before": {
+        "overall": "clean",
+        "warning": "pass"
+      },
+      "after": {
+        "overall": "clean",
+        "warning": "pass",
+        "skew": -13,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "case-diff",
+      "cond": "angle3",
+      "family": "angle",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -20,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "case-diff",
+      "cond": "rot1",
+      "family": "rotation",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "clean",
+        "warning": "pass",
+        "skew": 3,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "case-diff",
+      "cond": "rot2",
+      "family": "rotation",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "clean",
+        "warning": "pass",
+        "skew": 8,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "case-diff",
+      "cond": "rot3",
+      "family": "rotation",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "clean",
+        "warning": "pass",
+        "skew": 15,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "case-diff",
+      "cond": "crease1",
+      "family": "crease",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -1,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "case-diff",
+      "cond": "crease2",
+      "family": "crease",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": 2,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "case-diff",
+      "cond": "curved1",
+      "family": "curvature",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -16,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "case-diff",
+      "cond": "angle4",
+      "family": "angle",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -20,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "case-diff",
+      "cond": "curved2",
+      "family": "curvature",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -20,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "title-case-prefix",
+      "cond": "angle1",
+      "family": "angle",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_prefix_case"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_prefix_case",
+        "skew": -6,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "title-case-prefix",
+      "cond": "angle2",
+      "family": "angle",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_prefix_case",
+        "skew": -13,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "title-case-prefix",
+      "cond": "angle3",
+      "family": "angle",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_wording"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -20,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "title-case-prefix",
+      "cond": "angle4",
+      "family": "angle",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_prefix_case"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_prefix_case",
+        "skew": -20,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "title-case-prefix",
+      "cond": "rot1",
+      "family": "rotation",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_prefix_case"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_prefix_case",
+        "skew": 3,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "title-case-prefix",
+      "cond": "rot2",
+      "family": "rotation",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_prefix_case"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_prefix_case",
+        "skew": 8,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "title-case-prefix",
+      "cond": "rot3",
+      "family": "rotation",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_wording"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_prefix_case",
+        "skew": 15,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "title-case-prefix",
+      "cond": "crease1",
+      "family": "crease",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_prefix_case"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_prefix_case",
+        "skew": -1,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "title-case-prefix",
+      "cond": "crease2",
+      "family": "crease",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_prefix_case"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_prefix_case",
+        "skew": 2,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "title-case-prefix",
+      "cond": "curved2",
+      "family": "curvature",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_prefix_case",
+        "skew": -20,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "title-case-prefix",
+      "cond": "curved1",
+      "family": "curvature",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": -16,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "word-swap",
+      "cond": "angle2",
+      "family": "angle",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -13,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "word-swap",
+      "cond": "angle3",
+      "family": "angle",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": -20,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "word-swap",
+      "cond": "angle4",
+      "family": "angle",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -20,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "word-swap",
+      "cond": "angle1",
+      "family": "angle",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_wording"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": -6,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "word-swap",
+      "cond": "rot1",
+      "family": "rotation",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_wording"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": 3,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "word-swap",
+      "cond": "rot2",
+      "family": "rotation",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_wording"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": 8,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "word-swap",
+      "cond": "rot3",
+      "family": "rotation",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": 15,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "word-swap",
+      "cond": "crease2",
+      "family": "crease",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_wording"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": 2,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "word-swap",
+      "cond": "crease1",
+      "family": "crease",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": -1,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "word-swap",
+      "cond": "curved2",
+      "family": "curvature",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -20,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "word-swap",
+      "cond": "curved1",
+      "family": "curvature",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": -16,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "word-drop",
+      "cond": "angle1",
+      "family": "angle",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_wording"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": -6,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "word-drop",
+      "cond": "angle4",
+      "family": "angle",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -20,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "word-drop",
+      "cond": "angle2",
+      "family": "angle",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_wording"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": -13,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "word-drop",
+      "cond": "angle3",
+      "family": "angle",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": -20,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "word-drop",
+      "cond": "rot3",
+      "family": "rotation",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_wording"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": 15,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "word-drop",
+      "cond": "rot1",
+      "family": "rotation",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_wording"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": 3,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "word-drop",
+      "cond": "rot2",
+      "family": "rotation",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_wording"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": 8,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "word-drop",
+      "cond": "crease1",
+      "family": "crease",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_wording"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": -1,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "word-drop",
+      "cond": "crease2",
+      "family": "crease",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_wording"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": 2,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "word-drop",
+      "cond": "curved1",
+      "family": "curvature",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": -16,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "punct-drift",
+      "cond": "angle1",
+      "family": "angle",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_wording"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": -6,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "word-drop",
+      "cond": "curved2",
+      "family": "curvature",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": -20,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "punct-drift",
+      "cond": "angle2",
+      "family": "angle",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_wording"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": -13,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "punct-drift",
+      "cond": "angle4",
+      "family": "angle",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_wording"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": -20,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "punct-drift",
+      "cond": "angle3",
+      "family": "angle",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_wording"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": -20,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "punct-drift",
+      "cond": "rot1",
+      "family": "rotation",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_wording"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": 3,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "punct-drift",
+      "cond": "rot2",
+      "family": "rotation",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_wording"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": 8,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "punct-drift",
+      "cond": "rot3",
+      "family": "rotation",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_wording"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": 15,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "punct-drift",
+      "cond": "crease1",
+      "family": "crease",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": -1,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "punct-drift",
+      "cond": "curved1",
+      "family": "curvature",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_wording"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": -16,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "punct-drift",
+      "cond": "crease2",
+      "family": "crease",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_wording"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": 2,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "punct-drift",
+      "cond": "curved2",
+      "family": "curvature",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": -20,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "allcaps-body",
+      "cond": "angle1",
+      "family": "angle",
+      "expected": "clean",
+      "before": {
+        "overall": "clean",
+        "warning": "pass_formatting_note"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -5.5,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "allcaps-body",
+      "cond": "rot1",
+      "family": "rotation",
+      "expected": "clean",
+      "before": {
+        "overall": "clean",
+        "warning": "pass_formatting_note"
+      },
+      "after": {
+        "overall": "clean",
+        "warning": "pass_formatting_note",
+        "skew": 3,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "allcaps-body",
+      "cond": "angle2",
+      "family": "angle",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -13,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "allcaps-body",
+      "cond": "angle3",
+      "family": "angle",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -20,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "allcaps-body",
+      "cond": "angle4",
+      "family": "angle",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -20,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "allcaps-body",
+      "cond": "rot2",
+      "family": "rotation",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "clean",
+        "warning": "pass_formatting_note",
+        "skew": 8,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "allcaps-body",
+      "cond": "crease1",
+      "family": "crease",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "clean",
+        "warning": "pass_formatting_note",
+        "skew": -1,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "allcaps-body",
+      "cond": "crease2",
+      "family": "crease",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": 2,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "allcaps-body",
+      "cond": "rot3",
+      "family": "rotation",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": 15,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "allcaps-body",
+      "cond": "curved1",
+      "family": "curvature",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -16,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "non-bold-prefix",
+      "cond": "angle1",
+      "family": "angle",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -6,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "non-bold-prefix",
+      "cond": "angle2",
+      "family": "angle",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -13,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "allcaps-body",
+      "cond": "curved2",
+      "family": "curvature",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -20,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "non-bold-prefix",
+      "cond": "angle3",
+      "family": "angle",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -20,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "non-bold-prefix",
+      "cond": "rot1",
+      "family": "rotation",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "pass"
+      },
+      "after": {
+        "overall": "clean",
+        "warning": "pass",
+        "skew": 3,
+        "falseRejection": false,
+        "missedViolation": true,
+        "silentMiss": true
+      }
+    },
+    {
+      "label": "non-bold-prefix",
+      "cond": "rot2",
+      "family": "rotation",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": 8,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "non-bold-prefix",
+      "cond": "rot3",
+      "family": "rotation",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "pass",
+        "skew": 15,
+        "falseRejection": false,
+        "missedViolation": true,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "non-bold-prefix",
+      "cond": "angle4",
+      "family": "angle",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -20,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "non-bold-prefix",
+      "cond": "crease1",
+      "family": "crease",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -1,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "non-bold-prefix",
+      "cond": "crease2",
+      "family": "crease",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": 2,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "non-bold-prefix",
+      "cond": "curved2",
+      "family": "curvature",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -20,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "injection",
+      "cond": "angle1",
+      "family": "angle",
+      "expected": "clean",
+      "before": {
+        "overall": "clean",
+        "warning": "pass"
+      },
+      "after": {
+        "overall": "clean",
+        "warning": "pass",
+        "skew": -6,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "non-bold-prefix",
+      "cond": "curved1",
+      "family": "curvature",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -16,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "injection",
+      "cond": "angle2",
+      "family": "angle",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -13,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "injection",
+      "cond": "angle3",
+      "family": "angle",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -20,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "injection",
+      "cond": "rot1",
+      "family": "rotation",
+      "expected": "clean",
+      "before": {
+        "overall": "clean",
+        "warning": "pass"
+      },
+      "after": {
+        "overall": "clean",
+        "warning": "pass",
+        "skew": 3,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "injection",
+      "cond": "rot2",
+      "family": "rotation",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "clean",
+        "warning": "pass",
+        "skew": 8,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "injection",
+      "cond": "angle4",
+      "family": "angle",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -20,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "injection",
+      "cond": "rot3",
+      "family": "rotation",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "clean",
+        "warning": "pass",
+        "skew": 15,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "injection",
+      "cond": "crease1",
+      "family": "crease",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -1,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "injection",
+      "cond": "crease2",
+      "family": "crease",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": 2,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "injection",
+      "cond": "curved1",
+      "family": "curvature",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -16,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "small-warning",
+      "cond": "angle1",
+      "family": "angle",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -6.5,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "small-warning",
+      "cond": "angle2",
+      "family": "angle",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -13,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "injection",
+      "cond": "curved2",
+      "family": "curvature",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -20,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "small-warning",
+      "cond": "angle3",
+      "family": "angle",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -20,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "small-warning",
+      "cond": "angle4",
+      "family": "angle",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": 20,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "small-warning",
+      "cond": "rot2",
+      "family": "rotation",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": 8,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "small-warning",
+      "cond": "rot3",
+      "family": "rotation",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": 15,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "small-warning",
+      "cond": "rot1",
+      "family": "rotation",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": 3,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "small-warning",
+      "cond": "curved1",
+      "family": "curvature",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -16,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "small-warning",
+      "cond": "crease1",
+      "family": "crease",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -1,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "small-warning",
+      "cond": "curved2",
+      "family": "curvature",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": 14,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "small-warning",
+      "cond": "crease2",
+      "family": "crease",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": 2,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "wine-label",
+      "cond": "angle2",
+      "family": "angle",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -10,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "wine-label",
+      "cond": "angle1",
+      "family": "angle",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -5,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "wine-label",
+      "cond": "rot1",
+      "family": "rotation",
+      "expected": "clean",
+      "before": {
+        "overall": "clean",
+        "warning": "pass"
+      },
+      "after": {
+        "overall": "clean",
+        "warning": "pass",
+        "skew": 3,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "wine-label",
+      "cond": "angle3",
+      "family": "angle",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -15.5,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "wine-label",
+      "cond": "rot3",
+      "family": "rotation",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": 15,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "wine-label",
+      "cond": "angle4",
+      "family": "angle",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -20,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "wine-label",
+      "cond": "crease2",
+      "family": "crease",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": 2,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "wine-label",
+      "cond": "rot2",
+      "family": "rotation",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": 8,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "wine-label",
+      "cond": "crease1",
+      "family": "crease",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -1,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "wine-label",
+      "cond": "curved2",
+      "family": "curvature",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -20,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "wine-label",
+      "cond": "curved1",
+      "family": "curvature",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -12.5,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "stones-throw",
+      "cond": "angle2",
+      "family": "angle",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -10.5,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "stones-throw",
+      "cond": "rot1",
+      "family": "rotation",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "clean",
+        "warning": "pass",
+        "skew": 3,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "stones-throw",
+      "cond": "angle3",
+      "family": "angle",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -16,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "stones-throw",
+      "cond": "angle1",
+      "family": "angle",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -5.5,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "stones-throw",
+      "cond": "rot3",
+      "family": "rotation",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": 15,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "stones-throw",
+      "cond": "rot2",
+      "family": "rotation",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": 8,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "stones-throw",
+      "cond": "angle4",
+      "family": "angle",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -20,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "stones-throw",
+      "cond": "small1",
+      "family": "downscale",
+      "expected": "clean",
+      "before": {
+        "overall": "clean",
+        "warning": "pass"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -2,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "stones-throw",
+      "cond": "small2",
+      "family": "downscale",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -2,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "stones-throw",
+      "cond": "small3",
+      "family": "downscale",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -2,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "stones-throw",
+      "cond": "glare2",
+      "family": "glare",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -2,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "stones-throw",
+      "cond": "shadow2",
+      "family": "shadow",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -2,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "stones-throw",
+      "cond": "crease1",
+      "family": "crease",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -1,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "stones-throw",
+      "cond": "curved2",
+      "family": "curvature",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": 12,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "stones-throw",
+      "cond": "curved1",
+      "family": "curvature",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -13,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "stones-throw",
+      "cond": "occl2",
+      "family": "occlusion",
+      "expected": "clean",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_wording"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -2,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "harbor-gin",
+      "cond": "angle1",
+      "family": "angle",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -5.5,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "stones-throw",
+      "cond": "crease2",
+      "family": "crease",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": 2,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "harbor-gin",
+      "cond": "angle2",
+      "family": "angle",
+      "expected": "clean",
+      "before": {
+        "overall": "clean",
+        "warning": "pass"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -12,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "harbor-gin",
+      "cond": "rot1",
+      "family": "rotation",
+      "expected": "clean",
+      "before": {
+        "overall": "clean",
+        "warning": "pass"
+      },
+      "after": {
+        "overall": "clean",
+        "warning": "pass",
+        "skew": 3,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "harbor-gin",
+      "cond": "angle4",
+      "family": "angle",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -20,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "harbor-gin",
+      "cond": "rot2",
+      "family": "rotation",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "clean",
+        "warning": "pass",
+        "skew": 8,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "harbor-gin",
+      "cond": "angle3",
+      "family": "angle",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -18.5,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "harbor-gin",
+      "cond": "rot3",
+      "family": "rotation",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "clean",
+        "warning": "pass",
+        "skew": 15,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "harbor-gin",
+      "cond": "crease2",
+      "family": "crease",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": 2,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "harbor-gin",
+      "cond": "curved2",
+      "family": "curvature",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -20,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "harbor-gin",
+      "cond": "crease1",
+      "family": "crease",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -1,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "harbor-gin",
+      "cond": "curved1",
+      "family": "curvature",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -14.5,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "batch-rye",
+      "cond": "angle1",
+      "family": "angle",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -6,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "batch-rye",
+      "cond": "angle2",
+      "family": "angle",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "clean",
+        "warning": "pass",
+        "skew": -13,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "batch-rye",
+      "cond": "angle3",
+      "family": "angle",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -20,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "batch-rye",
+      "cond": "rot1",
+      "family": "rotation",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "clean",
+        "warning": "pass",
+        "skew": 3,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "batch-rye",
+      "cond": "rot2",
+      "family": "rotation",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "clean",
+        "warning": "pass",
+        "skew": 8,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "batch-rye",
+      "cond": "rot3",
+      "family": "rotation",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "clean",
+        "warning": "pass",
+        "skew": 15,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "batch-rye",
+      "cond": "angle4",
+      "family": "angle",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -20,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "batch-rye",
+      "cond": "crease1",
+      "family": "crease",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -1,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "batch-rye",
+      "cond": "crease2",
+      "family": "crease",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": 2,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "batch-rye",
+      "cond": "curved1",
+      "family": "curvature",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -16,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "batch-rye",
+      "cond": "curved2",
+      "family": "curvature",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -20,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "batch-vodka",
+      "cond": "angle2",
+      "family": "angle",
+      "expected": "clean",
+      "before": {
+        "overall": "clean",
+        "warning": "pass"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -12,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "batch-vodka",
+      "cond": "angle1",
+      "family": "angle",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -5.5,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "batch-vodka",
+      "cond": "angle3",
+      "family": "angle",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -18.5,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "batch-vodka",
+      "cond": "rot2",
+      "family": "rotation",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "clean",
+        "warning": "pass",
+        "skew": 8,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "batch-vodka",
+      "cond": "rot1",
+      "family": "rotation",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "clean",
+        "warning": "pass",
+        "skew": 3,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "batch-vodka",
+      "cond": "angle4",
+      "family": "angle",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -20,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "batch-vodka",
+      "cond": "rot3",
+      "family": "rotation",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": 15,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "batch-vodka",
+      "cond": "crease1",
+      "family": "crease",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -1,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "batch-vodka",
+      "cond": "crease2",
+      "family": "crease",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": 2,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "batch-vodka",
+      "cond": "curved2",
+      "family": "curvature",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -20,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "batch-vodka",
+      "cond": "curved1",
+      "family": "curvature",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -14.5,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "batch-stout",
+      "cond": "blur1",
+      "family": "blur",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -2,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "batch-stout",
+      "cond": "blur2",
+      "family": "blur",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -2,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "batch-stout",
+      "cond": "angle2",
+      "family": "angle",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -11,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "batch-stout",
+      "cond": "angle1",
+      "family": "angle",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "clean",
+        "warning": "pass",
+        "skew": -5.5,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "batch-stout",
+      "cond": "angle4",
+      "family": "angle",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -20,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "batch-stout",
+      "cond": "rot1",
+      "family": "rotation",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "clean",
+        "warning": "pass",
+        "skew": 3,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "batch-stout",
+      "cond": "angle3",
+      "family": "angle",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -17.5,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "batch-stout",
+      "cond": "rot3",
+      "family": "rotation",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": 15,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "batch-stout",
+      "cond": "small2",
+      "family": "downscale",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -2,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "batch-stout",
+      "cond": "rot2",
+      "family": "rotation",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": 8,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "batch-stout",
+      "cond": "small3",
+      "family": "downscale",
+      "expected": "clean",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_wording"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": -2,
+        "falseRejection": true,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "batch-stout",
+      "cond": "glare2",
+      "family": "glare",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "clean",
+        "warning": "pass",
+        "skew": -2,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "batch-stout",
+      "cond": "shadow2",
+      "family": "shadow",
+      "expected": "clean",
+      "before": {
+        "overall": "clean",
+        "warning": "pass"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -2,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "batch-stout",
+      "cond": "crease2",
+      "family": "crease",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": 2,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "batch-stout",
+      "cond": "crease1",
+      "family": "crease",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -1,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "batch-stout",
+      "cond": "curved1",
+      "family": "curvature",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -13,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "batch-stout",
+      "cond": "curved2",
+      "family": "curvature",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": 15,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "batch-stout",
+      "cond": "occl2",
+      "family": "occlusion",
+      "expected": "clean",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_wording"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": -2,
+        "falseRejection": true,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "batch-rose",
+      "cond": "angle2",
+      "family": "angle",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -10,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "batch-rose",
+      "cond": "angle1",
+      "family": "angle",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -5,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "batch-rose",
+      "cond": "angle4",
+      "family": "angle",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -20,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "batch-rose",
+      "cond": "rot1",
+      "family": "rotation",
+      "expected": "clean",
+      "before": {
+        "overall": "clean",
+        "warning": "pass"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": 3,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "batch-rose",
+      "cond": "rot2",
+      "family": "rotation",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "clean",
+        "warning": "pass",
+        "skew": 8,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "batch-rose",
+      "cond": "angle3",
+      "family": "angle",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -15.5,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "batch-rose",
+      "cond": "rot3",
+      "family": "rotation",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": 15,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "batch-rose",
+      "cond": "crease2",
+      "family": "crease",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": 2,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "batch-rose",
+      "cond": "crease1",
+      "family": "crease",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -1,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "batch-rose",
+      "cond": "curved2",
+      "family": "curvature",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -20,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "batch-mismatch-brand",
+      "cond": "angle1",
+      "family": "angle",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -5.5,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "batch-mismatch-brand",
+      "cond": "angle2",
+      "family": "angle",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -12,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "batch-rose",
+      "cond": "curved1",
+      "family": "curvature",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -12.5,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "batch-mismatch-brand",
+      "cond": "angle3",
+      "family": "angle",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -18.5,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "batch-mismatch-brand",
+      "cond": "rot1",
+      "family": "rotation",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "clean",
+        "warning": "pass",
+        "skew": 3,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "batch-mismatch-brand",
+      "cond": "angle4",
+      "family": "angle",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -20,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "batch-mismatch-brand",
+      "cond": "rot2",
+      "family": "rotation",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": 8,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "batch-mismatch-brand",
+      "cond": "rot3",
+      "family": "rotation",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": 15,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "batch-mismatch-brand",
+      "cond": "crease2",
+      "family": "crease",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": 2,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "batch-mismatch-brand",
+      "cond": "crease1",
+      "family": "crease",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -1,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "batch-case-diff",
+      "cond": "blur1",
+      "family": "blur",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -2,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "batch-mismatch-brand",
+      "cond": "curved2",
+      "family": "curvature",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -20,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "batch-case-diff",
+      "cond": "blur2",
+      "family": "blur",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -2,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "batch-mismatch-brand",
+      "cond": "curved1",
+      "family": "curvature",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -14.5,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "batch-case-diff",
+      "cond": "angle1",
+      "family": "angle",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -5.5,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "batch-case-diff",
+      "cond": "angle2",
+      "family": "angle",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -10.5,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "batch-case-diff",
+      "cond": "angle3",
+      "family": "angle",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -17.5,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "batch-case-diff",
+      "cond": "rot1",
+      "family": "rotation",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": 3,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "batch-case-diff",
+      "cond": "rot2",
+      "family": "rotation",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": 8,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "batch-case-diff",
+      "cond": "angle4",
+      "family": "angle",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -20,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "batch-case-diff",
+      "cond": "small3",
+      "family": "downscale",
+      "expected": "clean",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_wording"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -2,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "batch-case-diff",
+      "cond": "small2",
+      "family": "downscale",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -2,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "batch-case-diff",
+      "cond": "rot3",
+      "family": "rotation",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": 15,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "batch-case-diff",
+      "cond": "shadow2",
+      "family": "shadow",
+      "expected": "clean",
+      "before": {
+        "overall": "clean",
+        "warning": "pass"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -2,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "batch-case-diff",
+      "cond": "crease2",
+      "family": "crease",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": 2,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "batch-case-diff",
+      "cond": "crease1",
+      "family": "crease",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -1,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "batch-case-diff",
+      "cond": "glare2",
+      "family": "glare",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -2,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "batch-case-diff",
+      "cond": "curved2",
+      "family": "curvature",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": 15,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "batch-case-diff",
+      "cond": "occl2",
+      "family": "occlusion",
+      "expected": "clean",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_wording"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": -2,
+        "falseRejection": true,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "batch-case-diff",
+      "cond": "curved1",
+      "family": "curvature",
+      "expected": "clean",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -13,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "wine-title-case",
+      "cond": "angle1",
+      "family": "angle",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_prefix_case"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_prefix_case",
+        "skew": -5,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "wine-title-case",
+      "cond": "angle2",
+      "family": "angle",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_prefix_case"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_prefix_case",
+        "skew": -10,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "wine-title-case",
+      "cond": "angle4",
+      "family": "angle",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_wording"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_prefix_case",
+        "skew": -20,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "wine-title-case",
+      "cond": "rot2",
+      "family": "rotation",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_prefix_case"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_prefix_case",
+        "skew": 8,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "wine-title-case",
+      "cond": "rot1",
+      "family": "rotation",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_prefix_case"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_prefix_case",
+        "skew": 3,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "wine-title-case",
+      "cond": "angle3",
+      "family": "angle",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_prefix_case",
+        "skew": -15.5,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "wine-title-case",
+      "cond": "crease1",
+      "family": "crease",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_prefix_case"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_prefix_case",
+        "skew": -1,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "wine-title-case",
+      "cond": "crease2",
+      "family": "crease",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_prefix_case"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": 2,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "wine-title-case",
+      "cond": "rot3",
+      "family": "rotation",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_prefix_case"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": 15,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "wine-title-case",
+      "cond": "curved1",
+      "family": "curvature",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_prefix_case"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -12.5,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "wine-word-swap",
+      "cond": "angle3",
+      "family": "angle",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": -15.5,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "wine-title-case",
+      "cond": "curved2",
+      "family": "curvature",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_prefix_case"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_prefix_case",
+        "skew": -20,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "wine-word-swap",
+      "cond": "angle1",
+      "family": "angle",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_wording"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": -5,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "wine-word-swap",
+      "cond": "angle2",
+      "family": "angle",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_wording"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": -10,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "wine-word-swap",
+      "cond": "angle4",
+      "family": "angle",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -20,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "wine-word-swap",
+      "cond": "rot1",
+      "family": "rotation",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_wording"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": 3,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "wine-word-swap",
+      "cond": "rot2",
+      "family": "rotation",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": 8,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "wine-word-swap",
+      "cond": "rot3",
+      "family": "rotation",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": 15,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "wine-word-swap",
+      "cond": "crease1",
+      "family": "crease",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_wording"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": -1,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "wine-word-swap",
+      "cond": "crease2",
+      "family": "crease",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_wording"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": 2,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "wine-word-swap",
+      "cond": "curved2",
+      "family": "curvature",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -20,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "wine-word-swap",
+      "cond": "curved1",
+      "family": "curvature",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": -12.5,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "wine-word-drop",
+      "cond": "angle2",
+      "family": "angle",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_wording"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -10,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "wine-word-drop",
+      "cond": "angle1",
+      "family": "angle",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_wording"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": -5,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "wine-word-drop",
+      "cond": "angle3",
+      "family": "angle",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -15.5,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "wine-word-drop",
+      "cond": "angle4",
+      "family": "angle",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -20,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "wine-word-drop",
+      "cond": "rot1",
+      "family": "rotation",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_wording"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": 3,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "wine-word-drop",
+      "cond": "rot2",
+      "family": "rotation",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": 8,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "wine-word-drop",
+      "cond": "rot3",
+      "family": "rotation",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": 15,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "wine-word-drop",
+      "cond": "crease1",
+      "family": "crease",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_wording"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": -1,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "wine-word-drop",
+      "cond": "crease2",
+      "family": "crease",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_wording"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": 2,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "wine-word-drop",
+      "cond": "curved1",
+      "family": "curvature",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -12.5,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "wine-word-drop",
+      "cond": "curved2",
+      "family": "curvature",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -20,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "wine-punct-drift",
+      "cond": "angle1",
+      "family": "angle",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_wording"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": -5,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "wine-punct-drift",
+      "cond": "angle2",
+      "family": "angle",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_wording"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": -10,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "wine-punct-drift",
+      "cond": "angle3",
+      "family": "angle",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_wording"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": -15.5,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "wine-punct-drift",
+      "cond": "angle4",
+      "family": "angle",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_wording"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": -20,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "wine-punct-drift",
+      "cond": "rot1",
+      "family": "rotation",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_wording"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": 3,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "wine-punct-drift",
+      "cond": "rot2",
+      "family": "rotation",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": 8,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "wine-punct-drift",
+      "cond": "rot3",
+      "family": "rotation",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": 15,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "wine-punct-drift",
+      "cond": "crease1",
+      "family": "crease",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_wording"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -1,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "wine-punct-drift",
+      "cond": "crease2",
+      "family": "crease",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_wording"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": 2,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "wine-punct-drift",
+      "cond": "curved2",
+      "family": "curvature",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -20,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "wine-non-bold",
+      "cond": "angle1",
+      "family": "angle",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "clean",
+        "warning": "pass",
+        "skew": -5,
+        "falseRejection": false,
+        "missedViolation": true,
+        "silentMiss": true
+      }
+    },
+    {
+      "label": "wine-punct-drift",
+      "cond": "curved1",
+      "family": "curvature",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_wording"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -12.5,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "wine-non-bold",
+      "cond": "angle2",
+      "family": "angle",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -10,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "wine-non-bold",
+      "cond": "angle4",
+      "family": "angle",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -20,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "wine-non-bold",
+      "cond": "rot1",
+      "family": "rotation",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "clean",
+        "warning": "pass",
+        "skew": 3,
+        "falseRejection": false,
+        "missedViolation": true,
+        "silentMiss": true
+      }
+    },
+    {
+      "label": "wine-non-bold",
+      "cond": "rot2",
+      "family": "rotation",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": 8,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "wine-non-bold",
+      "cond": "rot3",
+      "family": "rotation",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": 15,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "wine-non-bold",
+      "cond": "angle3",
+      "family": "angle",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -15.5,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "wine-non-bold",
+      "cond": "crease1",
+      "family": "crease",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "clean",
+        "warning": "pass"
+      },
+      "after": {
+        "overall": "clean",
+        "warning": "pass",
+        "skew": -1,
+        "falseRejection": false,
+        "missedViolation": true,
+        "silentMiss": true
+      }
+    },
+    {
+      "label": "wine-non-bold",
+      "cond": "curved1",
+      "family": "curvature",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -12.5,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "wine-non-bold",
+      "cond": "crease2",
+      "family": "crease",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": 2,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "wine-non-bold",
+      "cond": "curved2",
+      "family": "curvature",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -20,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "can-title-case",
+      "cond": "angle1",
+      "family": "angle",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_prefix_case",
+        "skew": -5.5,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "can-title-case",
+      "cond": "angle2",
+      "family": "angle",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_prefix_case",
+        "skew": -10.5,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "can-title-case",
+      "cond": "angle3",
+      "family": "angle",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -16,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "can-title-case",
+      "cond": "rot1",
+      "family": "rotation",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_wording"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": 3,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "can-title-case",
+      "cond": "angle4",
+      "family": "angle",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_wording"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": 8.5,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "can-title-case",
+      "cond": "rot2",
+      "family": "rotation",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_wording"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_prefix_case",
+        "skew": 8,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "can-title-case",
+      "cond": "rot3",
+      "family": "rotation",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_prefix_case"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": 15,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "can-title-case",
+      "cond": "small1",
+      "family": "downscale",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": -2,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "can-title-case",
+      "cond": "small3",
+      "family": "downscale",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -2,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "can-title-case",
+      "cond": "small2",
+      "family": "downscale",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -2,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "can-title-case",
+      "cond": "crease1",
+      "family": "crease",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_wording"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": -1,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "can-title-case",
+      "cond": "glare2",
+      "family": "glare",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_wording"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": -2,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "can-title-case",
+      "cond": "shadow2",
+      "family": "shadow",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_wording"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -2,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "can-title-case",
+      "cond": "curved2",
+      "family": "curvature",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_prefix_case"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": 12,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "can-title-case",
+      "cond": "crease2",
+      "family": "crease",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_wording"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": 2,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "can-title-case",
+      "cond": "curved1",
+      "family": "curvature",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": -13,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "can-title-case",
+      "cond": "occl2",
+      "family": "occlusion",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_wording"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": -2,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "can-word-swap",
+      "cond": "angle1",
+      "family": "angle",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_wording"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": -5.5,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "can-word-swap",
+      "cond": "angle2",
+      "family": "angle",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_wording"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": -10.5,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "can-word-swap",
+      "cond": "angle3",
+      "family": "angle",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -16,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "can-word-swap",
+      "cond": "angle4",
+      "family": "angle",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -20,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "can-word-swap",
+      "cond": "rot3",
+      "family": "rotation",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": 15,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "can-word-swap",
+      "cond": "rot1",
+      "family": "rotation",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_wording"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": 3,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "can-word-swap",
+      "cond": "rot2",
+      "family": "rotation",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_wording"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": 8,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "can-word-swap",
+      "cond": "small1",
+      "family": "downscale",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "clean",
+        "warning": "pass"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -2,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "can-word-swap",
+      "cond": "small3",
+      "family": "downscale",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -2,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "can-word-swap",
+      "cond": "small2",
+      "family": "downscale",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -2,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "can-word-swap",
+      "cond": "glare2",
+      "family": "glare",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_wording"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": -2,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "can-word-swap",
+      "cond": "crease1",
+      "family": "crease",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_wording"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -1,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "can-word-swap",
+      "cond": "shadow2",
+      "family": "shadow",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_wording"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": -2,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "can-word-swap",
+      "cond": "crease2",
+      "family": "crease",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": 2,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "can-word-swap",
+      "cond": "curved2",
+      "family": "curvature",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": 12,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "can-word-swap",
+      "cond": "curved1",
+      "family": "curvature",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_wording"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": -13,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "can-word-swap",
+      "cond": "occl2",
+      "family": "occlusion",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_wording"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": -2,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "can-word-drop",
+      "cond": "angle2",
+      "family": "angle",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_wording"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": -10.5,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "can-word-drop",
+      "cond": "angle1",
+      "family": "angle",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": -5.5,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "can-word-drop",
+      "cond": "angle3",
+      "family": "angle",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_wording"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -16,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "can-word-drop",
+      "cond": "angle4",
+      "family": "angle",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -20,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "can-word-drop",
+      "cond": "rot1",
+      "family": "rotation",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_wording"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": 3,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "can-word-drop",
+      "cond": "rot2",
+      "family": "rotation",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_wording"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": 8,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "can-word-drop",
+      "cond": "small3",
+      "family": "downscale",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -2,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "can-word-drop",
+      "cond": "rot3",
+      "family": "rotation",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": 15,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "can-word-drop",
+      "cond": "small2",
+      "family": "downscale",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -2,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "can-word-drop",
+      "cond": "glare2",
+      "family": "glare",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_wording"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -2,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "can-word-drop",
+      "cond": "small1",
+      "family": "downscale",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -2,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "can-word-drop",
+      "cond": "shadow2",
+      "family": "shadow",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -2,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "can-word-drop",
+      "cond": "crease2",
+      "family": "crease",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": 2,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "can-word-drop",
+      "cond": "crease1",
+      "family": "crease",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_wording"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -1,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "can-word-drop",
+      "cond": "curved1",
+      "family": "curvature",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": -13,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "can-word-drop",
+      "cond": "curved2",
+      "family": "curvature",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": 12,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "can-punct-drift",
+      "cond": "angle1",
+      "family": "angle",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": -5.5,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "can-word-drop",
+      "cond": "occl2",
+      "family": "occlusion",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_wording"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": -2,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "can-punct-drift",
+      "cond": "angle2",
+      "family": "angle",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_wording"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": -10.5,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "can-punct-drift",
+      "cond": "angle3",
+      "family": "angle",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_wording"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -16,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "can-punct-drift",
+      "cond": "angle4",
+      "family": "angle",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -20,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "can-punct-drift",
+      "cond": "rot1",
+      "family": "rotation",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_wording"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": 3,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "can-punct-drift",
+      "cond": "rot3",
+      "family": "rotation",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_wording"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": 15,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "can-punct-drift",
+      "cond": "rot2",
+      "family": "rotation",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_wording"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": 8,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "can-punct-drift",
+      "cond": "small2",
+      "family": "downscale",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -2,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "can-punct-drift",
+      "cond": "small3",
+      "family": "downscale",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -2,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "can-punct-drift",
+      "cond": "small1",
+      "family": "downscale",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_wording"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": -2,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "can-punct-drift",
+      "cond": "glare2",
+      "family": "glare",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_wording"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": -2,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "can-punct-drift",
+      "cond": "shadow2",
+      "family": "shadow",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_wording"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": -2,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "can-punct-drift",
+      "cond": "crease1",
+      "family": "crease",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_wording"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": -1,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "can-punct-drift",
+      "cond": "crease2",
+      "family": "crease",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": 2,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "can-punct-drift",
+      "cond": "curved2",
+      "family": "curvature",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": 12,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "can-punct-drift",
+      "cond": "curved1",
+      "family": "curvature",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_wording"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": -13,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "can-non-bold",
+      "cond": "angle1",
+      "family": "angle",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -5.5,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "can-punct-drift",
+      "cond": "occl2",
+      "family": "occlusion",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_wording"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": -2,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "can-non-bold",
+      "cond": "angle2",
+      "family": "angle",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -10.5,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "can-non-bold",
+      "cond": "angle4",
+      "family": "angle",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -20,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "can-non-bold",
+      "cond": "angle3",
+      "family": "angle",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -16,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "can-non-bold",
+      "cond": "rot2",
+      "family": "rotation",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": 8,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "can-non-bold",
+      "cond": "rot1",
+      "family": "rotation",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": 3,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "can-non-bold",
+      "cond": "small1",
+      "family": "downscale",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -2,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "can-non-bold",
+      "cond": "small2",
+      "family": "downscale",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -2,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "can-non-bold",
+      "cond": "rot3",
+      "family": "rotation",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": 15,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "can-non-bold",
+      "cond": "small3",
+      "family": "downscale",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -2,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "can-non-bold",
+      "cond": "glare2",
+      "family": "glare",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -2,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "can-non-bold",
+      "cond": "shadow2",
+      "family": "shadow",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -2,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "can-non-bold",
+      "cond": "crease1",
+      "family": "crease",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -1,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "can-non-bold",
+      "cond": "curved1",
+      "family": "curvature",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -13,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "can-non-bold",
+      "cond": "crease2",
+      "family": "crease",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": 2,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "can-non-bold",
+      "cond": "occl2",
+      "family": "occlusion",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_wording"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -2,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "can-non-bold",
+      "cond": "curved2",
+      "family": "curvature",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": 12,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "gin-title-case",
+      "cond": "angle1",
+      "family": "angle",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_prefix_case"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_prefix_case",
+        "skew": -6,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "gin-title-case",
+      "cond": "angle2",
+      "family": "angle",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_prefix_case"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_prefix_case",
+        "skew": -12,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "gin-title-case",
+      "cond": "angle3",
+      "family": "angle",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_wording"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_prefix_case",
+        "skew": -18.5,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "gin-title-case",
+      "cond": "angle4",
+      "family": "angle",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_wording"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -20,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "gin-title-case",
+      "cond": "rot1",
+      "family": "rotation",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_prefix_case"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_prefix_case",
+        "skew": 3,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "gin-title-case",
+      "cond": "rot3",
+      "family": "rotation",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_prefix_case"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_prefix_case",
+        "skew": 15,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "gin-title-case",
+      "cond": "crease1",
+      "family": "crease",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_prefix_case"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_prefix_case",
+        "skew": -1,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "gin-title-case",
+      "cond": "rot2",
+      "family": "rotation",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_prefix_case"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_prefix_case",
+        "skew": 8,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "gin-title-case",
+      "cond": "curved1",
+      "family": "curvature",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_prefix_case"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": -14.5,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "gin-title-case",
+      "cond": "crease2",
+      "family": "crease",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_prefix_case"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_prefix_case",
+        "skew": 2,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "gin-title-case",
+      "cond": "curved2",
+      "family": "curvature",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_prefix_case"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -20,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "gin-word-swap",
+      "cond": "angle2",
+      "family": "angle",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_wording"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": -12,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "gin-word-swap",
+      "cond": "angle3",
+      "family": "angle",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": -18.5,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "gin-word-swap",
+      "cond": "angle1",
+      "family": "angle",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": -5.5,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "gin-word-swap",
+      "cond": "angle4",
+      "family": "angle",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": -20,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "gin-word-swap",
+      "cond": "rot1",
+      "family": "rotation",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_wording"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": 3,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "gin-word-swap",
+      "cond": "rot2",
+      "family": "rotation",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_wording"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": 8,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "gin-word-swap",
+      "cond": "rot3",
+      "family": "rotation",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": 15,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "gin-word-swap",
+      "cond": "crease1",
+      "family": "crease",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_wording"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": -1,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "gin-word-swap",
+      "cond": "crease2",
+      "family": "crease",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_wording"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": 2,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "gin-word-swap",
+      "cond": "curved2",
+      "family": "curvature",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -20,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "gin-word-swap",
+      "cond": "curved1",
+      "family": "curvature",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": -14.5,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "gin-word-drop",
+      "cond": "angle1",
+      "family": "angle",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_wording"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": -5.5,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "gin-word-drop",
+      "cond": "angle2",
+      "family": "angle",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_wording"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": -11.5,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "gin-word-drop",
+      "cond": "angle3",
+      "family": "angle",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": -18.5,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "gin-word-drop",
+      "cond": "angle4",
+      "family": "angle",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": -20,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "gin-word-drop",
+      "cond": "rot1",
+      "family": "rotation",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_wording"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": 3,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "gin-word-drop",
+      "cond": "rot3",
+      "family": "rotation",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": 15,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "gin-word-drop",
+      "cond": "rot2",
+      "family": "rotation",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_wording"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": 8,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "gin-word-drop",
+      "cond": "crease1",
+      "family": "crease",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": -1,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "gin-word-drop",
+      "cond": "crease2",
+      "family": "crease",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": 2,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "gin-word-drop",
+      "cond": "curved1",
+      "family": "curvature",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": -14.5,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "gin-word-drop",
+      "cond": "curved2",
+      "family": "curvature",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -20,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "gin-punct-drift",
+      "cond": "angle1",
+      "family": "angle",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_wording"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": -5.5,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "gin-punct-drift",
+      "cond": "angle2",
+      "family": "angle",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_wording"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": -12,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "gin-punct-drift",
+      "cond": "angle3",
+      "family": "angle",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_wording"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": -18.5,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "gin-punct-drift",
+      "cond": "angle4",
+      "family": "angle",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": -20,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "gin-punct-drift",
+      "cond": "rot1",
+      "family": "rotation",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_wording"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": 3,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "gin-punct-drift",
+      "cond": "rot2",
+      "family": "rotation",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_wording"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": 8,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "gin-punct-drift",
+      "cond": "rot3",
+      "family": "rotation",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_wording"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": 15,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "gin-punct-drift",
+      "cond": "crease1",
+      "family": "crease",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_wording"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": -1,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "gin-punct-drift",
+      "cond": "crease2",
+      "family": "crease",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_wording"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": 2,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "gin-punct-drift",
+      "cond": "curved1",
+      "family": "curvature",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "warning_failure",
+        "warning": "fail_wording"
+      },
+      "after": {
+        "overall": "warning_failure",
+        "warning": "fail_wording",
+        "skew": -14.5,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "gin-punct-drift",
+      "cond": "curved2",
+      "family": "curvature",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -20,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "gin-non-bold",
+      "cond": "angle2",
+      "family": "angle",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -12,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "gin-non-bold",
+      "cond": "angle3",
+      "family": "angle",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -18.5,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "gin-non-bold",
+      "cond": "angle1",
+      "family": "angle",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -5.5,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "gin-non-bold",
+      "cond": "rot1",
+      "family": "rotation",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": 3,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "gin-non-bold",
+      "cond": "rot2",
+      "family": "rotation",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "clean",
+        "warning": "pass",
+        "skew": 8,
+        "falseRejection": false,
+        "missedViolation": true,
+        "silentMiss": true
+      }
+    },
+    {
+      "label": "gin-non-bold",
+      "cond": "angle4",
+      "family": "angle",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -20,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "gin-non-bold",
+      "cond": "rot3",
+      "family": "rotation",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": 15,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "gin-non-bold",
+      "cond": "crease2",
+      "family": "crease",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": 2,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "gin-non-bold",
+      "cond": "crease1",
+      "family": "crease",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -1,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "gin-non-bold",
+      "cond": "curved2",
+      "family": "curvature",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -20,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    },
+    {
+      "label": "gin-non-bold",
+      "cond": "curved1",
+      "family": "curvature",
+      "expected": "warning_failure",
+      "before": {
+        "overall": "needs_review",
+        "warning": "unreadable"
+      },
+      "after": {
+        "overall": "needs_review",
+        "warning": "unreadable",
+        "skew": -14.5,
+        "falseRejection": false,
+        "missedViolation": false,
+        "silentMiss": false
+      }
+    }
+  ]
+}

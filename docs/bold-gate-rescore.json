@@ -11,25 +11,29 @@
     "minBodyStrokePx": 2
   },
   "n": 160,
-  "not_bold": 6,
-  "human": 151,
+  "not_bold": 7,
+  "human": 150,
   "green_leaks": 3,
-  "unmeasurable": 96,
+  "unmeasurable": 80,
   "rows": [
     {
       "label": "can-non-bold",
       "cond": "angle1",
-      "swRatio": 1.1428571428571428,
-      "densRatio": 0.7660600295261265,
-      "sizeRatio": 1.4782608695652173,
-      "swBodyNativePx": 2.3333333333333335,
+      "swRatio": 1.125,
+      "densRatio": 1.3429992053242128,
+      "sizeRatio": 0.8222222222222222,
+      "swBodyNativePx": 2.6666666666666665,
       "measurable": true,
       "gate": "human"
     },
     {
       "label": "can-non-bold",
       "cond": "angle2",
-      "measurable": false,
+      "swRatio": 1.125,
+      "densRatio": 1.1982170955750435,
+      "sizeRatio": 0.9347826086956522,
+      "swBodyNativePx": 2.6666666666666665,
+      "measurable": true,
       "gate": "human"
     },
     {
@@ -123,8 +127,12 @@
     {
       "label": "can-non-bold",
       "cond": "crease1",
-      "measurable": false,
-      "gate": "human"
+      "swRatio": 0.7272727272727273,
+      "densRatio": 1.2462142057771233,
+      "sizeRatio": 0.8333333333333334,
+      "swBodyNativePx": 3.6666666666666665,
+      "measurable": true,
+      "gate": "not_bold"
     },
     {
       "label": "can-non-bold",
@@ -184,8 +192,8 @@
       "label": "can-non-bold",
       "cond": "glare2",
       "swRatio": 1,
-      "densRatio": 0.9383434547908232,
-      "sizeRatio": 0.9696969696969697,
+      "densRatio": 0.9461815892467333,
+      "sizeRatio": 1,
       "swBodyNativePx": 1.3333333333333333,
       "measurable": true,
       "gate": "human"
@@ -203,8 +211,12 @@
     {
       "label": "can-non-bold",
       "cond": "jpeg2",
-      "measurable": false,
-      "gate": "human"
+      "swRatio": 0.7272727272727273,
+      "densRatio": 1.1070444864681357,
+      "sizeRatio": 1.032258064516129,
+      "swBodyNativePx": 3.6666666666666665,
+      "measurable": true,
+      "gate": "not_bold"
     },
     {
       "label": "can-non-bold",
@@ -232,8 +244,8 @@
       "label": "can-non-bold",
       "cond": "occl2",
       "swRatio": 1,
-      "densRatio": 1.3966952506182024,
-      "sizeRatio": 0.7777777777777778,
+      "densRatio": 1.217124066852683,
+      "sizeRatio": 0.86,
       "swBodyNativePx": 2.6666666666666665,
       "measurable": true,
       "gate": "human"
@@ -252,9 +264,9 @@
       "label": "can-non-bold",
       "cond": "rot1",
       "swRatio": 1,
-      "densRatio": 1.1818899929322746,
-      "sizeRatio": 0.8913043478260869,
-      "swBodyNativePx": 2.3333333333333335,
+      "densRatio": 1.3277327611908514,
+      "sizeRatio": 0.8205128205128205,
+      "swBodyNativePx": 2.6666666666666665,
       "measurable": true,
       "gate": "human"
     },
@@ -262,16 +274,20 @@
       "label": "can-non-bold",
       "cond": "rot2",
       "swRatio": 1,
-      "densRatio": 0.952369369039667,
-      "sizeRatio": 1.1206896551724137,
-      "swBodyNativePx": 2.3333333333333335,
+      "densRatio": 1.2567876293724345,
+      "sizeRatio": 0.8205128205128205,
+      "swBodyNativePx": 2.6666666666666665,
       "measurable": true,
       "gate": "human"
     },
     {
       "label": "can-non-bold",
       "cond": "rot3",
-      "measurable": false,
+      "swRatio": 0.875,
+      "densRatio": 1.3169071025915418,
+      "sizeRatio": 0.7948717948717948,
+      "swBodyNativePx": 2.6666666666666665,
+      "measurable": true,
       "gate": "human"
     },
     {
@@ -290,9 +306,9 @@
       "label": "can-non-bold",
       "cond": "small1",
       "swRatio": 1,
-      "densRatio": 1.50388247894455,
-      "sizeRatio": 0.8,
-      "swBodyNativePx": 1.6666666666666667,
+      "densRatio": 1.4370440404246894,
+      "sizeRatio": 0.8214285714285714,
+      "swBodyNativePx": 2,
       "measurable": true,
       "gate": "human"
     },
@@ -333,13 +349,21 @@
     {
       "label": "gin-non-bold",
       "cond": "angle2",
-      "measurable": false,
+      "swRatio": 0.9166666666666666,
+      "densRatio": 1.2698918799646954,
+      "sizeRatio": 0.8297872340425532,
+      "swBodyNativePx": 4,
+      "measurable": true,
       "gate": "human"
     },
     {
       "label": "gin-non-bold",
       "cond": "angle3",
-      "measurable": false,
+      "swRatio": 1,
+      "densRatio": 1.2084421263368632,
+      "sizeRatio": 0.9130434782608695,
+      "swBodyNativePx": 3.6666666666666665,
+      "measurable": true,
       "gate": "human"
     },
     {
@@ -535,27 +559,31 @@
     {
       "label": "gin-non-bold",
       "cond": "rot1",
-      "swRatio": 0.875,
-      "densRatio": 1.1893922534077355,
-      "sizeRatio": 0.8636363636363636,
-      "swBodyNativePx": 2.6666666666666665,
+      "swRatio": 1,
+      "densRatio": 1.3898809523809523,
+      "sizeRatio": 0.75,
+      "swBodyNativePx": 3.3333333333333335,
       "measurable": true,
-      "gate": "not_bold"
+      "gate": "human"
     },
     {
       "label": "gin-non-bold",
       "cond": "rot2",
-      "swRatio": 0.875,
-      "densRatio": 1.0202048802445205,
-      "sizeRatio": 0.9836065573770492,
-      "swBodyNativePx": 2.6666666666666665,
+      "swRatio": 0.9,
+      "densRatio": 1.3425972831393875,
+      "sizeRatio": 0.7692307692307693,
+      "swBodyNativePx": 3.3333333333333335,
       "measurable": true,
-      "gate": "not_bold"
+      "gate": "human"
     },
     {
       "label": "gin-non-bold",
       "cond": "rot3",
-      "measurable": false,
+      "swRatio": 0.9,
+      "densRatio": 1.3471709364055873,
+      "sizeRatio": 0.75,
+      "swBodyNativePx": 3.3333333333333335,
+      "measurable": true,
       "gate": "human"
     },
     {
@@ -611,10 +639,10 @@
     {
       "label": "non-bold-prefix",
       "cond": "angle1",
-      "swRatio": 0.8461538461538461,
-      "densRatio": 0.8332648688714972,
-      "sizeRatio": 1.2941176470588236,
-      "swBodyNativePx": 4.333333333333333,
+      "swRatio": 0.7647058823529411,
+      "densRatio": 1.2695843780867715,
+      "sizeRatio": 0.8367346938775511,
+      "swBodyNativePx": 5.666666666666667,
       "measurable": true,
       "gate": "not_bold"
     },
@@ -627,14 +655,22 @@
     {
       "label": "non-bold-prefix",
       "cond": "angle3",
-      "measurable": false,
+      "swRatio": 0.8,
+      "densRatio": 0.9670313829619008,
+      "sizeRatio": 1.75,
+      "swBodyNativePx": 5,
+      "measurable": true,
       "gate": "human"
     },
     {
       "label": "non-bold-prefix",
       "cond": "angle4",
-      "measurable": false,
-      "gate": "human"
+      "swRatio": 0.8125,
+      "densRatio": 0.8776007700969777,
+      "sizeRatio": 1.4130434782608696,
+      "swBodyNativePx": 5.333333333333333,
+      "measurable": true,
+      "gate": "not_bold"
     },
     {
       "label": "non-bold-prefix",
@@ -715,10 +751,10 @@
     {
       "label": "non-bold-prefix",
       "cond": "crease1",
-      "swRatio": 0.6923076923076923,
-      "densRatio": 1.1206477135155626,
-      "sizeRatio": 0.851063829787234,
-      "swBodyNativePx": 4.333333333333333,
+      "swRatio": 0.6,
+      "densRatio": 1.092159044275227,
+      "sizeRatio": 1,
+      "swBodyNativePx": 6.666666666666667,
       "measurable": true,
       "gate": "not_bold"
     },
@@ -855,27 +891,31 @@
     {
       "label": "non-bold-prefix",
       "cond": "rot1",
-      "swRatio": 0.8,
-      "densRatio": 1.119514661574407,
-      "sizeRatio": 0.9318181818181818,
-      "swBodyNativePx": 3.3333333333333335,
+      "swRatio": 0.6470588235294118,
+      "densRatio": 1.3171762724994664,
+      "sizeRatio": 0.7619047619047619,
+      "swBodyNativePx": 5.666666666666667,
       "measurable": true,
-      "gate": "not_bold"
+      "gate": "human"
     },
     {
       "label": "non-bold-prefix",
       "cond": "rot2",
-      "swRatio": 0.8888888888888888,
-      "densRatio": 0.9817946969570979,
-      "sizeRatio": 1.096774193548387,
-      "swBodyNativePx": 3,
+      "swRatio": 0.7333333333333333,
+      "densRatio": 1.359793785469461,
+      "sizeRatio": 0.7619047619047619,
+      "swBodyNativePx": 5,
       "measurable": true,
       "gate": "human"
     },
     {
       "label": "non-bold-prefix",
       "cond": "rot3",
-      "measurable": false,
+      "swRatio": 0.7333333333333333,
+      "densRatio": 1.3777466166314025,
+      "sizeRatio": 0.7619047619047619,
+      "swBodyNativePx": 5,
+      "measurable": true,
       "gate": "human"
     },
     {
@@ -943,7 +983,11 @@
     {
       "label": "wine-non-bold",
       "cond": "angle3",
-      "measurable": false,
+      "swRatio": 0.6551724137931034,
+      "densRatio": 1.1818334320715274,
+      "sizeRatio": 2.230769230769231,
+      "swBodyNativePx": 9.666666666666666,
+      "measurable": true,
       "gate": "human"
     },
     {
@@ -1043,14 +1087,22 @@
     {
       "label": "wine-non-bold",
       "cond": "curved1",
-      "measurable": false,
+      "swRatio": 1,
+      "densRatio": 1.3478129943465191,
+      "sizeRatio": 1.0612244897959184,
+      "swBodyNativePx": 7.666666666666667,
+      "measurable": true,
       "gate": "human"
     },
     {
       "label": "wine-non-bold",
       "cond": "curved2",
-      "measurable": false,
-      "gate": "human"
+      "swRatio": 0.5,
+      "densRatio": 0.6843672413557126,
+      "sizeRatio": 1.2804878048780488,
+      "swBodyNativePx": 7.333333333333333,
+      "measurable": true,
+      "gate": "not_bold"
     },
     {
       "label": "wine-non-bold",
@@ -1163,19 +1215,31 @@
     {
       "label": "wine-non-bold",
       "cond": "rot1",
-      "measurable": false,
+      "swRatio": 0.7727272727272727,
+      "densRatio": 1.3533377832431823,
+      "sizeRatio": 0.9591836734693877,
+      "swBodyNativePx": 7.333333333333333,
+      "measurable": true,
       "gate": "human"
     },
     {
       "label": "wine-non-bold",
       "cond": "rot2",
-      "measurable": false,
+      "swRatio": 0.8260869565217391,
+      "densRatio": 1.382928028505891,
+      "sizeRatio": 0.9591836734693877,
+      "swBodyNativePx": 7.666666666666667,
+      "measurable": true,
       "gate": "human"
     },
     {
       "label": "wine-non-bold",
       "cond": "rot3",
-      "measurable": false,
+      "swRatio": 0.782608695652174,
+      "densRatio": 1.4442545414703951,
+      "sizeRatio": 0.9387755102040817,
+      "swBodyNativePx": 7.666666666666667,
+      "measurable": true,
       "gate": "human"
     },
     {

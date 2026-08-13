@@ -4,8 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import type { CheckResult } from "@/lib/compare/index.ts";
 import type { LabelExtraction } from "@/lib/vision/contract.ts";
 import type { Bands } from "@/lib/vision/locate.ts";
-import { DEMO_SAMPLES, type DemoSample } from "@/lib/samples.ts";
-import { downscaleImage } from "@/lib/downscale.ts";
+import { DEMO_SAMPLES, DOWNLOAD_SAMPLES, type DemoSample } from "@/lib/samples.ts";
+import { prepareImage } from "@/lib/downscale.ts";
 import { applyBoldGate, type BoldGateResult } from "@/lib/compare/boldGate.ts";
 import { measureBoldSignals } from "@/lib/boldMeasure.ts";
 import { Shell } from "./Shell.tsx";
@@ -125,7 +125,7 @@ export function SingleCheck() {
     setConfirming(false);
     setBoldAuto(null);
     try {
-      const small = image.type === "application/pdf" ? image : await downscaleImage(image);
+      const small = image.type === "application/pdf" ? image : await prepareImage(image);
       const form = new FormData();
       form.set("image", small);
       for (const [k, v] of Object.entries(f)) form.set(k, v);
@@ -396,10 +396,10 @@ export function SingleCheck() {
                 )}
                 <p className="text-[12px] text-muted-2">
                   Need test files? Download a{" "}
-                  {["clean-match", "case-diff", "title-case-prefix"].map((n, i) => (
+                  {DOWNLOAD_SAMPLES.map((n, i) => (
                     <span key={n}>
                       {i > 0 && " · "}
-                      <a href={`/api/samples/${n}.png`} download className="font-semibold text-navy hover:underline">label {i + 1}</a>
+                      <a href={`/api/samples/${n}`} download className="font-semibold text-navy hover:underline">label {i + 1}</a>
                     </span>
                   ))}{" "}
                   to upload yourself.

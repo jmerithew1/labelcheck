@@ -5,7 +5,7 @@ import type { CheckResult } from "@/lib/compare/index.ts";
 import type { LabelExtraction } from "@/lib/vision/contract.ts";
 import type { Bands } from "@/lib/vision/locate.ts";
 import { parseCsv, toCsv } from "@/lib/csv.ts";
-import { downscaleImage } from "@/lib/downscale.ts";
+import { prepareImage } from "@/lib/downscale.ts";
 import { applyBoldGate, type BoldGateResult } from "@/lib/compare/boldGate.ts";
 import { measureBoldSignals } from "@/lib/boldMeasure.ts";
 import { ResultView } from "./ResultView.tsx";
@@ -331,7 +331,7 @@ export function BatchReview() {
         const row = queue[i];
         update(row.index, { status: "checking", error: undefined });
         try {
-          const small = row.file!.type === "application/pdf" ? row.file! : await downscaleImage(row.file!);
+          const small = row.file!.type === "application/pdf" ? row.file! : await prepareImage(row.file!);
           const form = new FormData();
           form.set("image", small);
           form.set("skip_locate", "1");
@@ -378,7 +378,7 @@ export function BatchReview() {
         if (boldFetching.current.has(t.index)) continue;
         boldFetching.current.add(t.index);
         try {
-          const small = await downscaleImage(t.file!);
+          const small = await prepareImage(t.file!);
           const form = new FormData();
           form.set("image", small);
           const res = await fetch("/api/locate", { method: "POST", body: form });
@@ -471,7 +471,7 @@ export function BatchReview() {
     let alive = true;
     (async () => {
       try {
-        const small = await downscaleImage(row.file!);
+        const small = await prepareImage(row.file!);
         const form = new FormData();
         form.set("image", small);
         const res = await fetch("/api/locate", { method: "POST", body: form });

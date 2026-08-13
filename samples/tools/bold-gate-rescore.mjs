@@ -31,6 +31,7 @@ import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';
 import { createWorker } from 'tesseract.js';
 import { applyBoldGate, BOLD_GATE as GATE } from '../../lib/compare/boldGate.ts';
+import { enhanceImage } from '../../lib/enhance.ts';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..', '..');
@@ -38,6 +39,13 @@ const IMG = path.join(ROOT, 'samples', 'robustness');
 const argv = process.argv.slice(2);
 const arg = (k, d) => { const a = argv.find((x) => x.startsWith(`--${k}=`)); return a ? a.split('=')[1] : d; };
 const LIMIT = Number(arg('limit', 0));
+// --enhance measures through the SHIPPED pre-read pipeline (lib/enhance.ts
+// deskew). Enhancement makes previously-unreadable warnings readable, which
+// removes the accidental protection the legibility gate was giving non-bold
+// labels — so the bold gate has to carry that weight on its own now. This
+// flag is how we check it does, at zero API cost.
+const ENHANCE = process.argv.includes('--enhance');
+const ENH_SRC = enhanceImage.toString();
 
 // Import the SHIPPED gate rather than restating it. A local copy silently
 // fell out of sync the moment lib/compare/boldGate.ts gained a resolution
@@ -83,8 +91,26 @@ const tmp = path.join(IMG, '_gatecrop.png');
 
 /** Whole-image crop + 3x upscale + contrast stretch, then OCR for the words. */
 async function signalsFor(file) {
-  const b64 = fs.readFileSync(file).toString('base64');
+  let b64 = fs.readFileSync(file).toString('base64');
   const mime = file.endsWith('.jpg') ? 'jpeg' : 'png';
+  if (ENHANCE) {
+    const e = await page.evaluate(async ({ b64, mime, ENH_SRC }) => {
+      const img = new Image();
+      img.src = `data:image/${mime};base64,` + b64;
+      await new Promise((r) => { img.onload = r; img.onerror = r; });
+      if (!img.naturalWidth) return null;
+      const c = document.createElement('canvas');
+      c.width = img.naturalWidth; c.height = img.naturalHeight;
+      const ctx = c.getContext('2d', { willReadFrequently: true });
+      ctx.drawImage(img, 0, 0);
+      const o = eval('(' + ENH_SRC + ')')(ctx.getImageData(0, 0, c.width, c.height).data, c.width, c.height);
+      if (o.skewDeg === 0) return null; // untouched — keep the original bytes
+      c.width = o.width; c.height = o.height;
+      ctx.putImageData(new ImageData(o.data, o.width, o.height), 0, 0);
+      return c.toDataURL('image/png').split(',')[1];
+    }, { b64, mime, ENH_SRC });
+    if (e) b64 = e;
+  }
   const prep = await page.evaluate(async ({ b64, mime }) => {
     const img = new Image();
     img.src = `data:image/${mime};base64,` + b64;
