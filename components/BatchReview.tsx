@@ -283,14 +283,39 @@ export function BatchReview() {
       setGlobalError(`The spreadsheet is missing required column${missing.length > 1 ? "s" : ""}: ${missing.join(", ").replace(/_/g, " ")}. Download the sample CSV to see the expected format.`);
       return false;
     }
+    if (parsed.length === 1) {
+      setGlobalError(
+        "The spreadsheet has column headings but no label rows under them. Add one row per label — the file name in the first column must match an uploaded label file.",
+      );
+      return false;
+    }
+    // U+FFFD means the file was not UTF-8 and characters were destroyed in
+    // decoding. Left alone, "Añejo" becomes "aejo" and the tool reports a
+    // mismatch against a perfectly good label — sending the agent hunting a
+    // defect that does not exist.
+    if (csvText.includes("�")) {
+      setGlobalError(
+        "The spreadsheet isn't saved as UTF-8, so accented characters (é, ñ, ü) arrived damaged and would be reported as mismatches. Re-save it as CSV UTF-8 and upload it again.",
+      );
+      return false;
+    }
     setGlobalError(null);
     const issues: string[] = [];
     const imageMap = new Map<string, File>();
     const stem = (n: string) => n.toLowerCase().replace(/\.\w+$/, "");
     for (const f of images) {
       const key = stem(f.name);
-      if (imageMap.has(key)) issues.push(`Two files share the name "${f.name}" — using the first.`);
-      else imageMap.set(key, f);
+      const clash = imageMap.get(key);
+      if (clash) {
+        // Matching is by name WITHOUT extension, so photo.png and photo.jpg
+        // collide. Say that, rather than claiming two files share a name when
+        // they visibly don't.
+        issues.push(
+          clash.name.toLowerCase() === f.name.toLowerCase()
+            ? `Two files share the name "${f.name}" — using the first.`
+            : `"${f.name}" and "${clash.name}" match the same CSV row (labels pair by file name without the extension) — using "${clash.name}".`,
+        );
+      } else imageMap.set(key, f);
     }
     const newRows: BatchRow[] = parsed.slice(1).map((cells, i) => {
       const rec: Record<string, string> = {};

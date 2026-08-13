@@ -21,10 +21,13 @@ export function parseVolumeMl(raw: string): number | null {
     .replace(/(\d),(?=\d{3}\b)/g, "$1")
     .replace(/\s+/g, " ")
     .trim();
-  const m = s.match(/(\d+(?:[.,]\d{1,2})?)\s*(fl\.? ?oz\.?|fluid ounces?|millilitres?|milliliters?|centilitres?|centiliters?|litres?|liters?|ml|cl|l|oz)\b/);
-  if (!m) return null;
-  const value = parseFloat(m[1].replace(",", "."));
-  const unitKey = m[2].replace(/\./g, "").replace(/\s+/g, " ");
+  // The leading sign is captured so it can be REJECTED. Without it "-750 mL"
+  // parsed as 750 and reported a clean MATCH against "750 mL" — a silent wrong
+  // answer, which is worse than declining to compare and asking for a human.
+  const m = s.match(/(-?)(\d+(?:[.,]\d{1,2})?)\s*(fl\.? ?oz\.?|fluid ounces?|millilitres?|milliliters?|centilitres?|centiliters?|litres?|liters?|ml|cl|l|oz)\b/);
+  if (!m || m[1]) return null;
+  const value = parseFloat(m[2].replace(",", "."));
+  const unitKey = m[3].replace(/\./g, "").replace(/\s+/g, " ");
   const factor =
     UNIT_TO_ML[unitKey] ??
     UNIT_TO_ML[unitKey.replace(/s$/, "")] ??

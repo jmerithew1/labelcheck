@@ -17,7 +17,13 @@ import { enhanceImage } from "./enhance.ts";
  */
 export async function prepareImage(file: File, maxEdge = 1568): Promise<File> {
   if (!file.type.startsWith("image/")) return file;
-  const bitmap = await createImageBitmap(file).catch(() => null);
+  // "from-image" applies the EXIF orientation tag. Without it a portrait phone
+  // photo decodes sideways, and the deskew pass caps at ±20° so it provably
+  // cannot recover a 90° error — the warning comes back unreadable on a label
+  // that is perfectly fine. Phone uploads are the likeliest degraded input the
+  // brief names, so this is the cheapest hedge available.
+  const bitmap = await createImageBitmap(file, { imageOrientation: "from-image" })
+    .catch(() => createImageBitmap(file).catch(() => null));
   if (!bitmap) return file; // unreadable as an image — let the server reject loudly
 
   const longEdge = Math.max(bitmap.width, bitmap.height);

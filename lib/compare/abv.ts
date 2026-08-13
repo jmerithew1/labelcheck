@@ -17,15 +17,17 @@ export function parseAbv(raw: string): ParsedAbv {
   let percent: number | null = null;
   let proof: number | null = null;
 
-  // Proof: "90 proof" / "(90 Proof)"
-  const proofMatch = s.match(/(\d+(?:\.\d+)?)\s*proof/);
-  if (proofMatch) proof = parseFloat(proofMatch[1]);
+  // Each leading sign is captured only so a negative can be REJECTED: "-45%"
+  // used to parse as 45 and report a clean match against "45%". Declining to
+  // parse sends it to a human, which is the right answer for nonsense input.
+  const proofMatch = s.match(/(-?)(\d+(?:\.\d+)?)\s*proof/);
+  if (proofMatch && !proofMatch[1]) proof = parseFloat(proofMatch[2]);
 
   // Percent forms: "45%", "45 percent", "alc. 45% by vol.", "alcohol 13.5% by volume"
   const pctMatch =
-    s.match(/(\d+(?:\.\d+)?)\s*(?:%|percent)/) ??
-    s.match(/(?:alc(?:ohol)?\.?\s*)(\d+(?:\.\d+)?)/);
-  if (pctMatch) percent = parseFloat(pctMatch[1]);
+    s.match(/(-?)(\d+(?:\.\d+)?)\s*(?:%|percent)/) ??
+    s.match(/(?:alc(?:ohol)?\.?\s*)(-?)(\d+(?:\.\d+)?)/);
+  if (pctMatch && !pctMatch[1]) percent = parseFloat(pctMatch[2]);
 
   // Percent absent but proof present → derivable
   if (percent === null && proof !== null) percent = proof / 2;

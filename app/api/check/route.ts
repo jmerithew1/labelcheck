@@ -9,12 +9,14 @@ import { locateBands, type LocatableMedia, type Bands } from "@/lib/vision/locat
 import { applySecondReading } from "@/lib/compare/warning.ts";
 import { compareLabel, type ApplicationData } from "@/lib/compare/index.ts";
 import { rateLimited, RATE_LIMIT_MESSAGE } from "@/lib/rateLimit.ts";
+import { fileTypeComplaint } from "@/lib/fileType.ts";
 
 export const maxDuration = 60;
 
 const MAX_IMAGE_BYTES = 8 * 1024 * 1024; // images are downscaled client-side; this is the loud backstop
 const MAX_PDF_BYTES = 10 * 1024 * 1024; // PDFs can't be downscaled in-browser
 const MEDIA_TYPES = new Set(["image/png", "image/jpeg", "image/webp", "application/pdf"]);
+const MAX_FIELD_CHARS = 300;
 
 /**
  * POST /api/check — one label against one application.
@@ -66,7 +68,12 @@ export async function POST(req: Request) {
 
   const field = (name: string) => {
     const v = form.get(name);
-    return typeof v === "string" ? v : "";
+    // Cap the length. The comparison engine runs a full Levenshtein matrix
+    // (O(n·m)) against the label text on the server thread, so an oversized
+    // cell — trivial to produce from a CSV — could stall every concurrent
+    // batch row behind it. A few hundred characters is generous for a brand
+    // name, and truncation is visible in the result rather than silent.
+    return typeof v === "string" ? v.slice(0, MAX_FIELD_CHARS) : "";
   };
   const app: ApplicationData = {
     brand_name: field("brand_name"),
@@ -83,7 +90,13 @@ export async function POST(req: Request) {
     );
   }
 
-  const bytes = Buffer.from(await image.arrayBuffer()).toString("base64");
+  const raw = new Uint8Array(await image.arrayBuffer());
+  // The extension lies more often than you'd think — check the bytes before
+  // spending a paid call that will fail upstream with unactionable copy.
+  const complaint = fileTypeComplaint(raw, image.type, image.name);
+  if (complaint) return NextResponse.json({ error: complaint }, { status: 400 });
+
+  const bytes = Buffer.from(raw).toString("base64");
   const media = image.type as ExtractableMedia;
 
   // Evidence bands run as a THIRD parallel call (spike: p50 2.0s < the main
@@ -99,7 +112,9 @@ export async function POST(req: Request) {
   if (!outcome.ok) {
     return NextResponse.json(
       { error: failureMessage(outcome.failure), failure: outcome.failure.kind, ms: outcome.ms },
-      { status: outcome.failure.kind === "rate_limited" ? 429 : 502 },
+      // 503 for a missing key: the service is unconfigured, not the upstream
+      // misbehaving, and it must not read as a transient blip worth retrying.
+      { status: outcome.failure.kind === "rate_limited" ? 429 : outcome.failure.kind === "not_configured" ? 503 : 502 },
     );
   }
 

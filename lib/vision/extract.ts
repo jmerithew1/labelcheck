@@ -118,6 +118,8 @@ export type ExtractionFailure =
   | { kind: "refusal" }
   | { kind: "rate_limited" }
   | { kind: "timeout" }
+  /** server has no working API key — retrying cannot fix it */
+  | { kind: "not_configured" }
   | { kind: "api_error"; detail: string };
 
 export type ExtractionOutcome =
@@ -203,7 +205,13 @@ export async function extractLabel(
 
     let bold: LabelExtraction["warning_prefix_bold"] = "unclear";
     let bodyBold: LabelExtraction["warning_body_bold"] = "unclear";
-    let legibility: LabelExtraction["warning_legibility"] = "crisp";
+    // "marginal", NOT "crisp", when the typography call gave us nothing.
+    // These defaults apply when that call failed or returned no tool_use, and
+    // "crisp" is a claim we did not earn: the legibility gate exists to stop a
+    // hallucinated word-for-word pass on a warning too blurred to read, and
+    // defaulting to the most permissive value quietly switched it off exactly
+    // when the evidence was weakest. "marginal" routes to a human instead.
+    let legibility: LabelExtraction["warning_legibility"] = "marginal";
     if (boldMsg) {
       const btu = boldMsg.content.find((b) => b.type === "tool_use");
       if (btu && btu.type === "tool_use") {
@@ -212,8 +220,14 @@ export async function extractLabel(
         bold = w === "heavier" ? "bold" : w === "same" || w === "lighter" ? "not_bold" : "unclear";
         const b = input.body_weight;
         bodyBold = b === "bold" ? "bold" : b === "regular" ? "not_bold" : "unclear";
+        // Only the two values that actually assert readability may produce
+        // "crisp"; a missing or unrecognised one is an unanswered question,
+        // not a clean bill of health.
         const g = (input as { legibility?: string }).legibility;
-        legibility = g === "marginal" ? "marginal" : g === "illegible" ? "illegible" : "crisp";
+        legibility =
+          g === "illegible" ? "illegible"
+            : g === "crisp" || g === "no_warning_present" ? "crisp"
+            : "marginal";
       }
     }
     extraction.warning_prefix_bold = bold;
@@ -223,12 +237,26 @@ export async function extractLabel(
     return { ok: true, extraction, ms };
   } catch (e) {
     const ms = Math.round(performance.now() - t0);
+    // Timeout FIRST: APIConnectionTimeoutError extends APIConnectionError
+    // extends APIError, so the generic branch below used to swallow it and the
+    // timeout copy — the only message that tells the user the image may be too
+    // large — was unreachable.
+    if (e instanceof Anthropic.APIConnectionTimeoutError || (e instanceof Error && /timeout|timed out/i.test(e.message))) {
+      return { ok: false, failure: { kind: "timeout" }, ms };
+    }
     if (e instanceof Anthropic.APIError) {
       if (e.status === 429) return { ok: false, failure: { kind: "rate_limited" }, ms };
+      // 401/403 is a server misconfiguration (missing or rejected key). It
+      // cannot be retried away, so it must not wear the "try again" copy.
+      if (e.status === 401 || e.status === 403) {
+        return { ok: false, failure: { kind: "not_configured" }, ms };
+      }
       return { ok: false, failure: { kind: "api_error", detail: `${e.status}: ${e.name}` }, ms };
     }
-    if (e instanceof Error && /timeout|timed out/i.test(e.message)) {
-      return { ok: false, failure: { kind: "timeout" }, ms };
+    // The SDK throws a plain Error at request time when no key is set — it
+    // does not throw at construction, so this is the only place it surfaces.
+    if (e instanceof Error && /api[_ ]?key/i.test(e.message)) {
+      return { ok: false, failure: { kind: "not_configured" }, ms };
     }
     return { ok: false, failure: { kind: "api_error", detail: String(e).slice(0, 200) }, ms };
   }
@@ -243,6 +271,9 @@ export function failureMessage(f: ExtractionFailure): string {
       return "The system is briefly at capacity. Wait a few seconds and try again.";
     case "timeout":
       return "Reading this image took too long and was stopped. Try again — if it keeps happening, the image may be too large or the service may be having trouble.";
+    case "not_configured":
+      // Deliberately NOT "try again": nothing the user does will help.
+      return "This site isn't finished being set up — its connection to the label reader is missing or was rejected. Nothing you did caused this; please tell whoever set the site up.";
     case "api_error":
       return "Something went wrong while reading the label. Try again; if it keeps failing, note the time and report the issue.";
   }
