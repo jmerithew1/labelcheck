@@ -121,12 +121,41 @@ Critical rules:
 - For each field: "found" with verbatim text, "absent" if genuinely not on the label, or "unreadable" if present but illegible (blur/glare/size). Never guess unreadable text.
 - Join line-wrapped text with single spaces. Reproduce hyphenation only if the hyphen is printed mid-word at a line break.`;
 
-/** Reassemble the flat tool output into the typed shape. Deterministic; no model involvement. */
+/**
+ * Reassemble the flat tool output into the typed shape. Deterministic; no
+ * model involvement.
+ *
+ * Every enum is VALIDATED, not cast. A cast is a promise the model keeps only
+ * when it behaves: a hallucinated `"FOUND"` used to satisfy TypeScript and
+ * then match none of the tri-state branches downstream, so the field fell
+ * through to plain text comparison instead of the absent/unreadable handling
+ * it needed. No crash, wrong branch, and nothing anywhere said so.
+ *
+ * Unrecognised values fall back to the SAFE end of each enum — the value that
+ * asks a human rather than the one that asserts a clean reading.
+ */
+
+/** Narrow an unknown to one of `allowed`, else the fallback. */
+function oneOf<T extends string>(value: unknown, allowed: readonly T[], fallback: T): T {
+  return typeof value === "string" && (allowed as readonly string[]).includes(value)
+    ? (value as T)
+    : fallback;
+}
+
+const FIELD_STATUSES = ["found", "absent", "unreadable"] as const;
+const BOLD_STATES = ["bold", "not_bold", "unclear"] as const;
+const LEGIBILITY = ["crisp", "marginal", "illegible"] as const;
+const TEXT_SIZES = ["normal", "small", "illegibly_small"] as const;
+
 export function toLabelExtraction(flat: Record<string, unknown>): LabelExtraction {
-  const f = (prefix: string): ExtractedField => ({
-    status: (flat[`${prefix}_status`] as FieldStatus) ?? "unreadable",
-    text: typeof flat[`${prefix}_text`] === "string" ? (flat[`${prefix}_text`] as string) : "",
-  });
+  const f = (prefix: string): ExtractedField => {
+    const status = oneOf(flat[`${prefix}_status`], FIELD_STATUSES, "unreadable");
+    const text = typeof flat[`${prefix}_text`] === "string" ? (flat[`${prefix}_text`] as string) : "";
+    // "found" with nothing to show is a contradiction the model occasionally
+    // produces; treat it as unreadable so it reaches a person instead of
+    // comparing an empty string against the application.
+    return status === "found" && !text.trim() ? { status: "unreadable", text: "" } : { status, text };
+  };
   return {
     is_alcohol_label: Boolean(flat.is_alcohol_label),
     brand_name: f("brand_name"),
@@ -136,14 +165,13 @@ export function toLabelExtraction(flat: Record<string, unknown>): LabelExtractio
     bottler_name_address: f("bottler"),
     country_of_origin: f("origin"),
     warning: f("warning"),
-    warning_prefix_bold:
-      (flat.warning_prefix_bold as LabelExtraction["warning_prefix_bold"]) ?? "unclear",
+    warning_prefix_bold: oneOf(flat.warning_prefix_bold, BOLD_STATES, "unclear"),
     // Filled by the parallel typography call, not the transcription schema.
-    warning_body_bold:
-      (flat.warning_body_bold as LabelExtraction["warning_body_bold"]) ?? "unclear",
-    warning_legibility:
-      (flat.warning_legibility as LabelExtraction["warning_legibility"]) ?? "crisp",
-    warning_text_size:
-      (flat.warning_text_size as LabelExtraction["warning_text_size"]) ?? "normal",
+    warning_body_bold: oneOf(flat.warning_body_bold, BOLD_STATES, "unclear"),
+    // "marginal", not "crisp": an unparseable answer has not earned a claim
+    // that the warning was legibly read. Matches the same default in
+    // extract.ts, for the same reason.
+    warning_legibility: oneOf(flat.warning_legibility, LEGIBILITY, "marginal"),
+    warning_text_size: oneOf(flat.warning_text_size, TEXT_SIZES, "normal"),
   };
 }

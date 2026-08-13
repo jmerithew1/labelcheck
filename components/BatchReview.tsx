@@ -25,6 +25,10 @@ const PAGE_SIZE = 10;
 // run ends; on a 200-300 label surge dump it would be hundreds of extra
 // calls the agent may never use — so past this size the pass is opt-in.
 const BOLD_GATE_EAGER_MAX = 60;
+// Band lookups that fail (usually a 429 from our own limiter during a large
+// batch) retry with backoff, then give up and degrade to the honest
+// "couldn't locate" state rather than spinning.
+const MAX_LOCATE_TRIES = 3;
 const REQUIRED_HEADERS = ["filename", "brand_name", "class_type", "alcohol_content", "net_contents"];
 
 const HEADER_SYNONYMS: Record<string, string> = {
@@ -76,6 +80,11 @@ interface BatchRow {
   /** the warning band has had its one OCR correction attempt (whether or not
    *  it succeeded) — stops the fallback from retrying forever */
   bandFixed?: boolean;
+  /** the last band lookup failed rather than finding nothing: "busy" = the
+   *  endpoint throttled us, "failed" = anything else. Distinct from bands:{}
+   *  so the card never says "couldn't locate the warning" about a label the
+   *  machine never got to look at. */
+  locateError?: "busy" | "failed";
 }
 
 /** Flagged comparison fields — the ones a per-field ruling can resolve. */
@@ -261,6 +270,9 @@ export function BatchReview() {
     boldFetching.current.clear();
     gateRunning.current.clear();
     preparedIdx.current.clear();
+    bandFixing.current.clear();
+    locateCooldown.current.clear();
+    locateAttempts.current.clear();
     setBoldPassStarted(false);
     setStripDismissed(false);
     setBoldUndo(null);
@@ -422,7 +434,9 @@ export function BatchReview() {
     // Large batches only start the pass once the agent asks for it.
     if (rows.length > BOLD_GATE_EAGER_MAX && !boldPassStarted) return;
     const targets = rows.filter(
-      (r) => boldEligible(r) && !r.bands && r.file && r.file.type !== "application/pdf" && !boldFetching.current.has(r.index),
+      (r) =>
+        boldEligible(r) && !r.bands && r.file && r.file.type !== "application/pdf" &&
+        !boldFetching.current.has(r.index) && !locateCooldown.current.has(r.index),
     );
     if (!targets.length) return;
     let alive = true;
@@ -445,8 +459,36 @@ export function BatchReview() {
           const res = await fetch("/api/locate", { method: "POST", body: form });
           const body = await res.json().catch(() => null);
           if (gen !== batchGen.current) return; // a new batch owns these indexes now
+          if (!res.ok) {
+            // Throttled or errored is NOT "nothing found". Reading an error
+            // body as {} made a rate-limited row look like a label whose
+            // warning could not be located, so the agent was asked to squint
+            // at something the machine never actually looked at.
+            const tries = (locateAttempts.current.get(t.index) ?? 0) + 1;
+            locateAttempts.current.set(t.index, tries);
+            if (tries >= MAX_LOCATE_TRIES) {
+              // Out of retries: fall back to the honest "tried, nothing found"
+              // state rather than leaving the card spinning forever.
+              setRows((rs) => rs.map((r) => (r.index === t.index ? { ...r, bands: {}, locateError: undefined } : r)));
+              return;
+            }
+            setRows((rs) =>
+              rs.map((r) => (r.index === t.index ? { ...r, locateError: res.status === 429 ? "busy" : "failed" } : r)),
+            );
+            // Backoff before the effect is allowed to pick this row up again —
+            // without it, setting the error re-renders, the effect re-runs,
+            // and a throttled batch retries in a tight loop against the very
+            // endpoint that just asked it to slow down. Held in its own set
+            // because `finally` below releases the in-flight claim.
+            locateCooldown.current.add(t.index);
+            window.setTimeout(() => {
+              locateCooldown.current.delete(t.index);
+              if (gen === batchGen.current) setRows((rs) => rs.map((r) => (r.index === t.index ? { ...r } : r)));
+            }, 2000 * tries);
+            return;
+          }
           // {} marks "tried, nothing found" so the card can say so honestly.
-          setRows((rs) => rs.map((r) => (r.index === t.index ? { ...r, bands: body?.bands ?? {} } : r)));
+          setRows((rs) => rs.map((r) => (r.index === t.index ? { ...r, bands: body?.bands ?? {}, locateError: undefined } : r)));
         } catch {
           /* retryable on the next effect run */
         } finally {
@@ -514,6 +556,8 @@ export function BatchReview() {
   // OCR worker serializes internally.
   const gateRunning = useRef<Set<number>>(new Set());
   const bandFixing = useRef<Set<number>>(new Set());
+  const locateCooldown = useRef<Set<number>>(new Set());
+  const locateAttempts = useRef<Map<number, number>>(new Map());
   useEffect(() => {
     // PDFs and rows with no image can never be measured — straight to "human"
     // so the attention-only strip can show them. A missing warning band is NOT
@@ -1499,8 +1543,14 @@ function BoldCard({
               />
             </span>
             {!cropReady && (
-              <span className={`absolute inset-0 flex items-center justify-center px-2 text-center text-[11px] text-muted-2 ${tried && !band ? "" : "animate-pulse"}`}>
-                {tried && !band ? "couldn't locate the warning — open the row" : "finding the warning…"}
+              <span className={`absolute inset-0 flex items-center justify-center px-2 text-center text-[11px] text-muted-2 ${tried && !band && !row.locateError ? "" : "animate-pulse"}`}>
+                {row.locateError === "busy"
+                  ? "waiting for a free slot to find the warning…"
+                  : row.locateError === "failed"
+                    ? "couldn't reach the finder — retrying…"
+                    : tried && !band
+                      ? "couldn't locate the warning — open the row"
+                      : "finding the warning…"}
               </span>
             )}
           </>
