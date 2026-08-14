@@ -66,6 +66,8 @@ One caveat about an earlier claim, kept because it shaped the design: the 3-roun
 
 ## Measured performance (deployed app, not localhost)
 
+**Reading the p95 honestly.** In the n=30 deployed run ([latency-p95.json](latency-p95.json): p50 4.58s · p90 5.36s · p95 5.48s · max 5.67s), **all 7 checks over five seconds were the same image** — the glare-heavy `clean-match--glare2`, median 5.28s. The other three rotated labels (medians 3.90s, 4.00s, 4.75s) never crossed the bar. The tail is therefore a property of *that photograph*, not of load, concurrency or a cold container, and client + network overhead is a median 274ms of the total. The claim that survives is: a typical label answers in about 4.5s, a badly lit one in about 5.3s, and the percentile moves with how many hard photos are in the sample.
+
 Measured 2026-08-11 against the production Railway deployment (raw data: [measured-performance.json](measured-performance.json)), and the single-label row re-measured 2026-08-13 after the deskew shipped (raw data: [post-deskew-latency.json](post-deskew-latency.json)):
 
 | Requirement | Measured | Bar |
