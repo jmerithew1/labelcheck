@@ -1,7 +1,7 @@
 {
   "measured": "2026-08-14",
   "target": "https://labelcheck-production-8f22.up.railway.app",
-  "what": "The brief's headline case — 250 label applications dumped at once — driven through the deployed batch UI on the build that carries the 2026-08-13/14 changes (shared verdict summary, relocated batch decisions, rebuilt bold spot-check crop, bottler lead-in fix, empty-fields guard fix). Re-run because the standing batch-ui-250.json evidence predates all of them.",
+  "what": "The brief's headline case \u2014 250 label applications dumped at once \u2014 driven through the deployed batch UI on the build that carries the 2026-08-13/14 changes (shared verdict summary, relocated batch decisions, rebuilt bold spot-check crop, bottler lead-in fix, empty-fields guard fix). Re-run because the standing batch-ui-250.json evidence predates all of them.",
   "how": "250 rows assembled in the browser from the twelve bundled sample applications (each row under its own filename) and dropped on the batch dropzone as a CSV plus 250 image files. Same client path as a real drop: per-image deskew, 250 object URLs, filename pairing, streaming table. Counts below are read from the exported report, not from the table, so they are exact rather than eyeballed.",
   "check_pass": {
     "labels": 250,
@@ -18,8 +18,26 @@
   "timing_caveat": {
     "issue": "The browser pane was not displayed for this run (document.hidden === true), which suspends the renderer between interactions. Real elapsed time was therefore much longer than the figure above, and the app's own clock advanced only while the tab was awake.",
     "what_the_number_is": "139.1s is ACTIVE processing time as measured by the page, not wall time on a foregrounded tab.",
-    "why_it_is_still_worth_recording": "It agrees closely with the 146.5s recorded by the earlier, independent 250-row run in batch-ui-250.json under the same constraint — two runs, two builds, ~5% apart.",
+    "why_it_is_still_worth_recording": "It agrees closely with the 146.5s recorded by the earlier, independent 250-row run in batch-ui-250.json under the same constraint \u2014 two runs, two builds, ~5% apart.",
     "what_would_settle_it": "One run with the browser pane displayed. Not done here; the number is reported as approximate rather than dressed up."
   },
-  "note_on_the_review_everything_start": "All 250 rows land in Needs review before the bold pass runs, because past 60 rows that pass is opt-in and a row whose bold was never examined must not show a green tick. That is deliberate. See batch-72-optin.json for the measured effect of clicking Check bold type at 72 rows: 39 of 56 eligible rows resolved by measurement, 17 left for a human glance."
+  "note_on_the_review_everything_start": "All 250 rows land in Needs review before the bold pass runs, because past 60 rows that pass is opt-in and a row whose bold was never examined must not show a green tick. That is deliberate. See batch-72-optin.json for the measured effect of clicking Check bold type at 72 rows: 39 of 56 eligible rows resolved by measurement, 17 left for a human glance.",
+  "opt_in_bold_pass": {
+    "eligible_rows": 210,
+    "chip_offered": "Check bold type 210",
+    "measured_before_the_run_was_stopped": 141,
+    "auto_resolved_by_measurement": 88,
+    "routed_to_a_human_glance": 53,
+    "still_unmeasured_when_stopped": 69,
+    "throughput": "~4 rows per minute of active browser time",
+    "why_stopped": "Not a failure \u2014 a measured limit. Every measurement is a tesseract pass serialized through one worker, and a row whose warning band is missing or wrong costs a second full-image OCR to repair it, so the remaining rows were running at ~15s each. Finishing would have taken another ~17 minutes of active browser time to move a ratio that had already stabilised. Recorded as a throughput limitation in approach.md rather than ground out for a rounder number.",
+    "outcome_ratio_is_stable": "88 of 141 measured here (62% auto-resolved) against 39 of 56 (70%) in the fully settled 72-row run \u2014 the triage behaviour holds at both sizes; only the throughput degrades.",
+    "spot_check_strip_at_this_size": {
+      "cards": 53,
+      "rendering_a_crop": 49,
+      "still_locating": 4,
+      "using_the_labelled_foot_of_label_fallback": 36,
+      "note": "36 of 53 cards \u2014 68% \u2014 rely on the fallback crop added 2026-08-13. On the previous build every one of those would have rendered no image at all, just 'couldn't locate the warning \u2014 open the row'. That is the clearest measure of what that fix is worth at scale."
+    }
+  }
 }
