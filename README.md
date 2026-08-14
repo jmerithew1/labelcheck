@@ -22,13 +22,14 @@ Nothing needs to be set up to try it — both pages carry their own sample data.
 
 ### Single check
 
-1. Type the application's values and drop the label file (PNG / JPG / WebP up to 8 MB, PDF up to 10 MB). **Any one field is enough** — the government-warning check needs none of them, so a back label carrying only a bottler address is still worth checking. The optional **TTB application #** appears on the printed report.
+1. Type the application's values and drop the label file (PNG / JPG / WebP up to 8 MB, PDF up to 10 MB). They are typed rather than pulled in because the brief rules out COLA integration — there is no system of record for a standalone prototype to read, so the values come off the application on the agent's other screen. A 200–300 label surge never types anything: that arrives through the batch page as the CSV the applications already export. **Any one field is enough** — the government-warning check needs none of them, so a back label carrying only a bottler address is still worth checking. The optional **TTB application #** appears on the printed report.
 2. **Check label.** The verdict lands in about five seconds. The badge in the top bar and the banner below it always say the same thing — they render from one shared summary, so they cannot disagree.
-3. **To see where a value sits on the label, click the wording in a comparison row** — the text itself, not the whole row. The status chip and the Accept / Reject buttons on the right are separate controls and are not part of the click target. Rows reading *Not provided* have nothing to locate and are not clickable.
+3. **To see where a value sits on the label, click its row** — anywhere on it. The Accept / Reject buttons keep their own presses, so clicking those records a decision instead. Rows reading *Not provided* have nothing to locate and stay inert.
 4. **The label viewer**: `−` / `+` zoom in 25% steps (50%–250%), **Rotate** turns 90° a click, **Fit** resets both, **View full size** opens a lightbox that keeps the highlight overlays. Above 100% the image pans — drag it.
 5. **Flagged rows carry Accept / Reject.** *Accept* re-files the row as matched and records that a person looked; *Reject* confirms a real mismatch. Either way the machine's original finding stays on the row and on the printed report — a ruling is layered over a verdict, never a replacement for one.
 6. **The government warning has its own panel**, split into *Wording* (word-for-word against 27 CFR 16.21) and *Formatting* (ALL CAPS, and bold). Bold is the one check a computer cannot finish: where the stroke-width measurement is confident it resolves itself and says so, and where it is not, the Formatting row grows the same **Accept** / **Reject** pair. Rejecting bold is a warning failure, and the whole screen turns red to match.
-7. **Print report** produces a printable record — choose *Save as PDF* in the print dialog for a file. **Check another label** resets the form.
+7. **Audit trail** sits collapsed at the foot of the result: which readers ran, how long they took, whether a second reading was taken, and what was finally recorded. It opens on click and is always included in the printed copy, whether or not it is open on screen.
+8. **Print report** produces a printable record — choose *Save as PDF* in the print dialog for a file. **Check another label** resets the form.
 
 ### Batch review
 

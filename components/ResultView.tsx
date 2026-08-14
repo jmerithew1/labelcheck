@@ -97,8 +97,11 @@ export function DecidePair({
  *  like the comparison rows — one gesture for one job. It used to carry a
  *  separate "Show on label" button, which meant the same action wore two
  *  different affordances on one screen and the caption had to explain both.
- *  The decision controls stay OUTSIDE that target: real buttons must not nest
- *  inside another button (508). */
+ *  The whole row responds, via a handler on the container that ignores clicks
+ *  originating in a real control; the inner button remains for semantics,
+ *  keyboard and the accessible name. The decision controls therefore stay
+ *  OUTSIDE that button, because real buttons must not nest inside another
+ *  button (508). */
 function WarningRow({
   compact,
   label,
@@ -119,15 +122,26 @@ function WarningRow({
   /** present = clicking the row shows this row's subject on the label */
   onSelect?: () => void;
 }) {
-  const targetCls = onSelect ? "cursor-pointer" : "cursor-default";
+  // Clicks from a real control (this row's own button, or the decision pair in
+  // `extra`) are handled by that control; anything else in the row counts.
+  const rowClick = onSelect
+    ? (e: React.MouseEvent) => {
+        if ((e.target as HTMLElement).closest("button")) return;
+        onSelect();
+      }
+    : undefined;
   if (compact) {
     const Target = onSelect ? "button" : "div";
     return (
-      <div data-row={anchor} className="flex flex-col gap-1.5 border-b border-hairline px-4 py-3 last:border-0">
+      <div
+        data-row={anchor}
+        onClick={rowClick}
+        className={`flex flex-col gap-1.5 border-b border-hairline px-4 py-3 last:border-0 ${onSelect ? "cursor-pointer" : ""}`}
+      >
         <Target
           onClick={onSelect}
           aria-label={onSelect ? `${label} — show on label` : undefined}
-          className={`flex w-full flex-col gap-1.5 text-left ${targetCls}`}
+          className="flex w-full flex-col gap-1.5 text-left"
         >
           <span className="flex items-center justify-between gap-3">
             <span className="text-[13px] font-semibold text-ink-soft">{label}</span>
@@ -141,11 +155,15 @@ function WarningRow({
   }
   const Target = onSelect ? "button" : "span";
   return (
-    <div data-row={anchor} className="flex items-start gap-4 border-b border-hairline px-4 py-3 last:border-0">
+    <div
+      data-row={anchor}
+      onClick={rowClick}
+      className={`flex items-start gap-4 border-b border-hairline px-4 py-3 last:border-0 ${onSelect ? "cursor-pointer" : ""}`}
+    >
       <Target
         onClick={onSelect}
         aria-label={onSelect ? `${label} — show on label` : undefined}
-        className={`flex min-w-0 flex-1 items-start gap-4 text-left ${targetCls}`}
+        className="flex min-w-0 flex-1 items-start gap-4 text-left"
       >
         <span className="w-24 shrink-0 pt-0.5 text-[13px] font-semibold text-ink-soft">{label}</span>
         <span className="min-w-0 flex-1 text-[13.5px] text-ink">{text}</span>
@@ -486,15 +504,32 @@ export function ResultView({
                 <div
                   key={f.field}
                   data-row={f.field}
-                  className={`flex items-start gap-3 border-b border-hairline px-4 py-3 last:border-0 ${rowBg} ${focusRing} ${hoverRing}`}
+                  // The WHOLE row is the click target, not just its text. The
+                  // inner button stays for semantics, keyboard and the
+                  // accessible name — it simply no longer has to be the only
+                  // way in. Clicks that came from a real control are ignored
+                  // here so the row's own button and the Accept / Reject pair
+                  // handle their own presses and nothing double-fires; a real
+                  // button cannot be nested inside another button (508), which
+                  // is why this is a container handler rather than one big
+                  // stretched button.
+                  onClick={
+                    locatable
+                      ? (e) => {
+                          if ((e.target as HTMLElement).closest("button")) return;
+                          setFocusedField(isFocused ? null : (f.field as BandField));
+                        }
+                      : undefined
+                  }
+                  className={`flex items-start gap-3 border-b border-hairline px-4 py-3 last:border-0 ${
+                    locatable ? "cursor-pointer" : ""
+                  } ${rowBg} ${focusRing} ${hoverRing}`}
                 >
                 <button
                   disabled={!locatable}
                   onClick={() => setFocusedField(isFocused ? null : (f.field as BandField))}
                   aria-label={`${FIELD_LABELS[f.field]}: ${f.verdict.replace(/_/g, " ")}${locatable ? " — show on label" : ""}`}
-                  className={`flex min-w-0 flex-1 items-center gap-3 rounded text-left ${
-                    locatable ? "cursor-pointer" : "cursor-default"
-                  }`}
+                  className="flex min-w-0 flex-1 items-center gap-3 rounded text-left"
                 >
                   <span className="min-w-0 flex-1">
                     <span className="block text-[12px] font-semibold text-ink-soft">{FIELD_LABELS[f.field]}</span>
@@ -579,13 +614,12 @@ export function ResultView({
             viewportHeight={compact ? 300 : 340}
           />
           <p className="mt-1.5 text-[12px] text-ink-faint">
-            {/* "Click any row" overstated it. The click target is the TEXT, not
-                the full row — the status chip and the decision buttons sit
-                outside it, because a real button cannot be nested inside
-                another button (508). Measured at 73-75% of the row width, so
-                someone clicking the right-hand end got nothing and had no way
-                to know why. */}
-            Click the wording in a row to see where it sits on the label. Locations are found automatically and may be approximate.
+            {/* This once read "click the wording", because the target really
+                was only the text — measured at 73-75% of the row width, so
+                someone clicking the right-hand end got nothing. The row itself
+                is the target now, and the caption can go back to saying the
+                simple thing. */}
+            Click any row to see where it sits on the label. Locations are found automatically and may be approximate.
           </p>
         </section>
       </div>

@@ -13,6 +13,7 @@ import { Shell } from "./Shell.tsx";
 import { Stepper, type StepPhase, type Outcome } from "./Stepper.tsx";
 import { CheckingCard } from "./CheckingCard.tsx";
 import { ResultView } from "./ResultView.tsx";
+import { AuditTrail } from "./AuditTrail.tsx";
 
 interface AppFields {
   brand_name: string;
@@ -35,6 +36,8 @@ interface OutcomeData {
   ms: number;
   /** time the background second reading took, when one ran */
   confirmMs?: number;
+  /** when the verdict landed — the audit trail stamps its last entry with it */
+  checkedAt?: Date;
 }
 
 /** The stepper's terminal step reports the SAME verdict as the result banner,
@@ -224,7 +227,7 @@ export function SingleCheck() {
         setStep("form");
         return;
       }
-      setOutcome({ result: body.result, extraction: body.extraction, bands: body.bands ?? {}, ms: body.ms });
+      setOutcome({ result: body.result, extraction: body.extraction, bands: body.bands ?? {}, ms: body.ms, checkedAt: new Date() });
       // Flag the gate as running BEFORE the effect below starts it, so the
       // first painted frame of the result never shows a bold confirmation the
       // measurement is about to resolve.
@@ -546,6 +549,32 @@ export function SingleCheck() {
             onPrint={() => window.print()}
             primaryAction={{ label: "Check another label", onClick: resetAll }}
           />
+        )}
+
+        {/* Audit trail. The batch panel has carried one since it shipped and
+            this page had none, so the same label was traceable through a batch
+            and opaque when checked by hand. Collapsed by default because it is
+            investigation material — wanted when a verdict is disputed, noise on
+            the other 95% of results — and <details> is keyboard accessible with
+            no layout risk. `print-open` forces it open in the printed copy (see
+            globals.css): a filed record should say which readers ran, how long
+            they took, and whether a second reading was taken. */}
+        {step === "result" && outcome && (
+          <details className="print-open mt-5 overflow-hidden rounded-xl border border-line bg-card">
+            <summary className="flex cursor-pointer list-none items-center gap-1.5 px-6 py-3.5 text-[13px] font-bold text-ink hover:bg-line-soft">
+              <span className="text-[11px] text-muted-2" aria-hidden>▸</span>
+              Audit trail — how this result was produced
+            </summary>
+            <div className="border-t border-line-soft px-6 py-4">
+              <AuditTrail
+                filename={file?.name ?? "label"}
+                fileSizeBytes={file?.size}
+                ms={outcome.ms}
+                checkedAt={outcome.checkedAt}
+                result={outcome.result}
+              />
+            </div>
+          </details>
         )}
       </div>
     </Shell>

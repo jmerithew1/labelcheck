@@ -9,6 +9,7 @@ import { prepareImage } from "@/lib/downscale.ts";
 import { applyBoldGate, type BoldGateResult } from "@/lib/compare/boldGate.ts";
 import { measureBoldSignals, ocrWarningBand } from "@/lib/boldMeasure.ts";
 import { DecidePair, ResultView, type FieldDecision } from "./ResultView.tsx";
+import { AuditTrail } from "./AuditTrail.tsx";
 import { CheckingCard } from "./CheckingCard.tsx";
 import { Shell } from "./Shell.tsx";
 
@@ -1343,7 +1344,12 @@ export function BatchReview() {
                   ))}
                 </div>
                 <div className="min-h-0 flex-1 overflow-auto px-6 py-4">
-                  {tab === "overview" ? panelResult(detail) : <AuditTrail row={detail} />}
+                  {/* Both are mounted and toggled with CSS rather than swapped, so a
+                      printed copy carries the evidence AND the trail whichever tab
+                      is on screen. Printing used to lose the trail from Overview
+                      and lose the evidence from Audit trail. */}
+                  <div className={tab === "overview" ? "" : "hidden print:block"}>{panelResult(detail)}</div>
+                  <div className={tab === "audit" ? "" : "hidden print:block print:mt-6"}><AuditTrail filename={detail.filename} fileSizeBytes={detail.file?.size} ms={detail.ms} checkedAt={detail.checkedAt} result={detail.result!} /></div>
                 </div>
                 {/* The ruling on the whole label closes the panel, after the
                     evidence — never above it competing with the per-row
@@ -1400,7 +1406,12 @@ export function BatchReview() {
             ))}
           </div>
           <div className="min-h-0 flex-1 overflow-auto px-6 py-4">
-            {tab === "overview" ? panelResult(detail) : <AuditTrail row={detail} />}
+            {/* Both are mounted and toggled with CSS rather than swapped, so a
+                      printed copy carries the evidence AND the trail whichever tab
+                      is on screen. Printing used to lose the trail from Overview
+                      and lose the evidence from Audit trail. */}
+                  <div className={tab === "overview" ? "" : "hidden print:block"}>{panelResult(detail)}</div>
+                  <div className={tab === "audit" ? "" : "hidden print:block print:mt-6"}><AuditTrail filename={detail.filename} fileSizeBytes={detail.file?.size} ms={detail.ms} checkedAt={detail.checkedAt} result={detail.result!} /></div>
           </div>
           <div className="flex flex-col gap-2.5 border-t border-line px-6 py-3">
             {rulingBar(detail)}
@@ -1673,47 +1684,6 @@ function BoldCard({
           {state === "flagged" ? "Flagged" : "Not bold"}
         </button>
       </span>
-    </div>
-  );
-}
-
-/** Audit trail (design timeline style, REAL entries — no fake confidence
- *  numbers, and an honest closing note: nothing is stored). */
-function AuditTrail({ row }: { row: BatchRow }) {
-  const r = row.result!;
-  const confirmed = r.warning.notes.some((n) => /second independent/i.test(n));
-  const overturned = r.warning.notes.some((n) => /readings.*disagree/i.test(n));
-  const ts = row.checkedAt ? row.checkedAt.toLocaleTimeString() : undefined;
-  // Plain English first (Margaret finding #1); technical identifiers in
-  // parentheses for auditors who need them.
-  const items: { t: string; d: string }[] = [
-    { t: "Label uploaded", d: `${row.filename}${row.file ? ` (${(row.file.size / 1024 / 1024).toFixed(1)} MB)` : ""} — shrunk in your browser before sending.` },
-    { t: "Text read from the label", d: `The computer read the label word for word, exactly as printed, and separately judged whether the warning is in bold type. Took ${row.ms ? (row.ms / 1000).toFixed(1) : "?"} seconds (readers: claude-haiku-4-5, claude-sonnet-5).` },
-    { t: "Compared to the application", d: "Fixed rules in the software decide every pass or fail — the computer only reads the label. The warning must match the required text exactly (27 CFR 16.21); the other fields are compared with sensible tolerance for formatting." },
-  ];
-  if (confirmed) items.push({ t: "Second opinion", d: "Because the warning failed, a second independent reading was taken. It agreed — the failure stands." });
-  if (overturned) items.push({ t: "Second opinion", d: "Two independent readings disagreed, so instead of asserting a failure this row was marked for a manual look." });
-  items.push({
-    t: "Result recorded",
-    d: `${r.overall.replace(/_/g, " ")} — warning: ${r.warning.verdict.replace(/_/g, " ")}; ${r.fields.filter((f) => f.verdict === "match" || f.verdict === "match_formatting").length} field(s) matched.`,
-  });
-  return (
-    <div className="flex flex-col">
-      <ol className="flex flex-col">
-        {items.map((it, i) => (
-          <li key={i} className="relative pb-4 pl-5 last:pb-0">
-            {i < items.length - 1 && <span className="absolute left-[4px] top-3 h-full w-[1.5px] bg-line" aria-hidden />}
-            <span className="absolute left-0 top-1.5 h-2.5 w-2.5 rounded-full bg-navy" aria-hidden />
-            <p className="text-[13px] font-bold text-ink">
-              {it.t} {ts && i === items.length - 1 && <span className="ml-1 font-normal text-[11.5px] text-muted-2">{ts}</span>}
-            </p>
-            <p className="text-[12.5px] leading-snug text-muted">{it.d}</p>
-          </li>
-        ))}
-      </ol>
-      <p className="mt-4 border-t border-line-soft pt-3 text-[12px] text-muted-2">
-        The computer never decides pass or fail — it only reads. Nothing is stored: the evidence lives in this browser session only.
-      </p>
     </div>
   );
 }

@@ -71,4 +71,12 @@ body {
   .label-scroll { height: auto !important; max-height: none !important; overflow: visible !important; }
   .label-scroll > div { width: 100% !important; height: auto !important; transform: none !important; }
   .print-keep-together { break-inside: avoid; }
+  /* A collapsed audit trail must still reach the filed copy — a printed record
+     that omits how the result was produced is the one thing an audit trail
+     exists to prevent. `open` is a DOM property rather than a style, so forcing
+     it takes CSS on the content itself; the disclosure arrow is dropped since
+     nothing is clickable on paper. */
+  details.print-open > summary { display: none; }
+  details.print-open > *:not(summary) { display: block !important; }
+  details.print-open { break-inside: avoid; }
 }
