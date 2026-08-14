@@ -1,5 +1,19 @@
 # Decisions — append-only, newest at top. Every entry names the rejected alternative.
 
+## 2026-08-14 (later still) — the sample CSV was a trap, reported from the outside
+
+**Owner downloaded the sample CSV, dropped it into the batch page, and got an error on every row.** Reproduced exactly on production: twelve rows, each reading "No matching label file uploaded". The app was not wrong — it cannot check a label it does not have — but the page had invited the mistake and then answered it twelve times instead of once.
+
+Two things were wrong, and only the second one is about copy.
+
+**A spreadsheet with no labels at all built a row per application and failed each.** `onFiles` already handled the mirror case (labels with no spreadsheet) with a single clear sentence; the reverse had no equivalent, so it fell through to per-row pairing errors. Those errors are exactly right when SOME labels are missing — they name the CSV row and the file it wanted — and exactly the wrong instrument for "you brought no labels at all". That case now stops before any rows are built and says so in one sentence, naming the three ways forward (add the labels, load the sample batch, or take the zip). **Rejected**: leaving it, on the grounds that the per-row errors are technically accurate — accuracy that takes twelve red rows to say one thing is not usable error handling, which is a named evaluation criterion.
+
+**The download was labelled by format instead of by contents.** "sample CSV" next to "Load the sample batch" reads as "the sample", so taking it and dropping it straight back in is the obvious move. The links now say what they carry: *sample bundle (zip — spreadsheet + labels)* first, *spreadsheet only* second. **Rejected**: removing the CSV download — it is the only artifact that documents the expected column format, and `buildRows` points at it by name when a column is missing.
+
+**Verified by reproducing the report, not by reading the diff**: the CSV alone now yields one message and **zero rows** (was twelve error rows), while CSV + a partial set of labels still builds its rows and still reports a pairing issue per missing file — the behaviour that was right stayed right.
+
+**Method note.** This was found by a person using the thing, not by any harness here — the 250-label runs, the real-label corpus and the out-of-sample batch all drove the dropzone with files already in hand, so none of them could ever have taken the download link and come back through the front door. Worth remembering what that class of test structurally cannot see.
+
 ## 2026-08-14 (later) — the single check gets an audit trail, the whole row gets the click, and a print bug nobody had reported
 
 **Traceability existed on exactly one of the two surfaces.** The batch detail panel has carried an audit trail since it shipped; the single-check page had none. The same label was therefore fully traceable when it arrived in a batch and completely opaque when a person checked it by hand — which is every demo sample and every file a user uploads. For a tool whose pitch is "evidence-linked and audit-ready", that was the wrong half to be missing. `AuditTrail` moved out of `BatchReview` into its own component with a neutral prop shape, and the single page renders it collapsed at the foot of the result.

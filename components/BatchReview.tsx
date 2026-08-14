@@ -362,6 +362,19 @@ export function BatchReview() {
       setGlobalError("Include the spreadsheet (CSV) along with the label files — one row per application; labels are matched to rows by file name.");
       return;
     }
+    // The mirror case, and the one people actually hit: the spreadsheet arrives
+    // with no labels at all. Downloading "sample CSV" and dropping it in is the
+    // obvious thing to try, and it used to build a row per application and fail
+    // every one of them — a wall of red saying "No matching label file uploaded"
+    // twelve times for a mistake that takes one sentence to explain. The
+    // per-row pairing errors stay right when SOME labels are missing; they are
+    // just the wrong way to say "you brought no labels at all".
+    if (!media.length) {
+      setGlobalError(
+        "That’s the spreadsheet on its own — it lists the labels but doesn’t contain them. Drop the label files in with it, or press “Load the sample batch” to run the bundled example, or download the sample bundle (zip), which has the spreadsheet and its labels together.",
+      );
+      return;
+    }
     const clean = buildRows(await csv.text(), media);
     if (clean) setAutoRun(true);
   }
@@ -1057,9 +1070,13 @@ export function BatchReview() {
             Just exploring?{" "}
             <button onClick={loadSampleBatch} className="font-semibold text-navy hover:underline">Load the sample batch</button>
             <span className="text-muted-2"> · </span>
-            <a href="/api/batch-samples/batch.csv" download className="font-semibold text-navy hover:underline">sample CSV</a>
+            {/* The two downloads are labelled with what they CONTAIN. "sample
+                CSV" alone read as "the sample", so people downloaded it, dropped
+                it straight back in, and got an error per row — the spreadsheet
+                names the labels, it does not carry them. */}
+            <a href="/api/batch-samples/sample-batch.zip" download className="font-semibold text-navy hover:underline">sample bundle (zip — spreadsheet + labels)</a>
             <span className="text-muted-2"> · </span>
-            <a href="/api/batch-samples/sample-batch.zip" download className="font-semibold text-navy hover:underline">sample bundle (zip)</a>
+            <a href="/api/batch-samples/batch.csv" download className="font-semibold text-navy hover:underline">spreadsheet only</a>
           </p>
           {globalError && (
             <div className="w-full rounded-[10px] border border-bad-line bg-red-tint p-4 text-[13.5px] font-semibold text-red">{globalError}</div>

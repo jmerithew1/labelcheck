@@ -22,7 +22,7 @@ Then try the other three cards: **Clean match** comes back fully green with noth
 
 Bold is the one check a computer cannot finish. A measurement gate (stroke width + ink density + AI agreement) resolves most labels by itself — **not infallible**: worst case 3 silent misses in 160 re-scored samples, 1.9%, see rubric C9. Whatever it cannot resolve appears on its own in the **Confirm bold** strip, showing just those warnings cropped and zoomed; hover one to magnify, then confirm or flag, with an **Undo** on every decision. Flags move the row to Needs review. **Download report** exports the run as CSV carrying both the machine verdicts and your rulings.
 
-**Bring your own.** Any label file (PNG/JPEG/WebP/PDF) plus typed fields works in single check — the page links downloadable test labels if you have none, and any *one* field is enough, because the government-warning check needs none of them. The batch dropzone takes the application CSV together with the label files; a sample CSV and a ready-made zip bundle are linked under it.
+**Bring your own.** Any label file (PNG/JPEG/WebP/PDF) plus typed fields works in single check — the page links downloadable test labels if you have none, and any *one* field is enough, because the government-warning check needs none of them. The batch dropzone takes the application CSV together with the label files; a ready-made zip bundle carrying both is linked under it, alongside the spreadsheet on its own for the format.
 
 ## Measured, on the deployed URL
 

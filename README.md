@@ -7,7 +7,7 @@ AI-assisted verification of alcohol beverage label images against TTB applicatio
 ## What it does
 
 - **Single check (~5s):** application fields + label file (PNG/JPEG/WebP/PDF) → per-field comparison with character-level diffs and click-to-highlight evidence on the label image, plus a hard pass/fail on the Government Health Warning Statement (27 CFR Part 16).
-- **Batch check:** a CSV of applications + their label images (built for 200–300 at a time) → results stream into a master-detail review table as each label finishes — filter chips with live counts (Matched / Need review / Not required) — one click narrows to "Need review" — search, and a per-row evidence panel with an audit trail. Exportable to CSV. Every batch row carries an audit-trail tab showing the real pipeline steps; a sample CSV and ready-made zip bundle are linked under the dropzone.
+- **Batch check:** a CSV of applications + their label images (built for 200–300 at a time) → results stream into a master-detail review table as each label finishes — filter chips with live counts (Matched / Need review / Not required) — one click narrows to "Need review" — search, and a per-row evidence panel with an audit trail. Exportable to CSV. Every batch row carries an audit-trail tab showing the real pipeline steps; a ready-made zip bundle (spreadsheet + labels) and the spreadsheet on its own are linked under the dropzone.
 - **Judgment where judgment belongs:** `STONE'S THROW` vs `Stone's Throw` is a *match, surfaced with a note* — never an auto-rejection. The only hard FAIL language in the app belongs to the government warning, where the regulation is exact.
 - **Try it in 3 clicks:** the home page bundles one-click samples (Clean match / Mismatch / Warning issue / Multiple issues) and the batch page has a "Load the sample batch" button — no data needed.
 
@@ -18,7 +18,7 @@ Nothing needs to be set up to try it — both pages carry their own sample data.
 ### Try it with no data of your own
 
 - **Single check** — under the upload box, *No label handy?* offers four one-click samples: **Clean match**, **Mismatch**, **Warning issue**, **Multiple issues**. Each one fills the application fields and runs a *real* check against a bundled label — the dot on the card is the colour that result actually comes back. Below them, *Need test files?* downloads three label images to upload yourself.
-- **Batch review** — the empty state offers **Load the sample batch** (12 labels, runs immediately), plus the **sample CSV** and a **sample bundle (zip)** if you'd rather drive the upload yourself.
+- **Batch review** — the empty state offers **Load the sample batch** (12 labels, runs immediately), plus a **sample bundle (zip)** containing the spreadsheet *and* its labels if you'd rather drive the upload yourself. The **spreadsheet only** download is there for the CSV format — on its own it will not run, because it names the labels rather than carrying them, and the app says so if you try.
 
 ### Single check
 
