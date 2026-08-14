@@ -9,8 +9,9 @@ import { chromium } from 'playwright';
 import { createWorker } from 'tesseract.js';
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const OUT = process.argv[2] ?? path.join(process.cwd(), 'matrix-out');
+const OUT = process.argv[2] ?? path.join(path.dirname(fileURLToPath(import.meta.url)), 'matrix-out');
 fs.mkdirSync(OUT, { recursive: true });
 
 const PREFIX = 'GOVERNMENT WARNING:';

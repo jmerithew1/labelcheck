@@ -17,13 +17,22 @@ import type { CheckResult } from "@/lib/compare/index.ts";
 export function AuditTrail({
   filename,
   fileSizeBytes,
+  prepared,
+  isPdf,
   ms,
   checkedAt,
   result,
 }: {
   filename: string;
-  /** original upload size, before the browser shrinks it */
+  /** original upload size, before any browser preparation */
   fileSizeBytes?: number;
+  /** did prepareImage actually change the file? An audit found this entry
+   *  claiming "shrunk in your browser" unconditionally, while small images
+   *  are sent byte-for-byte as uploaded and PDFs never touch the prepare
+   *  path at all — a false statement in the one artifact whose entire job
+   *  is to be a truthful record. undefined = unknown, say nothing. */
+  prepared?: boolean;
+  isPdf?: boolean;
   /** time to the verdict on screen */
   ms?: number;
   checkedAt?: Date;
@@ -36,7 +45,12 @@ export function AuditTrail({
   const items: { t: string; d: string }[] = [
     {
       t: "Label uploaded",
-      d: `${filename}${fileSizeBytes ? ` (${(fileSizeBytes / 1024 / 1024).toFixed(1)} MB)` : ""} — shrunk in your browser before sending.`,
+      d: `${filename}${fileSizeBytes ? ` (${(fileSizeBytes / 1024 / 1024).toFixed(1)} MB)` : ""}${
+        isPdf ? " — PDF, sent exactly as uploaded."
+          : prepared ? " — shrunk or straightened in your browser before sending."
+          : prepared === false ? " — sent exactly as uploaded."
+          : "."
+      }`,
     },
     {
       t: "Text read from the label",

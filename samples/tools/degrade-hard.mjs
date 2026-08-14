@@ -11,8 +11,9 @@
 import { chromium } from 'playwright';
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const ROOT = path.resolve(process.cwd(), '..', '..');
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const OUT = path.join(ROOT, 'samples', 'degraded-hard');
 const BASE = process.argv[2] ?? LOCAL_DEFAULT;
 fs.mkdirSync(OUT, { recursive: true });

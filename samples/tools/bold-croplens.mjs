@@ -10,10 +10,11 @@ import { chromium } from 'playwright';
 import { createWorker } from 'tesseract.js';
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const OUT = process.argv[2] ?? path.join(process.cwd(), 'croplens-out');
+const OUT = process.argv[2] ?? path.join(path.dirname(fileURLToPath(import.meta.url)), 'croplens-out');
 fs.mkdirSync(OUT, { recursive: true });
-const ROOT = path.resolve(process.cwd(), '..', '..');
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 
 function apiKey() {
   if (process.env.ANTHROPIC_API_KEY) return process.env.ANTHROPIC_API_KEY;
@@ -28,8 +29,8 @@ const KEY = apiKey();
 // Crop judgments are fresh calls on the crop images.
 const aiCache = new Map();
 for (const p of [
-  path.join(process.cwd(), 'multisignal-out', 'multisignal-results.json'),
-  path.join(process.cwd(), 'multisignal-r2-out', 'multisignal-r2-results.json'),
+  path.join(path.dirname(fileURLToPath(import.meta.url)), 'multisignal-out', 'multisignal-results.json'),
+  path.join(path.dirname(fileURLToPath(import.meta.url)), 'multisignal-r2-out', 'multisignal-r2-results.json'),
 ]) {
   if (fs.existsSync(p)) {
     for (const r of JSON.parse(fs.readFileSync(p, 'utf8')).results) {

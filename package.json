@@ -10,7 +10,7 @@
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
     "verify": "npm run typecheck && npm run test && npm run build",
-    "check:docs": "node scripts/check-doc-counts.mjs"
+    "check:docs": "node scripts/check-doc-counts.mjs && node scripts/check-doc-numbers.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.65.0",

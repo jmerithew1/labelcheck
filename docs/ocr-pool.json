@@ -1,36 +1,42 @@
 {
-  "measured": "2026-08-14",
-  "what": "Effect of replacing the single serialized tesseract worker behind the bold gate with a lazily-grown, bounded pool (lib/pool.ts, capped at min(4, cores-1)).",
-  "why": "Measured the day before on the deployed app: the opt-in bold pass over 250 labels resolved about 4 rows per minute and would have needed 10+ minutes to finish, because every measurement — and the second full-image pass that repairs a wrong warning band — queued behind every other one. The check pass did the same 250 labels in ~140s, so the bold pass was the only part of the batch that did not scale.",
-  "does_the_pool_actually_grow": {
-    "method": "window.Worker patched with a counting proxy before the batch ran, so the count is real Web Worker constructions, not an inference.",
-    "with_the_pool": 4,
-    "pinned_to_one_worker": 1,
-    "note": "Confirmed on both the local dev server and the deployed app. The earlier worry that the batch trickles calls in one at a time — which would leave the pool at size 1 — was wrong."
-  },
-  "controlled_ab": {
-    "method": "Same machine, back to back, same 24-row batch (21 bold-eligible), eager pass. Only MAX_OCR_WORKERS changed between arms. Timed from the drop to the point where the bold tally stopped moving for three consecutive polls.",
-    "check_pass_arm_a_s": 63.6,
-    "check_pass_arm_b_s": 62.9,
-    "check_pass_note": "Within 1% of each other, so machine conditions were equivalent across the two arms.",
-    "pool_of_4_total_s": 123,
-    "pool_of_1_total_s": 161,
-    "bold_pass_pool_of_4_s": 59,
-    "bold_pass_pool_of_1_s": 98,
-    "speedup": "1.7x at this size — held back by worker startup (four workers each load WASM and language data) being paid across only 21 rows"
-  },
-  "at_250_on_the_deployed_app": {
-    "eligible_rows": 208,
-    "rows_per_minute_before": 4,
-    "rows_per_minute_after": 11.9,
-    "speedup": "~3x",
-    "measured_over": "4.05 minutes of active browser time, 48 of 208 rows measured — a rate measurement, not a completed pass",
-    "practical_effect": "A 250-label surge batch's bold pass drops from 10+ minutes to roughly 3.5 minutes.",
-    "why_the_ratio_beats_the_24_row_arm": "Worker startup is paid once and amortises; at 208 rows it is noise, at 21 rows it was most of the gain."
-  },
-  "not_claimed": [
-    "That the pass is now fast in absolute terms — it is still client-side OCR, and a 250-row batch is still minutes of background work.",
-    "A completed 250-row bold pass on the pooled build. The rate was measured over 48 rows and the run was stopped; finishing it would not have changed the rate.",
-    "Any change to what the gate decides. The pool changes only how many measurements run at once — the measurement, its pre-processing and the thresholds are untouched, so the zero-confident-mistakes evidence behind rubric C9 still applies."
-  ]
+ "measured": "2026-08-14",
+ "what": "Effect of replacing the single serialized tesseract worker behind the bold gate with a lazily-grown, bounded pool (lib/pool.ts, capped at min(4, cores-1)).",
+ "why": "Measured the day before on the deployed app: the opt-in bold pass over 250 labels resolved about 4 rows per minute and would have needed 10+ minutes to finish, because every measurement — and the second full-image pass that repairs a wrong warning band — queued behind every other one. The check pass did the same 250 labels in ~140s, so the bold pass was the only part of the batch that did not scale.",
+ "does_the_pool_actually_grow": {
+  "method": "window.Worker patched with a counting proxy before the batch ran, so the count is real Web Worker constructions, not an inference.",
+  "with_the_pool": 4,
+  "pinned_to_one_worker": 1,
+  "note": "Confirmed on both the local dev server and the deployed app. The earlier worry that the batch trickles calls in one at a time — which would leave the pool at size 1 — was wrong."
+ },
+ "controlled_ab": {
+  "method": "Same machine, back to back, same 24-row batch (21 bold-eligible), eager pass. Only MAX_OCR_WORKERS changed between arms. Timed from the drop to the point where the bold tally stopped moving for three consecutive polls.",
+  "check_pass_arm_a_s": 63.6,
+  "check_pass_arm_b_s": 62.9,
+  "check_pass_note": "Within 1% of each other, so machine conditions were equivalent across the two arms.",
+  "pool_of_4_total_s": 123,
+  "pool_of_1_total_s": 161,
+  "bold_pass_pool_of_4_s": 59,
+  "bold_pass_pool_of_1_s": 98,
+  "speedup": "1.7x at this size — held back by worker startup (four workers each load WASM and language data) being paid across only 21 rows"
+ },
+ "at_250_on_the_deployed_app": {
+  "eligible_rows": 208,
+  "rows_per_minute_before": 4,
+  "rows_per_minute_after": 11.9,
+  "speedup": "~3x",
+  "measured_over": "4.05 minutes of active browser time, 48 of 208 rows measured — a rate measurement, not a completed pass",
+  "practical_effect": "A 250-label surge batch's bold pass drops from 10+ minutes to roughly 3.5 minutes.",
+  "why_the_ratio_beats_the_24_row_arm": "Worker startup is paid once and amortises; at 208 rows it is noise, at 21 rows it was most of the gain."
+ },
+ "not_claimed": [
+  "That the pass is now fast in absolute terms — it is still client-side OCR, and a 250-row batch is still minutes of background work.",
+  "A completed 250-row bold pass on the pooled build. The rate was measured over 48 rows and the run was stopped; finishing it would not have changed the rate.",
+  "Any change to what the gate decides. The pool changes only how many measurements run at once — the measurement, its pre-processing and the thresholds are untouched, so the zero-confident-mistakes evidence behind rubric C9 still applies."
+ ],
+ "correction_2026_08_14": {
+  "what_was_wrong": "practical_effect said the 250-label bold pass drops to 'roughly 3.5 minutes'. That is the 4.05-minute MEASUREMENT WINDOW (48 rows) mistaken for the whole pass: 208 eligible rows at 11.9 rows/min is ~17.5 minutes, and the 'from 10+ minutes' before-case is ~52 minutes at 4 rows/min. The sibling file batch-ui-250-postfix.json computed the same quantity correctly ('another ~17 minutes') on the same day.",
+  "also_unreliable": "Both this run's 11.9 rows/min and batch-72-optin.json's implied 31.4 rows/min (56 rows/107s, ONE worker, pre-pool) were measured with the browser pane hidden, which suspends the renderer — four workers cannot be 2.6x slower than one, so at least one of the two rates is an artifact of throttling. Treat neither as a throughput claim.",
+  "superseded_by": "The 2026-08-14 process unification: bands now arrive with each row's verdict (no skip_locate), the bold pass always runs and streams during the batch, and the band-repair second OCR that dominated per-row cost fires far less often. The pass was re-measured with the pane visible after that change — see batch-ui-250-unified.json once recorded.",
+  "original_left_intact": "The measured numbers above are the record of that run and are not edited."
+ }
 }

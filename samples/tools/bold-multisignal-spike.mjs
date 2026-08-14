@@ -21,10 +21,11 @@ import { chromium } from 'playwright';
 import { createWorker } from 'tesseract.js';
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const OUT = process.argv[2] ?? path.join(process.cwd(), 'multisignal-out');
+const OUT = process.argv[2] ?? path.join(path.dirname(fileURLToPath(import.meta.url)), 'multisignal-out');
 fs.mkdirSync(OUT, { recursive: true });
-const ROOT = path.resolve(process.cwd(), '..', '..');
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 
 // ---- API key for the S4 model signal (never printed) ----
 function apiKey() {

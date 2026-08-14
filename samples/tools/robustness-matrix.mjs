@@ -15,8 +15,9 @@
 import { chromium } from 'playwright';
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const ROOT = path.resolve(process.cwd(), '..', '..');
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const OUT = path.join(ROOT, 'samples', 'robustness');
 fs.mkdirSync(OUT, { recursive: true });
 // Default to LOCAL. These harnesses fire hundreds of billed requests; with a

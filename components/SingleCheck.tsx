@@ -38,6 +38,9 @@ interface OutcomeData {
   confirmMs?: number;
   /** when the verdict landed — the audit trail stamps its last entry with it */
   checkedAt?: Date;
+  /** did prepareImage actually change the upload? Feeds the audit trail's
+   *  first entry, which must say what happened, not what usually happens. */
+  prepared?: boolean;
 }
 
 /** The stepper's terminal step reports the SAME verdict as the result banner,
@@ -227,7 +230,7 @@ export function SingleCheck() {
         setStep("form");
         return;
       }
-      setOutcome({ result: body.result, extraction: body.extraction, bands: body.bands ?? {}, ms: body.ms, checkedAt: new Date() });
+      setOutcome({ result: body.result, extraction: body.extraction, bands: body.bands ?? {}, ms: body.ms, checkedAt: new Date(), prepared: small !== image });
       // Flag the gate as running BEFORE the effect below starts it, so the
       // first painted frame of the result never shows a bold confirmation the
       // measurement is about to resolve.
@@ -559,6 +562,8 @@ export function SingleCheck() {
                   <AuditTrail
                     filename={file?.name ?? "label"}
                     fileSizeBytes={file?.size}
+                    prepared={outcome.prepared}
+                    isPdf={file?.type === "application/pdf"}
                     ms={outcome.ms}
                     checkedAt={outcome.checkedAt}
                     result={outcome.result}

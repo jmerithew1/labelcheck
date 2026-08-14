@@ -237,29 +237,36 @@ export async function extractLabel(
     return { ok: true, extraction, ms };
   } catch (e) {
     const ms = Math.round(performance.now() - t0);
-    // Timeout FIRST: APIConnectionTimeoutError extends APIConnectionError
-    // extends APIError, so the generic branch below used to swallow it and the
-    // timeout copy — the only message that tells the user the image may be too
-    // large — was unreachable.
-    if (e instanceof Anthropic.APIConnectionTimeoutError || (e instanceof Error && /timeout|timed out/i.test(e.message))) {
-      return { ok: false, failure: { kind: "timeout" }, ms };
-    }
-    if (e instanceof Anthropic.APIError) {
-      if (e.status === 429) return { ok: false, failure: { kind: "rate_limited" }, ms };
-      // 401/403 is a server misconfiguration (missing or rejected key). It
-      // cannot be retried away, so it must not wear the "try again" copy.
-      if (e.status === 401 || e.status === 403) {
-        return { ok: false, failure: { kind: "not_configured" }, ms };
-      }
-      return { ok: false, failure: { kind: "api_error", detail: `${e.status}: ${e.name}` }, ms };
-    }
-    // The SDK throws a plain Error at request time when no key is set — it
-    // does not throw at construction, so this is the only place it surfaces.
-    if (e instanceof Error && /api[_ ]?key/i.test(e.message)) {
-      return { ok: false, failure: { kind: "not_configured" }, ms };
-    }
-    return { ok: false, failure: { kind: "api_error", detail: String(e).slice(0, 200) }, ms };
+    return { ok: false, failure: classifyExtractionError(e), ms };
   }
+}
+
+/** Maps a thrown SDK/network error to a failure kind. Exported (and
+ *  unit-tested) because the branch ORDER is load-bearing and has already
+ *  been wrong once: APIConnectionTimeoutError extends APIConnectionError
+ *  extends APIError, so a generic APIError branch checked first swallowed
+ *  every timeout and the timeout copy — the only message that tells the user
+ *  the image may be too large — was unreachable. */
+export function classifyExtractionError(e: unknown): ExtractionFailure {
+  // Timeout FIRST — see above.
+  if (e instanceof Anthropic.APIConnectionTimeoutError || (e instanceof Error && /timeout|timed out/i.test(e.message))) {
+    return { kind: "timeout" };
+  }
+  if (e instanceof Anthropic.APIError) {
+    if (e.status === 429) return { kind: "rate_limited" };
+    // 401/403 is a server misconfiguration (missing or rejected key). It
+    // cannot be retried away, so it must not wear the "try again" copy.
+    if (e.status === 401 || e.status === 403) {
+      return { kind: "not_configured" };
+    }
+    return { kind: "api_error", detail: `${e.status}: ${e.name}` };
+  }
+  // The SDK throws a plain Error at request time when no key is set — it
+  // does not throw at construction, so this is the only place it surfaces.
+  if (e instanceof Error && /api[_ ]?key/i.test(e.message)) {
+    return { kind: "not_configured" };
+  }
+  return { kind: "api_error", detail: String(e).slice(0, 200) };
 }
 
 /** Human-readable, non-technical error copy (U2). */

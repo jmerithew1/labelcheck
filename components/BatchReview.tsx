@@ -9,6 +9,7 @@ import { prepareImage } from "@/lib/downscale.ts";
 import { applyBoldGate, type BoldGateResult } from "@/lib/compare/boldGate.ts";
 import { measureBoldSignals, ocrWarningBand } from "@/lib/boldMeasure.ts";
 import { DecidePair, ResultView, type FieldDecision } from "./ResultView.tsx";
+import { boldEligible, boldPendingRow, bucketOf, redFields, resolvedByFieldReview, type Bucket } from "@/lib/batchTriage.ts";
 import { AuditTrail } from "./AuditTrail.tsx";
 import { CheckingCard } from "./CheckingCard.tsx";
 import { Shell } from "./Shell.tsx";
@@ -21,15 +22,6 @@ import { Shell } from "./Shell.tsx";
 
 const CONCURRENCY = 8;
 const PAGE_SIZE = 10;
-// The bold gate needs one warning-locate call per eligible label. On an
-// interactive-sized batch that's cheap and the strip is ready the moment the
-// run ends; on a 200-300 label surge dump it would be hundreds of extra
-// calls the agent may never use — so past this size the pass is opt-in.
-const BOLD_GATE_EAGER_MAX = 60;
-// Band lookups that fail (usually a 429 from our own limiter during a large
-// batch) retry with backoff, then give up and degrade to the honest
-// "couldn't locate" state rather than spinning.
-const MAX_LOCATE_TRIES = 3;
 const REQUIRED_HEADERS = ["filename", "brand_name", "class_type", "alcohol_content", "net_contents"];
 
 const HEADER_SYNONYMS: Record<string, string> = {
@@ -44,7 +36,6 @@ const HEADER_SYNONYMS: Record<string, string> = {
 const canonicalHeader = (h: string) => HEADER_SYNONYMS[h.trim().toLowerCase()] ?? h.trim().toLowerCase();
 
 type RowStatus = "queued" | "checking" | "done" | "error";
-type Bucket = "matched" | "review" | "not_required" | "error" | "pending";
 
 interface BatchRow {
   index: number;
@@ -81,42 +72,7 @@ interface BatchRow {
   /** the warning band has had its one OCR correction attempt (whether or not
    *  it succeeded) — stops the fallback from retrying forever */
   bandFixed?: boolean;
-  /** the last band lookup failed rather than finding nothing: "busy" = the
-   *  endpoint throttled us, "failed" = anything else. Distinct from bands:{}
-   *  so the card never says "couldn't locate the warning" about a label the
-   *  machine never got to look at. */
-  locateError?: "busy" | "failed";
 }
-
-/** Flagged comparison fields — the ones a per-field ruling can resolve. */
-const redFields = (r: BatchRow) =>
-  r.result ? r.result.fields.filter((f) => f.verdict === "possible_mismatch" || f.verdict === "absent_on_label") : [];
-
-/** A needs-review row whose every flagged field the agent has accepted (and
- *  nothing else is outstanding) is resolved — it earns the same treatment as
- *  a clean row without a second "Accept label" click. Warning failures are
- *  never resolvable this way: those are regulatory hard fails. */
-const resolvedByFieldReview = (r: BatchRow): boolean => {
-  if (!r.result || r.result.overall !== "needs_review") return false;
-  if (r.result.warning.verdict.startsWith("fail") || r.result.warning.verdict === "unreadable") return false;
-  if (r.result.fields.some((f) => f.verdict === "unreadable")) return false;
-  const reds = redFields(r);
-  return reds.length > 0 && reds.every((f) => r.fieldReview?.[f.field] === "accepted");
-};
-
-/** Rows where the warning text passed — bold is the one element left for a
- *  human glance (the AI advisory never decides). */
-const boldEligible = (r: BatchRow): boolean =>
-  r.status === "done" && !!r.result &&
-  (r.result.warning.verdict === "pass" || r.result.warning.verdict === "pass_formatting_note");
-
-/** Still owes a human glance: no ruling, no human bold decision, and the
- *  measurement gate has RUN and did not confidently verify it. Rows still
- *  being measured are excluded so the dot, the chip and the strip always
- *  describe the same set. */
-const boldPendingRow = (r: BatchRow): boolean =>
-  boldEligible(r) && !r.agentReview && !r.boldReview &&
-  r.boldAuto !== undefined && r.boldAuto !== "bold";
 
 /** Shared control styles so every button in the table area reads as one
  *  system: chip-style toggles (tinted when active) and quiet secondaries. */
@@ -130,40 +86,6 @@ const CTRL_ON = {
   navy: "border-navy bg-select text-navy",
 } as const;
 
-// gateStarted: has the bold measurement pass actually begun for this batch?
-// Small batches start it eagerly; large ones wait for the agent to ask.
-function bucketOf(r: BatchRow, gateStarted: boolean): Bucket {
-  if (r.status === "error") return "error";
-  if (r.status !== "done" || !r.result) return "pending";
-  // The agent's ruling on a reviewed row outranks every machine state.
-  if (r.agentReview === "ok") return "matched";
-  if (r.agentReview === "correction") return "review";
-  // While the gate is still MEASURING, don't flicker the row through review.
-  // But "measuring" and "never started" are different states: above
-  // BOLD_GATE_EAGER_MAX the pass is opt-in and may never run, and a row whose
-  // bold was never looked at must not show a green tick — that would make the
-  // Matched filter mean "checked" on small batches and "not checked" on the
-  // large ones the brief actually targets. When the pass has not started, the
-  // glance is genuinely owed, so the row is review work.
-  const cleanEnough = r.result.overall === "clean" || resolvedByFieldReview(r);
-  if (boldEligible(r) && r.boldAuto === undefined && !r.boldReview) {
-    if (!gateStarted) return "review";
-    return cleanEnough ? "matched" : "review";
-  }
-  // An agent's flag outranks the clean verdict — a human said "not bold."
-  if (r.boldReview === "flagged") return "review";
-  // A confident machine "not bold" escalates too, unless a human overruled it.
-  if (r.boldAuto === "not_bold" && r.boldReview !== "confirmed") return "review";
-  // An owed bold glance IS review work. (Before the measurement gate every
-  // passing label owed one, which would have made this filter useless; the
-  // gate resolves most of them, so the few left belong here honestly.)
-  if (boldPendingRow(r)) return "review";
-  if (cleanEnough) {
-    const anyChecked = r.result.fields.some((f) => f.verdict !== "not_provided");
-    return anyChecked ? "matched" : "not_required";
-  }
-  return "review";
-}
 
 const fmtTime = (d: Date) =>
   d.toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
@@ -231,12 +153,6 @@ export function BatchReview() {
   // human glance and disappears when nothing does. Dismiss hides it until
   // the pending set changes again.
   const [stripDismissed, setStripDismissed] = useState(false);
-  const [boldPassStarted, setBoldPassStarted] = useState(false);
-  // Small batches start the bold measurement eagerly; large ones wait for the
-  // agent. Until it starts, an unmeasured bold prefix is genuinely unchecked,
-  // and bucketOf must not report those rows as matched.
-  const gateRuns = rows.length <= BOLD_GATE_EAGER_MAX || boldPassStarted;
-  const boldFetching = useRef<Set<number>>(new Set());
   // Below xl the detail panel renders inline BELOW the table, so opening a
   // row from the strip (or a row far down the list) can land off-screen and
   // look like nothing happened. Scroll it into view when it opens.
@@ -261,20 +177,16 @@ export function BatchReview() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoRun, rows]);
 
-  // Every batch gets a generation number. Late /api/locate and bold-gate
+  // Every batch gets a generation number. Late band-repair and bold-gate
   // responses write back by ROW INDEX, which restarts at 0 for each batch —
   // without this a stale band or bold verdict from the previous batch could
   // land on an unrelated label.
   const batchGen = useRef(0);
   function resetBatchState() {
     batchGen.current++;
-    boldFetching.current.clear();
     gateRunning.current.clear();
     preparedIdx.current.clear();
     bandFixing.current.clear();
-    locateCooldown.current.clear();
-    locateAttempts.current.clear();
-    setBoldPassStarted(false);
     setStripDismissed(false);
     setBoldUndo(null);
     setFilter("all");
@@ -335,6 +247,13 @@ export function BatchReview() {
       headers.forEach((h, j) => (rec[h] = (cells[j] ?? "").trim()));
       const file = imageMap.get(stem(rec.filename ?? ""));
       if (!file) issues.push(`Row ${i + 2}: no label file found for "${rec.filename}".`);
+      // Same guard the single page's Check button applies: a row with every
+      // application cell blank would be a guaranteed 400 from the server —
+      // catch it here as a pairing-style issue instead of burning a check
+      // slot to learn it and surfacing a generic per-row error.
+      const anyValue = ["brand_name", "class_type", "alcohol_content", "net_contents", "bottler_name_address", "country_of_origin"]
+        .some((k) => (rec[k] ?? "").trim());
+      if (file && !anyValue) issues.push(`Row ${i + 2} ("${rec.filename}"): every application field is blank — fill in at least one value to compare against.`);
       return {
         index: i,
         filename: rec.filename ?? "",
@@ -419,14 +338,20 @@ export function BatchReview() {
           swapPreparedUrl(row.index, small, row.file);
           const form = new FormData();
           form.set("image", small);
-          form.set("skip_locate", "1");
+          // No skip_locate: the batch runs the same check a single upload
+          // does, so evidence bands arrive WITH the verdict from the same
+          // parallel locator call (p50 ~2s, hidden inside the main call's
+          // ~3.8s window). The old flow suppressed bands here and refetched
+          // them serially through /api/locate after the run — a second
+          // process for the same job, and the reason the bold pass over a
+          // large batch was slow enough to be made opt-in at all.
           for (const k of ["brand_name", "class_type", "alcohol_content", "net_contents", "bottler_name_address", "country_of_origin"]) {
             form.set(k, row.application[k] ?? "");
           }
           const res = await fetch("/api/check", { method: "POST", body: form });
           const body = await res.json().catch(() => null);
           if (!res.ok || !body) update(row.index, { status: "error", error: body?.error ?? `HTTP ${res.status}` });
-          else update(row.index, { status: "done", result: body.result, extraction: body.extraction, ms: body.ms, checkedAt: new Date() });
+          else update(row.index, { status: "done", result: body.result, extraction: body.extraction, bands: body.bands ?? {}, ms: body.ms, checkedAt: new Date() });
         } catch {
           update(row.index, { status: "error", error: "Network problem — run again to retry this row." });
         }
@@ -439,109 +364,10 @@ export function BatchReview() {
     setVisited(new Set());
   }
 
-  // Warning bands for the bold gate + strip: once the run settles, fetch for
-  // every eligible row without bands, a few at a time — the machine gate
-  // resolves what it can before anything is asked of the human. In-flight
-  // indexes are tracked in a ref so re-renders never duplicate a fetch.
-  useEffect(() => {
-    if (running) return;
-    // Large batches only start the pass once the agent asks for it.
-    if (rows.length > BOLD_GATE_EAGER_MAX && !boldPassStarted) return;
-    const targets = rows.filter(
-      (r) =>
-        boldEligible(r) && !r.bands && r.file && r.file.type !== "application/pdf" &&
-        !boldFetching.current.has(r.index) && !locateCooldown.current.has(r.index),
-    );
-    if (!targets.length) return;
-    let alive = true;
-    let next = 0;
-    const gen = batchGen.current;
-    async function worker() {
-      while (alive) {
-        const t = targets[next++];
-        if (!t) return;
-        // Claim the row only when actually starting it — a worker killed by a
-        // re-render must not leave unstarted rows marked in-flight forever.
-        if (boldFetching.current.has(t.index)) continue;
-        boldFetching.current.add(t.index);
-        try {
-          const small = await prepareImage(t.file!);
-          if (gen !== batchGen.current) return;
-          swapPreparedUrl(t.index, small, t.file);
-          const form = new FormData();
-          form.set("image", small);
-          const res = await fetch("/api/locate", { method: "POST", body: form });
-          const body = await res.json().catch(() => null);
-          if (gen !== batchGen.current) return; // a new batch owns these indexes now
-          if (!res.ok) {
-            // Throttled or errored is NOT "nothing found". Reading an error
-            // body as {} made a rate-limited row look like a label whose
-            // warning could not be located, so the agent was asked to squint
-            // at something the machine never actually looked at.
-            const tries = (locateAttempts.current.get(t.index) ?? 0) + 1;
-            locateAttempts.current.set(t.index, tries);
-            if (tries >= MAX_LOCATE_TRIES) {
-              // Out of retries: fall back to the honest "tried, nothing found"
-              // state rather than leaving the card spinning forever.
-              setRows((rs) => rs.map((r) => (r.index === t.index ? { ...r, bands: {}, locateError: undefined } : r)));
-              return;
-            }
-            setRows((rs) =>
-              rs.map((r) => (r.index === t.index ? { ...r, locateError: res.status === 429 ? "busy" : "failed" } : r)),
-            );
-            // Backoff before the effect is allowed to pick this row up again —
-            // without it, setting the error re-renders, the effect re-runs,
-            // and a throttled batch retries in a tight loop against the very
-            // endpoint that just asked it to slow down. Held in its own set
-            // because `finally` below releases the in-flight claim.
-            locateCooldown.current.add(t.index);
-            window.setTimeout(() => {
-              locateCooldown.current.delete(t.index);
-              if (gen === batchGen.current) setRows((rs) => rs.map((r) => (r.index === t.index ? { ...r } : r)));
-            }, 2000 * tries);
-            return;
-          }
-          // {} marks "tried, nothing found" so the card can say so honestly.
-          setRows((rs) => rs.map((r) => (r.index === t.index ? { ...r, bands: body?.bands ?? {}, locateError: undefined } : r)));
-        } catch {
-          // A thrown fetch/decode is NOT "nothing found" either, and a silent
-          // catch here stranded rows: it changed no state, so the effect — which
-          // re-runs on `rows` — was never re-triggered, leaving `bands`
-          // undefined forever. Both the OCR repair and the gate require a
-          // defined `bands`, so those rows sat at boldAuto undefined, showed a
-          // green tick, exported as bold_check: unconfirmed, and kept the strip
-          // claiming "Measuring bold type…" for the rest of the session. It also
-          // retried with no attempt ceiling. Same accounting as an HTTP failure.
-          if (gen !== batchGen.current) return;
-          const tries = (locateAttempts.current.get(t.index) ?? 0) + 1;
-          locateAttempts.current.set(t.index, tries);
-          if (tries >= MAX_LOCATE_TRIES) {
-            setRows((rs) => rs.map((r) => (r.index === t.index ? { ...r, bands: {}, locateError: undefined } : r)));
-          } else {
-            setRows((rs) => rs.map((r) => (r.index === t.index ? { ...r, locateError: "failed" as const } : r)));
-            locateCooldown.current.add(t.index);
-            window.setTimeout(() => {
-              locateCooldown.current.delete(t.index);
-              if (gen === batchGen.current) setRows((rs) => rs.map((r) => (r.index === t.index ? { ...r } : r)));
-            }, 2000 * tries);
-          }
-        } finally {
-          boldFetching.current.delete(t.index);
-        }
-      }
-    }
-    void Promise.all(Array.from({ length: Math.min(4, targets.length) }, worker));
-    return () => { alive = false; };
-    // boldPassStarted MUST be a dependency: the guard above reads it, and
-    // "Check bold type" sets only it and stripDismissed — neither touches
-    // `rows`. Without it this effect never re-ran, so clicking the button on a
-    // batch over BOLD_GATE_EAGER_MAX fired no /api/locate call at all, while
-    // gateRuns flipped true and re-filed every unmeasured row as Matched with
-    // a green tick. That is precisely the "Matched means checked on small
-    // batches and not-checked on the large ones" failure bucketOf's comment
-    // was written to prevent, on the batch size the brief calls first-class.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [running, rows, boldPassStarted]);
+  // No post-run band sweep and no lazy panel fetch any more: bands arrive
+  // with each row's verdict from the check call itself, the same way the
+  // single page gets them. The only band repair left is the client-side OCR
+  // pass in the gate effect below, also shared with the single page.
 
   const setBoldReview = (index: number, v: "confirmed" | "flagged" | undefined) =>
     setRows((rs) => rs.map((r) => (r.index === index ? { ...r, boldReview: v } : r)));
@@ -598,8 +424,6 @@ export function BatchReview() {
   // OCR worker serializes internally.
   const gateRunning = useRef<Set<number>>(new Set());
   const bandFixing = useRef<Set<number>>(new Set());
-  const locateCooldown = useRef<Set<number>>(new Set());
-  const locateAttempts = useRef<Map<number, number>>(new Map());
   useEffect(() => {
     // PDFs and rows with no image can never be measured — straight to "human"
     // so the attention-only strip can show them. A missing warning band is NOT
@@ -697,7 +521,7 @@ export function BatchReview() {
   }, [rows]);
 
   const rulingBar = (r: BatchRow) => (
-    <RulingBar gateRuns={gateRuns} row={r}
+    <RulingBar row={r}
       onReview={(v) => setRows((rs) => rs.map((x) => (x.index === r.index ? { ...x, agentReview: v } : x)))}
       onMarkBold={markBold}
       onClearFields={() => setRows((rs) => rs.map((x) => (x.index === r.index ? { ...x, fieldReview: undefined } : x)))}
@@ -714,13 +538,14 @@ export function BatchReview() {
       extraction={r.extraction!}
       imageUrl={r.imageUrl!}
       bands={r.bands ?? {}}
-      /* undefined = the lazy /api/locate has not run yet; {} = it ran and
-         found nothing. Only the second is grounds for saying so. */
+      /* Bands arrive with the verdict (same call as a single check), so a
+         done row always has them; {} = the locator ran and found nothing,
+         which is the only state that justifies the fallback caption. */
       bandsPending={r.bands === undefined}
       ms={r.ms}
       boldAuto={r.boldAuto ?? null}
       boldHuman={r.boldReview ?? null}
-      boldMeasuring={boldEligible(r) && r.boldAuto === undefined && gateRuns}
+      boldMeasuring={boldEligible(r) && r.boldAuto === undefined}
       onBoldReview={(d) => markBold(r.index, d ?? undefined)}
       fieldReview={r.fieldReview}
       onFieldReview={(field, d) => setFieldDecision(r.index, field, d)}
@@ -728,29 +553,6 @@ export function BatchReview() {
       compact
     />
   );
-
-  // Lazy bands for the open detail row.
-  useEffect(() => {
-    const row = rows.find((r) => r.index === openRow);
-    if (!row || row.bands || !row.file || row.status !== "done" || row.file.type === "application/pdf") return;
-    let alive = true;
-    (async () => {
-      try {
-        const small = await prepareImage(row.file!);
-        if (!alive) return;
-        swapPreparedUrl(row.index, small, row.file);
-        const form = new FormData();
-        form.set("image", small);
-        const res = await fetch("/api/locate", { method: "POST", body: form });
-        const body = await res.json().catch(() => null);
-        if (alive && body?.bands) {
-          setRows((rs) => rs.map((r) => (r.index === row.index ? { ...r, bands: body.bands } : r)));
-        }
-      } catch { /* highlights degrade silently */ }
-    })();
-    return () => { alive = false; };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [openRow]);
 
   function exportCsv() {
     const header = ["filename", "overall", "agent_review", "government_warning", "bold_check", "brand_name", "class_type", "alcohol_content", "net_contents", "notes"];
@@ -766,9 +568,14 @@ export function BatchReview() {
       };
       // The bold record: a human decision wins; otherwise the machine gate's
       // result; otherwise unconfirmed. Only for labels whose text passed.
+      // One vocabulary, who-did-it explicit: agent_* is a human decision,
+      // auto_* is the measurement gate. The raw state names used to leak
+      // through for the human half ("confirmed"/"flagged" next to
+      // "auto_verified"), which made one column speak two languages.
       const bold = boldEligible(r)
-        ? r.boldReview ??
-          (r.boldAuto === "bold" ? "auto_verified" : r.boldAuto === "not_bold" ? "auto_flagged" : "unconfirmed")
+        ? r.boldReview === "confirmed" ? "agent_verified"
+          : r.boldReview === "flagged" ? "agent_flagged"
+          : r.boldAuto === "bold" ? "auto_verified" : r.boldAuto === "not_bold" ? "auto_flagged" : "unconfirmed"
         : "";
       return [
         safe(r.filename), r.result.overall, r.agentReview ?? "", r.result.warning.verdict, bold,
@@ -788,12 +595,10 @@ export function BatchReview() {
   }
 
   const counts = useMemo(() => {
-    const c: Record<Bucket, number> = { matched: 0, review: 0, not_required: 0, error: 0, pending: 0 };
-    for (const r of rows) c[bucketOf(r, gateRuns)]++;
+    const c: Record<Bucket, number> = { matched: 0, review: 0, bold_checking: 0, not_required: 0, error: 0, pending: 0 };
+    for (const r of rows) c[bucketOf(r)]++;
     return c;
-    // gateRuns changes rebucket every unmeasured row — omitting it left the
-    // chips contradicting the table right after "Check bold type" (audit).
-  }, [rows, gateRuns]);
+  }, [rows]);
   const done = rows.length - counts.pending;
   const boldRows = useMemo(() => rows.filter(boldEligible), [rows]);
   // Machine-verified rows are resolved; machine-flagged and inconclusive
@@ -808,17 +613,17 @@ export function BatchReview() {
   const visible = useMemo(() => {
     const q = search.trim().toLowerCase();
     const filtered = rows.filter((r) => {
-      const b = bucketOf(r, gateRuns);
+      const b = bucketOf(r);
       if (filter !== "all" && !(filter === b || (filter === "review" && b === "error"))) return false;
       if (q && !r.filename.toLowerCase().includes(q) && !(r.application.brand_name ?? "").toLowerCase().includes(q)) return false;
       return true;
     });
     if (!running && rows.every((r) => r.status !== "queued" && r.status !== "checking")) {
-      const rank: Record<Bucket, number> = { error: 0, review: 1, matched: 2, not_required: 3, pending: 4 };
-      return [...filtered].sort((a, b) => rank[bucketOf(a, gateRuns)] - rank[bucketOf(b, gateRuns)] || a.index - b.index);
+      const rank: Record<Bucket, number> = { error: 0, review: 1, bold_checking: 2, matched: 3, not_required: 4, pending: 5 };
+      return [...filtered].sort((a, b) => rank[bucketOf(a)] - rank[bucketOf(b)] || a.index - b.index);
     }
     return filtered;
-  }, [rows, filter, search, running, gateRuns]);
+  }, [rows, filter, search, running]);
   const pages = Math.max(1, Math.ceil(visible.length / PAGE_SIZE));
   const pageRows = visible.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
   const detail = rows.find((r) => r.index === openRow);
@@ -899,7 +704,7 @@ export function BatchReview() {
   }, [openRow]);
 
   const statusDot = (r: BatchRow, size = 22) => {
-    const b = bucketOf(r, gateRuns);
+    const b = bucketOf(r);
     // A bold type the agent REJECTED is a regulatory failure, not review work
     // — the row reads red, the same as the panel's banner now does, and it is
     // named as a warning failure rather than as a field "Mismatch".
@@ -916,7 +721,7 @@ export function BatchReview() {
         : b === "review" || boldOwed ? "bg-amber"
         : b === "matched" ? "bg-green" : "bg-na";
     const labels: Record<Bucket, string> = {
-      matched: "Matched", review: "Needs review", error: "Error", not_required: "Not required", pending: "Waiting",
+      matched: "Matched", review: "Needs review", bold_checking: "Checking bold type…", error: "Error", not_required: "Not required", pending: "Waiting",
     };
     const label =
       r.agentReview === "ok" ? "Accepted by you" : r.agentReview === "correction" ? "Rejected by you"
@@ -926,6 +731,7 @@ export function BatchReview() {
     const glyph =
       b === "error" || r.agentReview === "correction" || (isFail && r.agentReview !== "ok") ? "✕"
         : b === "review" || boldOwed ? "!"
+        : b === "bold_checking" ? "…"
         : b === "matched" ? "✓" : "–";
     return (
       <span
@@ -940,7 +746,7 @@ export function BatchReview() {
   };
 
   const statusPill = (r: BatchRow) => {
-    const b = bucketOf(r, gateRuns);
+    const b = bucketOf(r);
     const fieldFail = r.result?.fields.some((f) => f.verdict === "possible_mismatch" && r.fieldReview?.[f.field] !== "accepted");
     const warnFail = r.result?.overall === "warning_failure" || r.boldReview === "flagged";
     const isFail = warnFail || fieldFail || r.result?.overall === "not_a_label";
@@ -949,6 +755,7 @@ export function BatchReview() {
       r.agentReview === "ok" ? "Accepted ✓" : r.agentReview === "correction" ? "Rejected"
         : b === "error" ? "Error" : b === "review" ? (fieldFail ? "Mismatch" : warnFail ? "Warning fails" : "Needs review")
         : boldOwed ? "Bold to confirm"
+        : b === "bold_checking" ? "Checking bold…"
         : b === "matched" ? "Matched" : b === "not_required" ? "Not required" : "Waiting";
     const cls =
       r.agentReview === "ok" ? "bg-green-tint text-green" : r.agentReview === "correction" ? "bg-red-tint text-red"
@@ -1151,10 +958,10 @@ export function BatchReview() {
                   <p className="text-[13.5px] font-bold text-ink">Confirm bold type</p>
                   <p className="text-[12px] text-muted">
                     {boldMeasuring
-                      ? "Measuring bold type across the batch — the ones below already need your eyes. Hover a warning to magnify it, then confirm or flag."
+                      ? "Measuring bold type across the batch — the ones below already need your eyes. Hover a warning to magnify it, then Accept (bold) or Reject (not bold)."
                       : boldRows.length - boldPendingRows.length > 0
-                        ? `${boldRows.length - boldPendingRows.length} of ${boldRows.length} verified by measurement — these ${boldPendingRows.length === 1 ? "is the one" : `are the ${boldPendingRows.length}`} that need your eyes. Hover a warning to magnify it, then confirm or flag.`
-                        : "Bold is the one check that needs your eyes. Hover a warning below to magnify it, then confirm the ones that look bold and flag any that don't."}
+                        ? `${boldRows.length - boldPendingRows.length} of ${boldRows.length} verified by measurement — these ${boldPendingRows.length === 1 ? "is the one" : `are the ${boldPendingRows.length}`} that need your eyes. Hover a warning to magnify it, then Accept (bold) or Reject (not bold).`
+                        : "Bold is the one check that needs your eyes. Hover a warning below to magnify it, then Accept the ones that look bold and Reject any that don't."}
                   </p>
                   <span className="ml-auto whitespace-nowrap rounded-[5px] bg-amber-tint px-2 py-0.5 text-[11.5px] font-bold text-amber">
                     {boldPendingRows.length} left
@@ -1186,18 +993,13 @@ export function BatchReview() {
                 {chip("all", "All", rows.length, "navy")}
                 {chip("matched", "Matched", counts.matched, "green")}
                 {chip("review", "Need review", counts.review + counts.error, "amber")}
+                {/* Temporary by construction: this chip exists only while the
+                    always-on bold pass is still measuring otherwise-clean
+                    rows, and disappears with its last row. Need review never
+                    inflates with rows nobody has flagged. */}
+                {counts.bold_checking > 0 && chip("bold_checking", "Checking bold", counts.bold_checking, "na")}
                 {chip("not_required", "Not required", counts.not_required, "na")}
-                {rows.length > BOLD_GATE_EAGER_MAX && !boldPassStarted && boldRows.length > 0 && (
-                  <button
-                    onClick={() => { setBoldPassStarted(true); setStripDismissed(false); }}
-                    title="Measure bold type across this batch — one extra read per label, so it stays opt-in on large batches"
-                    className={`${CTRL_BASE} ${CTRL_IDLE}`}
-                  >
-                    Check bold type
-                    <span className="font-bold text-amber">{boldRows.length}</span>
-                  </button>
-                )}
-                {boldPending > 0 && (rows.length <= BOLD_GATE_EAGER_MAX || boldPassStarted) && (
+                {boldPending > 0 && (
                   <button
                     onClick={() => setStripDismissed((s) => !s)}
                     title="Bold checks that still need a human glance — the measurement gate resolved the rest"
@@ -1369,7 +1171,7 @@ export function BatchReview() {
                       is on screen. Printing used to lose the trail from Overview
                       and lose the evidence from Audit trail. */}
                   <div className={tab === "overview" ? "" : "hidden print:block"}>{panelResult(detail)}</div>
-                  <div className={tab === "audit" ? "" : "hidden print:block print:mt-6"}><AuditTrail filename={detail.filename} fileSizeBytes={detail.file?.size} ms={detail.ms} checkedAt={detail.checkedAt} result={detail.result!} /></div>
+                  <div className={tab === "audit" ? "" : "hidden print:block print:mt-6"}><AuditTrail filename={detail.filename} fileSizeBytes={detail.file?.size} prepared={!!detail.prepared} isPdf={detail.file?.type === "application/pdf"} ms={detail.ms} checkedAt={detail.checkedAt} result={detail.result!} /></div>
                 </div>
                 {/* The ruling on the whole label closes the panel, after the
                     evidence — never above it competing with the per-row
@@ -1431,7 +1233,7 @@ export function BatchReview() {
                       is on screen. Printing used to lose the trail from Overview
                       and lose the evidence from Audit trail. */}
                   <div className={tab === "overview" ? "" : "hidden print:block"}>{panelResult(detail)}</div>
-                  <div className={tab === "audit" ? "" : "hidden print:block print:mt-6"}><AuditTrail filename={detail.filename} fileSizeBytes={detail.file?.size} ms={detail.ms} checkedAt={detail.checkedAt} result={detail.result!} /></div>
+                  <div className={tab === "audit" ? "" : "hidden print:block print:mt-6"}><AuditTrail filename={detail.filename} fileSizeBytes={detail.file?.size} prepared={!!detail.prepared} isPdf={detail.file?.type === "application/pdf"} ms={detail.ms} checkedAt={detail.checkedAt} result={detail.result!} /></div>
           </div>
           <div className="flex flex-col gap-2.5 border-t border-line px-6 py-3">
             {rulingBar(detail)}
@@ -1462,9 +1264,10 @@ export function BatchReview() {
  *  which meant one screen offered the bold decision in two places, in two
  *  vocabularies ("Looks bold / Not bold" up top, "Accept / Reject" on the
  *  warning row), while flagged fields decided on their own rows in a third
- *  spot. The bold decision now lives only where the single-check page puts it:
- *  on the government-warning Formatting row. This bar rules on the whole label
- *  and nothing else.
+ *  spot. The bold decision now speaks one vocabulary everywhere it appears —
+ *  Accept / Reject, on the government-warning Formatting row and on the
+ *  Confirm-bold strip cards (both write the same state). This bar rules on
+ *  the whole label and nothing else.
  *
  *  Exception-based by design: a row with nothing outstanding shows one calm
  *  line, not two decision buttons. Offering a verdict on a label that already
@@ -1473,21 +1276,18 @@ export function BatchReview() {
  *  disagree with the tool. */
 function RulingBar({
   row: r,
-  gateRuns,
   onReview,
   onMarkBold,
   onClearFields,
 }: {
   row: BatchRow;
-  /** has the bold measurement pass begun for this batch? */
-  gateRuns: boolean;
   onReview: (v: "ok" | "correction" | undefined) => void;
   onMarkBold: (index: number, v: "confirmed" | "flagged" | undefined) => void;
   /** clears the per-field rulings made on the comparison rows above */
   onClearFields: () => void;
 }) {
   const [open, setOpen] = useState(false);
-  const bucket = bucketOf(r, gateRuns);
+  const bucket = bucketOf(r);
   const boldOwed = boldPendingRow(r);
   const fieldsDecided = Object.keys(r.fieldReview ?? {}).length > 0;
   const decided = !!r.agentReview || !!r.boldReview || fieldsDecided;
@@ -1586,7 +1386,7 @@ function BoldCard({
   // Only fall back once the locator has actually finished and come up empty —
   // while it is still working the card says so instead of guessing.
   const located = row.bands?.warning;
-  const settled = row.bands !== undefined && !row.locateError;
+  const settled = row.bands !== undefined;
   const guessing = !located && settled;
   const state = row.boldReview;
   const auto = row.boldAuto;
@@ -1661,12 +1461,8 @@ function BoldCard({
               />
             </span>
             {!cropReady && (
-              <span className={`absolute inset-0 flex items-center justify-center px-2 text-center text-[11px] text-muted-2 ${row.locateError ? "animate-pulse" : ""}`}>
-                {row.locateError === "busy"
-                  ? "waiting for a free slot to find the warning…"
-                  : row.locateError === "failed"
-                    ? "couldn't reach the finder — retrying…"
-                    : "finding the warning…"}
+              <span className="absolute inset-0 flex items-center justify-center px-2 text-center text-[11px] text-muted-2">
+                finding the warning…
               </span>
             )}
           </>
@@ -1690,18 +1486,25 @@ function BoldCard({
           Measurement says NOT bold — check this one
         </span>
       )}
+      {/* Same two words as every other decision on the screen — the panel's
+          Formatting row and this card write the same boldReview state, and an
+          audit caught them teaching two vocabularies for one action. The
+          question ("does this look bold?") lives in the copy and the titles;
+          the answer is always Accept / Reject. */}
       <span className="flex gap-1.5">
         <button
           onClick={() => onMark(row.index, state === "confirmed" ? undefined : "confirmed")}
+          title="Looks bold — accept the formatting"
           className={`${CTRL_BASE} flex-1 justify-center px-2 ${state === "confirmed" ? CTRL_ON.green : CTRL_IDLE}`}
         >
-          {state === "confirmed" ? "Confirmed" : "Looks bold"}
+          {state === "confirmed" ? "Accepted ✓" : "Accept"}
         </button>
         <button
           onClick={() => onMark(row.index, state === "flagged" ? undefined : "flagged")}
+          title="Not bold — reject the formatting"
           className={`${CTRL_BASE} flex-1 justify-center px-2 ${state === "flagged" ? CTRL_ON.red : CTRL_IDLE}`}
         >
-          {state === "flagged" ? "Flagged" : "Not bold"}
+          {state === "flagged" ? "Rejected" : "Reject"}
         </button>
       </span>
     </div>

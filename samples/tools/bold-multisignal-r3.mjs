@@ -18,10 +18,11 @@ import { chromium } from 'playwright';
 import { createWorker } from 'tesseract.js';
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const OUT = process.argv[2] ?? path.join(process.cwd(), 'multisignal-r3-out');
+const OUT = process.argv[2] ?? path.join(path.dirname(fileURLToPath(import.meta.url)), 'multisignal-r3-out');
 fs.mkdirSync(OUT, { recursive: true });
-const ROOT = path.resolve(process.cwd(), '..', '..');
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 
 function apiKey() {
   if (process.env.ANTHROPIC_API_KEY) return process.env.ANTHROPIC_API_KEY;
@@ -34,7 +35,7 @@ const KEY = apiKey();
 
 // Reuse round-1 AI judgments by case name (same deterministic images) to
 // avoid re-spending ~80 calls; only new cases get fresh calls.
-const r1Path = path.join(process.cwd(), 'multisignal-out', 'multisignal-results.json');
+const r1Path = path.join(path.dirname(fileURLToPath(import.meta.url)), 'multisignal-out', 'multisignal-results.json');
 const aiCache = new Map();
 if (fs.existsSync(r1Path)) {
   for (const r of JSON.parse(fs.readFileSync(r1Path, 'utf8')).results) {

@@ -6,9 +6,11 @@
 //
 //   node enhance-skew-audit.mjs [--limit=N]
 import fs from 'node:fs'; import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';
 import { enhanceImage } from '../../lib/enhance.ts';
-const IMG = path.resolve('../robustness');
+const HERE = path.dirname(fileURLToPath(import.meta.url));
+const IMG = path.join(HERE, '..', 'robustness');
 const LIMIT = Number((process.argv.find(a=>a.startsWith('--limit='))||'').split('=')[1]||0);
 let files = fs.readdirSync(IMG).filter(f=>/\.png$/.test(f));
 if (LIMIT) files = files.slice(0, LIMIT);
@@ -52,5 +54,5 @@ const badBase=base.filter(r=>Math.abs(r.skew??0)>=0.75);
 console.log(`\nPRISTINE FALSE-ROTATION: ${badBase.length}/${base.length}` + (badBase.length?`  -> ${badBase.map(r=>`${r.label}(${r.skew})`).join(' ')}`:'  (none — straight labels are left alone)'));
 const ms=rows.map(r=>r.ms).filter(Boolean).sort((a,b)=>a-b);
 console.log(`enhance cost: median ${ms[ms.length>>1]}ms, p95 ${ms[Math.floor(ms.length*0.95)]}ms, max ${ms[ms.length-1]}ms`);
-fs.writeFileSync(path.resolve('../../docs/enhance-skew-audit.json'), JSON.stringify({n:rows.length,rows},null,2));
+fs.writeFileSync(path.join(HERE, '..', '..', 'docs', 'enhance-skew-audit.json'), JSON.stringify({n:rows.length,rows},null,2));
 console.log('docs/enhance-skew-audit.json written');

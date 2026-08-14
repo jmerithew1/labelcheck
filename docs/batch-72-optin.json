@@ -1,34 +1,35 @@
 {
-  "measured": "2026-08-13",
-  "what": "72-label batch driven through the real batch UI, past the 60-row point where the bold measurement pass becomes opt-in. Run after the 2026-08-13 UI changes (shared verdict summary, relocated batch decisions, rebuilt bold spot-check crop), because the standing 250-row evidence predates all of them.",
-  "how": "Six copies of the twelve bundled sample applications, each under its own filename, assembled in the browser and dropped on the batch dropzone as a CSV + 72 image files. Same client path as a real drop: per-image deskew, object URLs, filename pairing, streaming table.",
-  "check_pass": {
-    "labels": 72,
-    "wall_clock_s": 56.8,
-    "per_label_s": 0.79,
-    "errors": 0,
-    "rate_limited": 0,
-    "pairing_issues": 0,
-    "note": "concurrency 8; per-label figure is wall-clock/labels, not per-request latency. The browser pane was not displayed, which suspends the renderer between interactions, so 56.8s is ACTIVE processing time as measured by the page, not wall time on a foregrounded tab."
-  },
-  "opt_in_bold_pass": {
-    "eligible_rows": 56,
-    "chip_offered": "Check bold type 56",
-    "auto_resolved_by_measurement": 39,
-    "left_for_a_human_glance": 17,
-    "settle_time_s": 107,
-    "note": "Counts move while the pass runs: a row still being measured sits in Matched and re-files to Needs review if the measurement comes back inconclusive. The settled figures are the ones recorded here \u2014 an early read at 10s showed 49 matched and 1 outstanding, which was optimistic by 16 rows. The settle time carries the same caveat as the check pass: active time, not wall time."
-  },
-  "bold_spot_check_strip": {
-    "cards_shown": 17,
-    "cards_rendering_a_crop": 17,
-    "cards_blank": 0,
-    "cards_using_the_labelled_foot_of_label_fallback": 11,
-    "note": "Before 2026-08-13 a card whose warning band was missing rendered no image at all, only the text 'couldn't locate the warning \u2014 open the row'. 11 of 17 here would have been blank. The fallback crop says in words that it is guessing."
-  },
-  "also_exercised": [
-    "pagination (Showing 1-10 of 72)",
-    "count-carrying filter chips tracking the gate as it settles",
-    "Download report (CSV) at this size"
-  ]
+ "measured": "2026-08-13",
+ "what": "72-label batch driven through the real batch UI, past the 60-row point where the bold measurement pass becomes opt-in. Run after the 2026-08-13 UI changes (shared verdict summary, relocated batch decisions, rebuilt bold spot-check crop), because the standing 250-row evidence predates all of them.",
+ "how": "Six copies of the twelve bundled sample applications, each under its own filename, assembled in the browser and dropped on the batch dropzone as a CSV + 72 image files. Same client path as a real drop: per-image deskew, object URLs, filename pairing, streaming table.",
+ "check_pass": {
+  "labels": 72,
+  "wall_clock_s": 56.8,
+  "per_label_s": 0.79,
+  "errors": 0,
+  "rate_limited": 0,
+  "pairing_issues": 0,
+  "note": "concurrency 8; per-label figure is wall-clock/labels, not per-request latency. The browser pane was not displayed, which suspends the renderer between interactions, so 56.8s is ACTIVE processing time as measured by the page, not wall time on a foregrounded tab."
+ },
+ "opt_in_bold_pass": {
+  "eligible_rows": 56,
+  "chip_offered": "Check bold type 56",
+  "auto_resolved_by_measurement": 39,
+  "left_for_a_human_glance": 17,
+  "settle_time_s": 107,
+  "note": "Counts move while the pass runs: a row still being measured sits in Matched and re-files to Needs review if the measurement comes back inconclusive. The settled figures are the ones recorded here — an early read at 10s showed 49 matched and 1 outstanding, which was optimistic by 16 rows. The settle time carries the same caveat as the check pass: active time, not wall time."
+ },
+ "bold_spot_check_strip": {
+  "cards_shown": 17,
+  "cards_rendering_a_crop": 17,
+  "cards_blank": 0,
+  "cards_using_the_labelled_foot_of_label_fallback": 11,
+  "note": "Before 2026-08-13 a card whose warning band was missing rendered no image at all, only the text 'couldn't locate the warning — open the row'. 11 of 17 here would have been blank. The fallback crop says in words that it is guessing."
+ },
+ "also_exercised": [
+  "pagination (Showing 1-10 of 72)",
+  "count-carrying filter chips tracking the gate as it settles",
+  "Download report (CSV) at this size"
+ ],
+ "note_2026_08_14": "The settle figures imply ~31 rows/min through ONE pre-pool worker, which contradicts ocr-pool.json's 11.9 rows/min through four pooled workers; both runs were measured with the browser pane hidden (renderer throttled), so neither rate is trustworthy. Also: this file's eligible_rows (56) and the 250-row files' 208/210 are different sessions — the counts move because one gate signal is a fresh model judgement per run."
 }

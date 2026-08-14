@@ -1,0 +1,106 @@
+{
+  "measured": "2026-08-14T22:56:16.023Z",
+  "target": "https://labelcheck-production-8f22.up.railway.app",
+  "what": "10 real approved TTB COLA labels (samples/real, spread across the corpus by file size) through /api/check with async_confirm=1 — time to the provisional verdict on screen, the path the single-check UI uses. Round trip from a developer machine, so upload and public-internet latency are included.",
+  "why": "The rubric's P1 out-of-sample row previously quoted median 5.1s / max 5.6s from a 2026-08-13 session with no committed artifact. This run replaces that claim with raw data.",
+  "n": 10,
+  "ok": 10,
+  "median_ms": 4923,
+  "p90_ms": 6815,
+  "max_ms": 7406,
+  "min_ms": 4074,
+  "over_5s": 5,
+  "samples": [
+    {
+      "i": 1,
+      "ttbid": "25072001000679",
+      "bytes": 80831,
+      "ms": 5770,
+      "ok": true,
+      "serverMs": 5319,
+      "warning": "fail_wording"
+    },
+    {
+      "i": 2,
+      "ttbid": "25192001000287",
+      "bytes": 139033,
+      "ms": 7406,
+      "ok": true,
+      "serverMs": 6979,
+      "warning": "fail_wording"
+    },
+    {
+      "i": 3,
+      "ttbid": "24051001000006",
+      "bytes": 157586,
+      "ms": 4923,
+      "ok": true,
+      "serverMs": 4522,
+      "warning": "pass"
+    },
+    {
+      "i": 4,
+      "ttbid": "24029001000345",
+      "bytes": 171929,
+      "ms": 5750,
+      "ok": true,
+      "serverMs": 5476,
+      "warning": "pass_formatting_note"
+    },
+    {
+      "i": 5,
+      "ttbid": "25108001000465",
+      "bytes": 194765,
+      "ms": 4370,
+      "ok": true,
+      "serverMs": 3973,
+      "warning": "fail_wording"
+    },
+    {
+      "i": 6,
+      "ttbid": "25112001000258",
+      "bytes": 239248,
+      "ms": 4074,
+      "ok": true,
+      "serverMs": 3756,
+      "warning": "pass_formatting_note"
+    },
+    {
+      "i": 7,
+      "ttbid": "25190001000829",
+      "bytes": 300606,
+      "ms": 4239,
+      "ok": true,
+      "serverMs": 3828,
+      "warning": "pass_formatting_note"
+    },
+    {
+      "i": 8,
+      "ttbid": "25010001000169",
+      "bytes": 434930,
+      "ms": 6815,
+      "ok": true,
+      "serverMs": 6218,
+      "warning": "pass_formatting_note"
+    },
+    {
+      "i": 9,
+      "ttbid": "25255001000165",
+      "bytes": 499279,
+      "ms": 4650,
+      "ok": true,
+      "serverMs": 4111,
+      "warning": "pass_formatting_note"
+    },
+    {
+      "i": 10,
+      "ttbid": "24067001000709",
+      "bytes": 632680,
+      "ms": 5428,
+      "ok": true,
+      "serverMs": 5037,
+      "warning": "fail_wording"
+    }
+  ],
+  "caveat": "The harness posts the ORIGINAL label bytes; the real single-check UI downscales images to <=1568px in the browser before upload, so these figures are an upper bound on what a user sees for the larger files. 5 of 10 exceeded five seconds, so the earlier uncommitted claim (median 5.1s, max 5.6s) was optimistic in the tail — max here is 7.4s."
+}
