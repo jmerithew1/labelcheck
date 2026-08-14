@@ -1,0 +1,73 @@
+{
+ "measured": "2026-08-14",
+ "target": "https://labelcheck-production-8f22.up.railway.app",
+ "what": "The brief's headline case \u2014 250 label applications dropped at once \u2014 through the deployed batch UI on the unified-process build (commit 248b2bf: bands arrive with each row's verdict, the bold pass always runs and streams, bold_checking bucket). 250 rows assembled in the browser from the twelve bundled samples, each under its own filename, and fed through the real file-picker input as a CSV + 250 images.",
+ "pane_visible": "YES \u2014 the browser pane was composited for the whole run, so the wall clock below is real elapsed time, not the throttled 'active processing time' the two earlier 250-row files carry. This is the measurement both of those files said was needed.",
+ "check_pass": {
+  "labels": 250,
+  "completed": 250,
+  "errors": 0,
+  "rate_limited": 0,
+  "pairing_issues": 0,
+  "app_reported_wall_clock_s": 158.7,
+  "note": "158.7s pane-visible vs 139.1s/146.5s pane-hidden on the pre-unification builds \u2014 consistent once renderer throttling is accounted for, and now carrying three upstream calls per row (transcription, bold judgment, band locator) instead of two."
+ },
+ "bold_pass": {
+  "ran": "automatically, streaming during the check pass \u2014 no opt-in chip exists any more",
+  "settled_at_s": 150,
+  "settled_before_check_pass_finished": true,
+  "in_flight_peak": 20,
+  "note": "The measurement finished BEFORE the check pass itself did (settled ~150s vs 158.7s), because bands now arrive with each row's verdict, so the expensive full-image band-repair OCR almost never fires. The pre-unification flow needed an additional opt-in pass after the run, estimated at ~17.5 minutes at its measured rate \u2014 that pass no longer exists as a separate phase."
+ },
+ "settled_buckets": {
+  "matched": 112,
+  "needs_review": 138,
+  "checking_bold": 0,
+  "not_required": 0,
+  "confirm_bold_glances_pending": 59,
+  "note": "Matched means machine-cleared including a confident bold measurement. Need review is findings (field mismatches, warning failures) plus rows whose bold the measurement could not settle \u2014 each of those genuinely owes a human glance, and 59 of them are one-hover cards in the Confirm bold strip. No row sits in review because nobody has looked yet; the pre-unification build opened this same batch with all 250 rows in Needs review."
+ },
+ "timeline_sampled_every_2s": [
+  {
+   "t": 3,
+   "matched": 0,
+   "review": 0,
+   "checking_bold": 0
+  },
+  {
+   "t": 19,
+   "matched": 0,
+   "review": 7,
+   "checking_bold": 18
+  },
+  {
+   "t": 51,
+   "matched": 23,
+   "review": 33,
+   "checking_bold": 20
+  },
+  {
+   "t": 98,
+   "matched": 57,
+   "review": 77,
+   "checking_bold": 16
+  },
+  {
+   "t": 146,
+   "matched": 104,
+   "review": 129,
+   "checking_bold": 0
+  },
+  {
+   "t": 162,
+   "matched": 112,
+   "review": 138,
+   "checking_bold": 0,
+   "wall_s": 158.7
+  }
+ ],
+ "sample_batch_12_rows": {
+  "wall_clock_s": 14.1,
+  "note": "Local dev run, pane visible: rows entered Checking bold at ~4s, resolved through it (never green mid-measurement), chip disappeared at settle. Replaces the uncited 'about 13 seconds' in submission.md."
+ }
+}
