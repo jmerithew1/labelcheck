@@ -79,10 +79,11 @@ One vision call per label does **perception only**: Claude Haiku 4.5 transcribes
 
 ### Measurement harnesses
 
-The twenty scripts in `samples/tools` are the measurement rig behind every number in the docs. Generated images are gitignored and regenerable — the scored summaries in `docs/*.json` are the evidence. All default to `http://localhost:3000`; pass a URL to target a deployment.
+The twenty-one scripts in `samples/tools` are the measurement rig behind every number in the docs. Generated images are gitignored and regenerable — the scored summaries in `docs/*.json` are the evidence. All default to `http://localhost:3000`; pass a URL to target a deployment.
 
 | Script | Measures | Writes |
 |---|---|---|
+| `round-trip-batch.mjs` | **The batch page through its own front door**: takes the bytes the download links actually serve, writes them to disk, feeds them back through the real file picker, and pairs randomised CSVs from arbitrary label sidecars. Needs a running app — `node round-trip-batch.mjs --base=<url>`, `--quick` for a zero-API-cost pairing check | `docs/round-trip-batch.json` |
 | `render.mjs` | Generates the 35 ground-truthed labels + sidecars + the 12-row sample batch | `samples/labels`, `samples/batch` |
 | `pick-demo-samples.mjs` | Chooses which degraded variant each demo card and download serves, validated against the measured verdicts | `samples/demo` + its manifest |
 | `make-sample-zip.mjs` | Rebuilds the downloadable sample bundle from what is actually on disk, so it cannot drift from `batch.csv` | `samples/batch/sample-batch.zip` |
