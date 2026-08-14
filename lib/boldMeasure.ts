@@ -1,6 +1,7 @@
 "use client";
 
 import type { BoldSignals } from "./compare/boldGate.ts";
+import { createPool } from "./pool.ts";
 
 /**
  * Browser-side measurement for the multi-signal bold gate: crop the warning
@@ -10,18 +11,42 @@ import type { BoldSignals } from "./compare/boldGate.ts";
  * cap height for both. Mirrors samples/tools/bold-multisignal-r2.mjs, which
  * is where these choices earned their validation numbers.
  * Returns null when anything is unmeasurable — the gate treats that as
- * "human". OCR calls share one worker and run serialized.
+ * "human". OCR runs on a small pool of workers (see below).
  */
 
-let workerPromise: Promise<import("tesseract.js").Worker> | null = null;
-let ocrChain: Promise<unknown> = Promise.resolve();
+type OcrWorker = import("tesseract.js").Worker;
 
-async function sharedWorker() {
-  if (!workerPromise) {
-    workerPromise = import("tesseract.js").then(({ createWorker }) => createWorker("eng"));
-  }
-  return workerPromise;
-}
+/**
+ * OCR worker pool.
+ *
+ * Every measurement is a tesseract pass, and these used to be serialized
+ * through a single worker. Measured on the deployed app with 250 labels: the
+ * opt-in bold pass resolved about FOUR ROWS PER MINUTE and would have taken
+ * over ten minutes to finish the batch — because a row whose warning band is
+ * missing or wrong costs a second full-image OCR to repair it, and every one
+ * of those queued behind every other. The check pass itself does 250 labels in
+ * ~140s, so the bold pass was the only part of the batch that did not scale.
+ *
+ * Workers are expensive (WASM + language data each), so the pool grows LAZILY:
+ * a new one is created only when every existing worker is busy and the cap has
+ * not been reached. A single-label check therefore still spins up exactly one,
+ * while a 250-row batch reaches the cap and stays there.
+ *
+ * The cap is deliberately conservative. These run on government laptops, and
+ * each worker holds its own WASM heap; leaving a core free keeps the main
+ * thread responsive, which matters because the crop preparation below is
+ * main-thread canvas work.
+ */
+const MAX_OCR_WORKERS = (() => {
+  const cores = typeof navigator !== "undefined" ? navigator.hardwareConcurrency : undefined;
+  if (!cores || !Number.isFinite(cores)) return 2; // unknown hardware: modest default
+  return Math.min(4, Math.max(1, cores - 1));
+})();
+
+const ocrPool = createPool<OcrWorker>({
+  max: MAX_OCR_WORKERS,
+  create: () => import("tesseract.js").then(({ createWorker }) => createWorker("eng")),
+});
 
 function loadImage(url: string): Promise<HTMLImageElement | null> {
   return new Promise((resolve) => {
@@ -112,14 +137,18 @@ function measureBox(rows: Float32Array[], bg: number): { capH: number; inkFrac: 
  * genuinely isn't readable.
  */
 export async function ocrWarningBand(imageUrl: string): Promise<[number, number] | null> {
+  // Claim a worker BEFORE decoding the image: on a 250-row batch every row
+  // fires at once, and acquiring first means at most MAX_OCR_WORKERS images
+  // are decoded concurrently instead of 250 sitting in memory waiting for a
+  // turn. The wait costs nothing — decoding is main-thread work that could not
+  // have run in parallel anyway.
+  const worker = await ocrPool.acquire();
+  if (!worker) return null;
   try {
     const img = await loadImage(imageUrl);
     if (!img) return null;
     const H = img.naturalHeight;
-    const recognized = await (ocrChain = ocrChain.then(async () => {
-      const worker = await sharedWorker();
-      return worker.recognize(imageUrl, {}, { blocks: true });
-    }).catch(() => null));
+    const recognized = await worker.recognize(imageUrl, {}, { blocks: true }).catch(() => null);
     if (!recognized) return null;
 
     const words: { text: string; y0: number; y1: number }[] = [];
@@ -138,6 +167,8 @@ export async function ocrWarningBand(imageUrl: string): Promise<[number, number]
     return [Math.round((start.y0 / H) * 1000), Math.round((bottom / H) * 1000)];
   } catch {
     return null;
+  } finally {
+    ocrPool.release(worker);
   }
 }
 
@@ -146,6 +177,12 @@ export async function measureBoldSignals(
   imageUrl: string,
   band: [number, number],
 ): Promise<BoldSignals | null> {
+  // Acquired before the crop is built, for the same reason as above: the pool
+  // then bounds peak memory as well as concurrency. Every eligible row in a
+  // batch calls this at once, and each crop is a canvas three times the width
+  // of the label.
+  const worker = await ocrPool.acquire();
+  if (!worker) return null;
   try {
     const img = await loadImage(imageUrl);
     if (!img) return null;
@@ -181,10 +218,7 @@ export async function measureBoldSignals(
 
     // OCR the crop (serialized on the shared worker).
     const dataUrl = canvas.toDataURL("image/png");
-    const recognized = await (ocrChain = ocrChain.then(async () => {
-      const worker = await sharedWorker();
-      return worker.recognize(dataUrl, {}, { blocks: true });
-    }).catch(() => null));
+    const recognized = await worker.recognize(dataUrl, {}, { blocks: true }).catch(() => null);
     if (!recognized) return null;
     const words: { text: string; x0: number; y0: number; x1: number; y1: number }[] = [];
     for (const b of (recognized as { data: { blocks?: Array<{ paragraphs: Array<{ lines: Array<{ words: Array<{ text: string; bbox: Box }> }> }> }> } }).data.blocks ?? [])
@@ -223,5 +257,7 @@ export async function measureBoldSignals(
     };
   } catch {
     return null;
+  } finally {
+    ocrPool.release(worker);
   }
 }
