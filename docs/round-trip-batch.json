@@ -1,6 +1,6 @@
 {
-  "ran": "2026-08-14T17:48:32.803Z",
-  "base": "http://localhost:3011",
+  "ran": "2026-08-14T19:02:56.403Z",
+  "base": "https://labelcheck-production-8f22.up.railway.app",
   "quick": false,
   "seed": 20260814,
   "passed": 7,
@@ -19,7 +19,7 @@
     {
       "scenario": "zip round trip completes",
       "pass": true,
-      "detail": "checked 12, errors=0, clean=9, needs_review=2, warning_failure=1"
+      "detail": "checked 12, errors=0, clean=8, needs_review=3, warning_failure=1"
     },
     {
       "scenario": "random CSV 1 pairs (missing-warning, stones-throw, gin-word-drop, gin-title-case)",
@@ -39,7 +39,7 @@
     {
       "scenario": "random CSV 2 completes",
       "pass": true,
-      "detail": "checked 4, errors=0, clean=4, needs_review=0, warning_failure=0; sidecar-clean in set=4, false rejections=0"
+      "detail": "checked 4, errors=0, clean=3, needs_review=1, warning_failure=0; sidecar-clean in set=4, false rejections=0"
     }
   ],
   "why": "Closes the loop the other batch harnesses structurally cannot: app output (download link) -> disk -> app input (real file picker). Every other batch test constructs a valid payload in-page and therefore assumes away the step where a user assembles theirs."
