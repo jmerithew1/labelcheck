@@ -579,7 +579,13 @@ export function ResultView({
             viewportHeight={compact ? 300 : 340}
           />
           <p className="mt-1.5 text-[12px] text-ink-faint">
-            Click any row to see where it sits on the label. Locations are found automatically and may be approximate.
+            {/* "Click any row" overstated it. The click target is the TEXT, not
+                the full row — the status chip and the decision buttons sit
+                outside it, because a real button cannot be nested inside
+                another button (508). Measured at 73-75% of the row width, so
+                someone clicking the right-hand end got nothing and had no way
+                to know why. */}
+            Click the wording in a row to see where it sits on the label. Locations are found automatically and may be approximate.
           </p>
         </section>
       </div>
