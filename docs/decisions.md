@@ -64,6 +64,16 @@ Two things were wrong, and only the second one is about copy.
 
 **Verified by exercising each control, not by reasoning about the diff**: clicking a status chip highlights (0 → 1 overlay), Accept and Reject record decisions without toggling the highlight, *Not provided* rows stay inert with a default cursor, keyboard focus and activation are unchanged, the print rules are present in the shipped stylesheet, and the batch panel holds the inactive tab's content in a print-only container in both directions.
 
+## 2026-08-14 — The bold-detector accuracy question, written down where reviewers will find it
+
+Owner relayed a colleague's reaction: *"they were able to get it to identify whether it's bold or not"* — i.e. why gate a thing a model can already do? The answer existed in the evidence but only in two dense places (rubric C9 and limitation 1), phrased for an evaluator scoring a rubric rather than for a colleague asking a fair question. Added `## How accurate is the bold check?` to [approach.md](approach.md), linked from the README's bold paragraph and from rubric C9.
+
+The argument the section makes, in the order it makes it: the objection is right that the model *can* tell — 16/17 on the ground-truthed set — so the question is not capability but **calibration under adversarial input**. Re-scored offline, the AI advisory alone leaks **47/160 (29%)** of degraded non-bold samples; the shipped gate, forced to accept the model's "bold" answer on every one of the 160, leaks **3 (1.9%)**. That gap is the pixels, not the prompt.
+
+Three numbers were checked against the files rather than quoted from memory while writing, and one was wrong on the first pass: the "roughly two thirds auto-resolved" cell cited `39/56` and `88/141` with no key, which the owner immediately (and correctly) could not parse. Replaced with the two runs spelled out — 72-label run 39 of 56 eligible (70%), 250-label run 88 of 141 measured (62%) — plus what "eligible" means, since only rows whose wording passed ever get a bold glance. A ratio with an unexplained denominator is not evidence, it is decoration.
+
+Also kept in the section, because omitting them would make it advocacy rather than a measurement: the 80/160 unmeasurable at the 2 px stroke floor, semibold-600 auto-resolving as bold, all three leaks being glare/noise (the *predicted* failure mode — glare physically thickens strokes), and the standing correction that the spike's "zero confident mistakes" rested on 14 decisions and is not load-bearing.
+
 ## 2026-08-14 — the bold pass gets an OCR worker pool, and the measurement that justified it
 
 **The batch had one part that did not scale, and it was found by measuring rather than by reasoning.** The check pass does 250 labels in ~140s. The opt-in bold pass over the same 250 managed about **four rows a minute** — every stroke-width measurement, plus the second full-image pass that repairs a wrong warning band, queued through a single tesseract worker.
