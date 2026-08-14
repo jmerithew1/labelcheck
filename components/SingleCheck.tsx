@@ -546,36 +546,31 @@ export function SingleCheck() {
             }
             isPdf={file?.type === "application/pdf"}
             appNumber={appNumber}
+            /* Inside the card, above the actions. Rendered after ResultView it
+               sat below "Check another label", outside the main window, and
+               read as missing. */
+            auditTrail={
+              <details className="print-open overflow-hidden rounded-xl border border-line bg-card">
+                <summary className="flex cursor-pointer list-none items-center gap-1.5 px-4 py-3 text-[13px] font-bold text-ink hover:bg-line-soft">
+                  <span className="text-[11px] text-muted-2" aria-hidden>▸</span>
+                  Audit trail — how this result was produced
+                </summary>
+                <div className="border-t border-line-soft px-4 py-4">
+                  <AuditTrail
+                    filename={file?.name ?? "label"}
+                    fileSizeBytes={file?.size}
+                    ms={outcome.ms}
+                    checkedAt={outcome.checkedAt}
+                    result={outcome.result}
+                  />
+                </div>
+              </details>
+            }
             onPrint={() => window.print()}
             primaryAction={{ label: "Check another label", onClick: resetAll }}
           />
         )}
 
-        {/* Audit trail. The batch panel has carried one since it shipped and
-            this page had none, so the same label was traceable through a batch
-            and opaque when checked by hand. Collapsed by default because it is
-            investigation material — wanted when a verdict is disputed, noise on
-            the other 95% of results — and <details> is keyboard accessible with
-            no layout risk. `print-open` forces it open in the printed copy (see
-            globals.css): a filed record should say which readers ran, how long
-            they took, and whether a second reading was taken. */}
-        {step === "result" && outcome && (
-          <details className="print-open mt-5 overflow-hidden rounded-xl border border-line bg-card">
-            <summary className="flex cursor-pointer list-none items-center gap-1.5 px-6 py-3.5 text-[13px] font-bold text-ink hover:bg-line-soft">
-              <span className="text-[11px] text-muted-2" aria-hidden>▸</span>
-              Audit trail — how this result was produced
-            </summary>
-            <div className="border-t border-line-soft px-6 py-4">
-              <AuditTrail
-                filename={file?.name ?? "label"}
-                fileSizeBytes={file?.size}
-                ms={outcome.ms}
-                checkedAt={outcome.checkedAt}
-                result={outcome.result}
-              />
-            </div>
-          </details>
-        )}
       </div>
     </Shell>
   );

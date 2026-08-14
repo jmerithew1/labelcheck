@@ -1,5 +1,19 @@
 # Decisions — append-only, newest at top. Every entry names the rejected alternative.
 
+## 2026-08-14 (warning row) — the same subject in two different shapes, and a click that did nothing
+
+**Owner compared the "Warning issue" and "Multiple issues" samples and asked why their government warnings behaved differently.** Two causes, and only one of them was intentional.
+
+**The comparison list carried a Government warning row only when the warning failed or could not be read.** So a failing warning appeared twice (list + panel) and a passing one appeared once (panel only) — the same subject in a different shape depending on the verdict, which is exactly the sort of thing that makes a reader stop and work out whether something is missing. The intent was sound (promote problems into the list a person scans) and the effect was not. It is now listed every time, PASS / Review / Fail, matching the panel; the panel remains where the two halves, wording and formatting, are split out. **Rejected**: removing it from the list entirely and letting the panel own it — the warning is the one check that can hard-fail, so it belongs in the list a person scans; and leaving it conditional, which is the behaviour that prompted the question.
+
+**Clicking that row did nothing at all on one of the two samples**, while still showing a pointer cursor under a caption that says "click any row to see where it sits on the label". Confirmed at the API rather than guessed: for `batch-vodka--shadow2` the locator returns bands for brand, class, ABV and net contents and **no warning band**, and the client's OCR repair cannot find it either — the shadow across the foot of that label defeats both. Measured from a clean state: brand click drew one box, warning click drew zero. A dead affordance under an instruction to use it.
+
+The viewer now falls back to the foot of the label — where the mandated statement sits on essentially every submission — and the caption changes to say it is a guess. That is the same honesty the batch spot-check card has carried since yesterday; this path simply never got it. **Rejected**: making the row un-clickable when no band exists, which removes the dead click but leaves the person with nothing to look at and no explanation; and drawing the fallback silently, which is the wrong-place highlight the label viewer has always refused to draw.
+
+**The single-check audit trail moved inside the result card.** It was rendered after `ResultView`, which put it below "Check another label" and outside the card entirely — far enough out of the main window that the owner nearly reported it missing. `ResultView` now takes it as a slot and renders it above the action row. **Rejected**: leaving placement to the caller, which is how it ended up outside the card in the first place.
+
+Verified on both samples: the passing warning lists as **Pass** and its click now draws the captioned fallback; the failing one still lists as **Fail**, still draws its real located band, and still shows the normal caption.
+
 ## 2026-08-14 (front door) — a harness that enters the way a person does
 
 **Follow-on from the sample-CSV trap.** The bug was fixed the same hour; the interesting part was why nothing here could have caught it. Every batch harness constructs its own input — `new File([blob], name)` plus a synthetic drop — and constructs it *correctly*. That is the right way to prove the engine, and it structurally cannot prove the affordances, because the step where a user assembles their payload is the step being skipped.

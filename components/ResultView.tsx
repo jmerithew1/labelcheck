@@ -191,6 +191,7 @@ export function ResultView({
   boldHuman = null,
   boldMeasuring = false,
   isPdf = false,
+  auditTrail,
   appNumber,
   fieldReview,
   onFieldReview,
@@ -221,6 +222,11 @@ export function ResultView({
   isPdf?: boolean;
   /** optional TTB application number — shown on the printed report */
   appNumber?: string;
+  /** Rendered inside the card, just above the action row. The single-check
+   *  page used to render its audit trail AFTER this component, which put it
+   *  below "Check another label" and outside the card entirely — far enough
+   *  out of the main window that it read as missing. */
+  auditTrail?: React.ReactNode;
   /** the agent's per-field rulings — layered over the machine verdicts */
   fieldReview?: Partial<Record<string, FieldDecision>>;
   /** present = flagged rows grow Accept / Confirm pills (null clears) */
@@ -329,6 +335,22 @@ export function ResultView({
       grid.removeEventListener("scroll", schedule, true);
     };
   }, [focusedField]);
+
+  // Where to look when the locator never found the warning. Measured cause:
+  // for a shadowed label the locator returns bands for every field EXCEPT the
+  // warning, and the OCR repair cannot find it either — so focusing the
+  // warning row drew nothing at all while the row still said "click me". The
+  // mandated statement sits at the foot of the label on essentially every
+  // submission, so the viewer shows that, captioned as a guess. Same honesty
+  // the batch spot-check card already carries.
+  const WARNING_FALLBACK_BAND: [number, number] = [700, 1000];
+  const warningLocated = Boolean(bands.warning);
+  const viewerBands = useMemo(
+    () => (warningLocated ? bands : { ...bands, warning: WARNING_FALLBACK_BAND }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [bands, warningLocated],
+  );
+  const guessingWarningLocation = !warningLocated && focusedField === "warning";
 
   const fieldTexts = useMemo(
     () => ({
@@ -579,24 +601,49 @@ export function ResultView({
                 </div>
               );
             })}
-            {(counts.warningFails || counts.warningReview) && (
-              <button
-                data-row="warning"
-                onClick={() => setFocusedField(focusedField === "warning" ? null : "warning")}
-                className={`flex w-full items-center gap-3 px-4 py-3 text-left ${counts.warningFails ? "bg-bad-bg/70" : "bg-warn-bg/70"} ${focusedField === "warning" ? (counts.warningFails ? "shadow-[inset_0_0_0_1.5px_#b3261e]" : "shadow-[inset_0_0_0_1.5px_#b25e09]") : ""}`}
-                aria-label="Government warning — show on label"
-              >
-                <span className="min-w-0 flex-1">
-                  <span className="block text-[12px] font-semibold text-ink-soft">Government warning</span>
-                  {/* The row states the REASON; "confirmed by second reading"
-                      is corroboration, not the explanation. */}
-                  <span className="block text-[13.5px] text-ink">
-                    {result.warning.notes.find((n) => !/second independent|single reading/i.test(n)) ?? result.warning.notes[0]}
+            {/* The government warning is ALWAYS listed here, whatever its
+                verdict. It used to appear only when it failed or could not be
+                read, so the same subject showed up in one place or two
+                depending on the outcome — an owner comparing two samples
+                noticed immediately and had to work out why. It is the one
+                check with a hard fail, so it belongs in the list a person
+                scans, passing or not; the panel below stays the place its two
+                halves (wording, formatting) are split out. */}
+            {(() => {
+              const failed = counts.warningFails || counts.bold === "rejected";
+              const review = !failed && (counts.warningReview || counts.bold === "owed");
+              const tint = failed ? "bg-bad-bg/70" : review ? "bg-warn-bg/70" : "";
+              const ring = focusedField === "warning"
+                ? failed ? "shadow-[inset_0_0_0_1.5px_#b3261e]"
+                  : review ? "shadow-[inset_0_0_0_1.5px_#b25e09]"
+                  : "shadow-[inset_0_0_0_1.5px_#167c3d]"
+                : "";
+              // A passing warning has no note to quote, so say the thing the
+              // panel says rather than leaving the row blank.
+              const note = result.warning.notes.find((n) => !/second independent|single reading/i.test(n))
+                ?? result.warning.notes[0];
+              const text = failed || review
+                ? note ?? "Check the warning on the label."
+                : counts.bold === "rejected"
+                  ? "You rejected the bold type."
+                  : "Exact required text found.";
+              return (
+                <button
+                  data-row="warning"
+                  onClick={() => setFocusedField(focusedField === "warning" ? null : "warning")}
+                  className={`flex w-full items-center gap-3 border-t border-hairline px-4 py-3 text-left ${tint} ${ring}`}
+                  aria-label="Government warning — show on label"
+                >
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-[12px] font-semibold text-ink-soft">Government warning</span>
+                    <span className="block text-[13.5px] text-ink">{text}</span>
                   </span>
-                </span>
-                {counts.warningFails ? <Chip tone="bad">{Icon.x} Fail</Chip> : <Chip tone="warn">Review</Chip>}
-              </button>
-            )}
+                  {failed ? <Chip tone="bad">{Icon.x} Fail</Chip>
+                    : review ? <Chip tone="warn">Review</Chip>
+                    : <Chip tone="ok">{Icon.check} Pass</Chip>}
+                </button>
+              );
+            })()}
           </div>
         </section>
 
@@ -607,7 +654,7 @@ export function ResultView({
             imageUrl={imageUrl}
             isPdf={isPdf}
             fieldTexts={fieldTexts}
-            bands={bands}
+            bands={viewerBands}
             shownFields={shownFields}
             focusedField={focusedField}
             connectorRef={overlayRef}
@@ -619,7 +666,9 @@ export function ResultView({
                 someone clicking the right-hand end got nothing. The row itself
                 is the target now, and the caption can go back to saying the
                 simple thing. */}
-            Click any row to see where it sits on the label. Locations are found automatically and may be approximate.
+            {guessingWarningLocation
+              ? "Couldn’t pinpoint the government warning on this image — showing the foot of the label, where it normally sits."
+              : "Click any row to see where it sits on the label. Locations are found automatically and may be approximate."}
           </p>
         </section>
       </div>
@@ -694,6 +743,8 @@ export function ResultView({
           </div>
         )}
       </section>
+
+      {auditTrail}
 
       {(onPrint || primaryAction) && (
         <div className="no-print flex flex-wrap items-center justify-between gap-3">
