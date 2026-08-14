@@ -1,0 +1,255 @@
+{
+  "measured": "2026-08-14T18:16:44.408Z",
+  "target": "https://labelcheck-production-8f22.up.railway.app",
+  "n": 30,
+  "ok": 30,
+  "method": "sequential single checks against the deployed app, four different labels rotated, async_confirm=1 so the figure is time-to-verdict-on-screen. Round trip from this machine, so it includes upload and network.",
+  "p50": 4578,
+  "p90": 5361,
+  "p95": 5476,
+  "max": 5672,
+  "min": 3550,
+  "over5s": 7,
+  "samples": [
+    {
+      "i": 1,
+      "name": "clean-match--glare2.png",
+      "ms": 5672,
+      "ok": true,
+      "serverMs": 5430,
+      "warning": "pass"
+    },
+    {
+      "i": 2,
+      "name": "harbor-gin--dark3.png",
+      "ms": 4000,
+      "ok": true,
+      "serverMs": 3682,
+      "warning": "pass"
+    },
+    {
+      "i": 3,
+      "name": "title-case-prefix--cast2.png",
+      "ms": 3550,
+      "ok": true,
+      "serverMs": 3410,
+      "warning": "fail_prefix_case"
+    },
+    {
+      "i": 4,
+      "name": "batch-vodka--shadow2.png",
+      "ms": 4619,
+      "ok": true,
+      "serverMs": 4451,
+      "warning": "pass"
+    },
+    {
+      "i": 5,
+      "name": "clean-match--glare2.png",
+      "ms": 5175,
+      "ok": true,
+      "serverMs": 4874,
+      "warning": "pass"
+    },
+    {
+      "i": 6,
+      "name": "harbor-gin--dark3.png",
+      "ms": 4193,
+      "ok": true,
+      "serverMs": 3764,
+      "warning": "pass"
+    },
+    {
+      "i": 7,
+      "name": "title-case-prefix--cast2.png",
+      "ms": 4077,
+      "ok": true,
+      "serverMs": 3753,
+      "warning": "fail_prefix_case"
+    },
+    {
+      "i": 8,
+      "name": "batch-vodka--shadow2.png",
+      "ms": 4747,
+      "ok": true,
+      "serverMs": 4453,
+      "warning": "pass"
+    },
+    {
+      "i": 9,
+      "name": "clean-match--glare2.png",
+      "ms": 5476,
+      "ok": true,
+      "serverMs": 5139,
+      "warning": "pass"
+    },
+    {
+      "i": 10,
+      "name": "harbor-gin--dark3.png",
+      "ms": 4578,
+      "ok": true,
+      "serverMs": 4316,
+      "warning": "pass"
+    },
+    {
+      "i": 11,
+      "name": "title-case-prefix--cast2.png",
+      "ms": 4269,
+      "ok": true,
+      "serverMs": 3795,
+      "warning": "fail_prefix_case"
+    },
+    {
+      "i": 12,
+      "name": "batch-vodka--shadow2.png",
+      "ms": 4871,
+      "ok": true,
+      "serverMs": 4597,
+      "warning": "pass"
+    },
+    {
+      "i": 13,
+      "name": "clean-match--glare2.png",
+      "ms": 5446,
+      "ok": true,
+      "serverMs": 5085,
+      "warning": "pass"
+    },
+    {
+      "i": 14,
+      "name": "harbor-gin--dark3.png",
+      "ms": 3673,
+      "ok": true,
+      "serverMs": 3426,
+      "warning": "pass"
+    },
+    {
+      "i": 15,
+      "name": "title-case-prefix--cast2.png",
+      "ms": 3898,
+      "ok": true,
+      "serverMs": 3753,
+      "warning": "fail_prefix_case"
+    },
+    {
+      "i": 16,
+      "name": "batch-vodka--shadow2.png",
+      "ms": 4611,
+      "ok": true,
+      "serverMs": 4465,
+      "warning": "pass"
+    },
+    {
+      "i": 17,
+      "name": "clean-match--glare2.png",
+      "ms": 5282,
+      "ok": true,
+      "serverMs": 4887,
+      "warning": "pass"
+    },
+    {
+      "i": 18,
+      "name": "harbor-gin--dark3.png",
+      "ms": 3863,
+      "ok": true,
+      "serverMs": 3604,
+      "warning": "pass"
+    },
+    {
+      "i": 19,
+      "name": "title-case-prefix--cast2.png",
+      "ms": 3639,
+      "ok": true,
+      "serverMs": 3492,
+      "warning": "fail_prefix_case"
+    },
+    {
+      "i": 20,
+      "name": "batch-vodka--shadow2.png",
+      "ms": 4837,
+      "ok": true,
+      "serverMs": 4659,
+      "warning": "pass"
+    },
+    {
+      "i": 21,
+      "name": "clean-match--glare2.png",
+      "ms": 5361,
+      "ok": true,
+      "serverMs": 5040,
+      "warning": "pass"
+    },
+    {
+      "i": 22,
+      "name": "harbor-gin--dark3.png",
+      "ms": 4076,
+      "ok": true,
+      "serverMs": 3764,
+      "warning": "pass"
+    },
+    {
+      "i": 23,
+      "name": "title-case-prefix--cast2.png",
+      "ms": 3828,
+      "ok": true,
+      "serverMs": 3510,
+      "warning": "fail_prefix_case"
+    },
+    {
+      "i": 24,
+      "name": "batch-vodka--shadow2.png",
+      "ms": 4749,
+      "ok": true,
+      "serverMs": 4586,
+      "warning": "pass"
+    },
+    {
+      "i": 25,
+      "name": "clean-match--glare2.png",
+      "ms": 4995,
+      "ok": true,
+      "serverMs": 4680,
+      "warning": "pass"
+    },
+    {
+      "i": 26,
+      "name": "harbor-gin--dark3.png",
+      "ms": 3708,
+      "ok": true,
+      "serverMs": 3449,
+      "warning": "pass"
+    },
+    {
+      "i": 27,
+      "name": "title-case-prefix--cast2.png",
+      "ms": 3927,
+      "ok": true,
+      "serverMs": 3715,
+      "warning": "fail_prefix_case"
+    },
+    {
+      "i": 28,
+      "name": "batch-vodka--shadow2.png",
+      "ms": 4582,
+      "ok": true,
+      "serverMs": 4422,
+      "warning": "pass"
+    },
+    {
+      "i": 29,
+      "name": "clean-match--glare2.png",
+      "ms": 5069,
+      "ok": true,
+      "serverMs": 4732,
+      "warning": "pass"
+    },
+    {
+      "i": 30,
+      "name": "harbor-gin--dark3.png",
+      "ms": 4324,
+      "ok": true,
+      "serverMs": 3973,
+      "warning": "pass"
+    }
+  ]
+}
