@@ -65,6 +65,7 @@ One vision call per label does **perception only**: Claude Haiku 4.5 transcribes
 
 | Doc | What's in it |
 |---|---|
+| [docs/submission.md](docs/submission.md) | **Start here** — the evaluator walkthrough: what to click, in order, and what each screen proves |
 | [docs/approach.md](docs/approach.md) | Architecture, measured results, trade-offs, limitations, deployment path for restricted networks |
 | [docs/spike-results.md](docs/spike-results.md) | Day-1 model benchmarks that drove the architecture (fidelity, latency, burst, bold accuracy) |
 | [docs/rubric.md](docs/rubric.md) | Every requirement from the brief, tracked with evidence |
