@@ -1,5 +1,17 @@
 # Decisions — append-only, newest at top. Every entry names the rejected alternative.
 
+## 2026-08-14 (batch check) — the fallback claimed failure before it had looked
+
+**Asked to check the batch page for the same three issues, and the check found one I had just introduced there.** The batch detail panel renders the same `ResultView`, so the always-listed warning row and the whole-row click carried over for free — but the foot-of-label fallback did not, because the two pages learn where the warning is at different times.
+
+The single-check page gets its bands with the verdict. The batch panel fetches them **lazily** when a row opens. So on batch, opening a row and clicking the warning immediately produced "Couldn't pinpoint the government warning on this image" — and then corrected itself to the normal caption a few seconds later when `/api/locate` returned. The app was announcing a failed search before the search had started.
+
+That is precisely the dishonesty the bold gate's `measuring` state exists to prevent, reappearing in a new place, and it was mine, hours old. `ResultView` now takes `bandsPending`, and only guesses once the search has actually finished and come up empty; the batch passes `r.bands === undefined` (never fetched) rather than `{}` (fetched, nothing found) — a distinction the batch code already maintained and the viewer was ignoring. The single page gets the same protection while its OCR repair is still running. **Rejected**: showing a "looking for the warning…" state during the wait, which puts a spinner in front of a person for a sub-second gap they would otherwise never notice; and dropping the fallback on the batch, which would leave the same dead click the fallback was written to fix.
+
+Verified on the batch panel: clicking the warning immediately after opening a row now shows the normal caption and no false claim, and once the locator lands the row draws its box. Both standing harnesses re-run clean (`single-check-upload` 7/7, `round-trip-batch` 4/4).
+
+**Worth noting what this run also showed about the locator.** The same vodka label had NO warning band through `/api/check` on the single page and a good one through `/api/locate` on the batch panel, minutes apart. Two calls, one image, different answers — which is the band-accuracy finding from earlier today showing up again, and the reason nothing downstream is allowed to trust a band without a repair path behind it.
+
 ## 2026-08-14 (warning row) — the same subject in two different shapes, and a click that did nothing
 
 **Owner compared the "Warning issue" and "Multiple issues" samples and asked why their government warnings behaved differently.** Two causes, and only one of them was intentional.

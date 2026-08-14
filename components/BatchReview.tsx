@@ -714,6 +714,9 @@ export function BatchReview() {
       extraction={r.extraction!}
       imageUrl={r.imageUrl!}
       bands={r.bands ?? {}}
+      /* undefined = the lazy /api/locate has not run yet; {} = it ran and
+         found nothing. Only the second is grounds for saying so. */
+      bandsPending={r.bands === undefined}
       ms={r.ms}
       boldAuto={r.boldAuto ?? null}
       boldHuman={r.boldReview ?? null}

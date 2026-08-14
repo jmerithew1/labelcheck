@@ -190,6 +190,7 @@ export function ResultView({
   boldAuto = null,
   boldHuman = null,
   boldMeasuring = false,
+  bandsPending = false,
   isPdf = false,
   auditTrail,
   appNumber,
@@ -218,6 +219,12 @@ export function ResultView({
   /** the gate is still measuring: the glance is not owed YET, so the headline
    *  says "checking" instead of flickering through "1 to confirm" and back */
   boldMeasuring?: boolean;
+  /** The locator has not been asked yet — the batch panel fetches bands lazily
+   *  when a row opens. Without this the viewer announced "couldn't pinpoint the
+   *  government warning" the instant a row was opened and corrected itself a
+   *  few seconds later: claiming a failure before looking, which is the same
+   *  dishonesty the bold gate's "measuring" state exists to prevent. */
+  bandsPending?: boolean;
   /** the submitted file is a PDF — the viewer shows a placeholder, not <img> */
   isPdf?: boolean;
   /** optional TTB application number — shown on the printed report */
@@ -345,12 +352,17 @@ export function ResultView({
   // the batch spot-check card already carries.
   const WARNING_FALLBACK_BAND: [number, number] = [700, 1000];
   const warningLocated = Boolean(bands.warning);
+  // Still looking: the batch panel has not fetched bands yet, or the single
+  // page's OCR repair is still running and may yet supply one. Guess only once
+  // the search has actually finished and come up empty.
+  const warningSearchPending = bandsPending || (boldMeasuring && !warningLocated);
+  const guessWarningLocation = !warningLocated && !warningSearchPending;
   const viewerBands = useMemo(
-    () => (warningLocated ? bands : { ...bands, warning: WARNING_FALLBACK_BAND }),
+    () => (guessWarningLocation ? { ...bands, warning: WARNING_FALLBACK_BAND } : bands),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [bands, warningLocated],
+    [bands, guessWarningLocation],
   );
-  const guessingWarningLocation = !warningLocated && focusedField === "warning";
+  const guessingWarningLocation = guessWarningLocation && focusedField === "warning";
 
   const fieldTexts = useMemo(
     () => ({
