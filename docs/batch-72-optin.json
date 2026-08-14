@@ -9,7 +9,7 @@
     "errors": 0,
     "rate_limited": 0,
     "pairing_issues": 0,
-    "note": "concurrency 8; per-label figure is wall-clock/labels, not per-request latency"
+    "note": "concurrency 8; per-label figure is wall-clock/labels, not per-request latency. The browser pane was not displayed, which suspends the renderer between interactions, so 56.8s is ACTIVE processing time as measured by the page, not wall time on a foregrounded tab."
   },
   "opt_in_bold_pass": {
     "eligible_rows": 56,
@@ -17,14 +17,14 @@
     "auto_resolved_by_measurement": 39,
     "left_for_a_human_glance": 17,
     "settle_time_s": 107,
-    "note": "Counts move while the pass runs: a row still being measured sits in Matched and re-files to Needs review if the measurement comes back inconclusive. The settled figures are the ones recorded here — an early read at 10s showed 49 matched and 1 outstanding, which was optimistic by 16 rows."
+    "note": "Counts move while the pass runs: a row still being measured sits in Matched and re-files to Needs review if the measurement comes back inconclusive. The settled figures are the ones recorded here \u2014 an early read at 10s showed 49 matched and 1 outstanding, which was optimistic by 16 rows. The settle time carries the same caveat as the check pass: active time, not wall time."
   },
   "bold_spot_check_strip": {
     "cards_shown": 17,
     "cards_rendering_a_crop": 17,
     "cards_blank": 0,
     "cards_using_the_labelled_foot_of_label_fallback": 11,
-    "note": "Before 2026-08-13 a card whose warning band was missing rendered no image at all, only the text 'couldn't locate the warning — open the row'. 11 of 17 here would have been blank. The fallback crop says in words that it is guessing."
+    "note": "Before 2026-08-13 a card whose warning band was missing rendered no image at all, only the text 'couldn't locate the warning \u2014 open the row'. 11 of 17 here would have been blank. The fallback crop says in words that it is guessing."
   },
   "also_exercised": [
     "pagination (Showing 1-10 of 72)",
