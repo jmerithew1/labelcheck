@@ -20,6 +20,27 @@ export function normalizeLoose(s: string): string {
     .trim();
 }
 
+/** The TTB responsibility statement that introduces a bottler's name.
+ *
+ *  27 CFR 5.36 requires the name and address to be preceded by a phrase like
+ *  "BOTTLED BY" or "DISTILLED AND BOTTLED BY". An application form carries the
+ *  name and address alone, so whether that phrase lands in the comparison is
+ *  decided by how much of the line the reader happens to return — and it
+ *  varies. On two real approved back labels checked minutes apart, one came
+ *  back as "BACK 40 LLC COLUMBIA, ILLINOIS" (matched) and the other as
+ *  "Bottled and Blended By Wise Ass Bottling Co. Bardstown, KY" (flagged at
+ *  59% similar, on a bottler the agent had typed correctly). The phrase is
+ *  boilerplate, not identity, so it comes off BOTH sides before comparing —
+ *  and only for comparing. What the agent sees is the text as printed.
+ */
+const RESPONSIBILITY_LEAD_IN =
+  /^(?:hand\s+|small\s+batch\s+)*(?:bottled|distilled|produced|brewed|vinted|blended|packed|canned|imported|manufactured|made|prepared)(?:\s*(?:and|&)\s*(?:bottled|blended|distilled|packed|canned|brewed|vinted|aged))*\s+(?:by|for)\s+/;
+
+/** Applied to already-normalised text (casefolded, punctuation stripped). */
+export function stripResponsibilityLeadIn(normalized: string): string {
+  return normalized.replace(RESPONSIBILITY_LEAD_IN, "").trim();
+}
+
 /** Levenshtein similarity ratio 0..1. */
 export function similarity(a: string, b: string): number {
   if (a === b) return 1;
@@ -45,7 +66,7 @@ export function compareTextField(
   field: string,
   applicationValue: string,
   label: { status: "found" | "absent" | "unreadable"; text: string },
-  opts: { optional?: boolean } = {},
+  opts: { optional?: boolean; stripLeadIn?: boolean } = {},
 ): FieldResult {
   const applicationTrimmed = applicationValue.trim();
   if (!applicationTrimmed) {
@@ -77,8 +98,13 @@ export function compareTextField(
   }
 
   const labelTrimmed = label.text.trim();
-  const normApp = normalizeLoose(applicationTrimmed);
-  const normLabel = normalizeLoose(labelTrimmed);
+  const rawApp = normalizeLoose(applicationTrimmed);
+  const rawLabel = normalizeLoose(labelTrimmed);
+  // The bottler field compares the ENTITY, not the regulatory phrase in front
+  // of it (see RESPONSIBILITY_LEAD_IN).
+  const normApp = opts.stripLeadIn ? stripResponsibilityLeadIn(rawApp) : rawApp;
+  const normLabel = opts.stripLeadIn ? stripResponsibilityLeadIn(rawLabel) : rawLabel;
+  const leadInDiffered = normApp !== rawApp || normLabel !== rawLabel;
 
   if (normApp === normLabel) {
     const identical = applicationTrimmed === labelTrimmed;
@@ -91,7 +117,9 @@ export function compareTextField(
       similarity: 1,
       note: identical
         ? undefined
-        : `Same ${field.replace(/_/g, " ")}, different formatting ("${labelTrimmed}" vs "${applicationTrimmed}").`,
+        : leadInDiffered
+          ? `Same ${field.replace(/_/g, " ")} — the label also prints the "bottled by" statement the regulation requires ("${labelTrimmed}" vs "${applicationTrimmed}").`
+          : `Same ${field.replace(/_/g, " ")}, different formatting ("${labelTrimmed}" vs "${applicationTrimmed}").`,
     };
   }
 

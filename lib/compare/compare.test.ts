@@ -5,7 +5,7 @@ import { CANONICAL_WARNING } from "./canonical.ts";
 import { checkWarning, normalizeTranscription } from "./warning.ts";
 import { compareAbv, parseAbv } from "./abv.ts";
 import { compareNetContents, parseVolumeMl } from "./netContents.ts";
-import { compareTextField } from "./fields.ts";
+import { compareTextField, stripResponsibilityLeadIn } from "./fields.ts";
 import { compareLabel, type ApplicationData } from "./index.ts";
 import type { LabelExtraction } from "../vision/contract.ts";
 
@@ -241,5 +241,46 @@ describe("compareLabel integration on sample ground truths", () => {
     const ex = extractionFromSidecar("clean-match");
     ex.is_alcohol_label = false;
     expect(compareLabel(oldTomApp, ex).overall).toBe("not_a_label");
+  });
+});
+
+describe("bottler responsibility statement", () => {
+  /** Found by running real approved TTB back labels through the batch page:
+   *  the reader sometimes returns the regulatory lead-in with the name and
+   *  sometimes not, so an identical bottler matched on one label and was
+   *  flagged at 59% similar on the next. */
+  const bottler = (appValue: string, labelText: string) =>
+    compareTextField("bottler_name_address", appValue, { status: "found", text: labelText }, { optional: true, stripLeadIn: true });
+
+  it("matches when the label prints the lead-in and the application does not", () => {
+    const r = bottler("Wise Ass Bottling Co., Bardstown, KY", "Bottled and Blended By Wise Ass Bottling Co. Bardstown, KY");
+    expect(r.verdict).toBe("match_formatting");
+    expect(r.note).toMatch(/bottled by/i);
+  });
+
+  it("handles the other common statements", () => {
+    for (const lead of [
+      "Distilled and Bottled by", "Produced and Bottled by", "Imported by",
+      "Bottled by", "Brewed and Bottled by", "Vinted and Bottled by", "Packed by",
+    ]) {
+      const r = bottler("Back 40 LLC, Columbia, Illinois", `${lead} Back 40 LLC, Columbia, Illinois`);
+      expect(r.verdict, lead).toBe("match_formatting");
+    }
+  });
+
+  it("still flags a genuinely different bottler", () => {
+    const r = bottler("Wise Ass Bottling Co., Bardstown, KY", "Bottled by Someone Else Distilling, Portland, OR");
+    expect(r.verdict).toBe("possible_mismatch");
+  });
+
+  it("does not strip a name that merely starts with a lead-in word", () => {
+    // "Bottled Goods Inc" is a name, not a responsibility statement — there is
+    // no "by", so nothing comes off.
+    expect(stripResponsibilityLeadIn("bottled goods inc portland or")).toBe("bottled goods inc portland or");
+  });
+
+  it("leaves other fields alone", () => {
+    const r = compareTextField("brand_name", "Bottled by Brand", { status: "found", text: "Brand" });
+    expect(r.verdict).toBe("possible_mismatch");
   });
 });

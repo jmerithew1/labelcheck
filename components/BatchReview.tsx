@@ -8,7 +8,7 @@ import { parseCsv, toCsv } from "@/lib/csv.ts";
 import { prepareImage } from "@/lib/downscale.ts";
 import { applyBoldGate, type BoldGateResult } from "@/lib/compare/boldGate.ts";
 import { measureBoldSignals, ocrWarningBand } from "@/lib/boldMeasure.ts";
-import { ResultView, type FieldDecision } from "./ResultView.tsx";
+import { DecidePair, ResultView, type FieldDecision } from "./ResultView.tsx";
 import { CheckingCard } from "./CheckingCard.tsx";
 import { Shell } from "./Shell.tsx";
 
@@ -67,7 +67,7 @@ interface BatchRow {
    *  inconclusive. A human decision always wins. */
   boldAuto?: BoldGateResult;
   /** The agent's ruling after reviewing the row: "ok" re-files it as
-   *  Matched (shown as "Reviewed ✓"), "correction" keeps it in review as a
+   *  Matched (shown as "Accepted ✓"), "correction" keeps it in review as a
    *  confirmed problem. Outranks every machine state. */
   agentReview?: "ok" | "correction";
   /** Per-field rulings on flagged comparison rows (rendered by ResultView).
@@ -93,7 +93,7 @@ const redFields = (r: BatchRow) =>
 
 /** A needs-review row whose every flagged field the agent has accepted (and
  *  nothing else is outstanding) is resolved — it earns the same treatment as
- *  a clean row without a second "Reviewed — OK" click. Warning failures are
+ *  a clean row without a second "Accept label" click. Warning failures are
  *  never resolvable this way: those are regulatory hard fails. */
 const resolvedByFieldReview = (r: BatchRow): boolean => {
   if (!r.result || r.result.overall !== "needs_review") return false;
@@ -682,11 +682,33 @@ export function BatchReview() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rows]);
 
-  const reviewBar = (r: BatchRow) => (
-    <ReviewBar gateRuns={gateRuns} row={r}
+  const rulingBar = (r: BatchRow) => (
+    <RulingBar gateRuns={gateRuns} row={r}
       onReview={(v) => setRows((rs) => rs.map((x) => (x.index === r.index ? { ...x, agentReview: v } : x)))}
       onMarkBold={markBold}
       onClearFields={() => setRows((rs) => rs.map((x) => (x.index === r.index ? { ...x, fieldReview: undefined } : x)))}
+    />
+  );
+
+  /** The evidence panel, rendered identically in the docked and inline
+   *  variants. Every decision control sits exactly where the single-check page
+   *  puts it: flagged fields decide on their own comparison rows, and the bold
+   *  glance decides on the government-warning Formatting row. */
+  const panelResult = (r: BatchRow) => (
+    <ResultView
+      result={r.result!}
+      extraction={r.extraction!}
+      imageUrl={r.imageUrl!}
+      bands={r.bands ?? {}}
+      ms={r.ms}
+      boldAuto={r.boldAuto ?? null}
+      boldHuman={r.boldReview ?? null}
+      boldMeasuring={boldEligible(r) && r.boldAuto === undefined && gateRuns}
+      onBoldReview={(d) => markBold(r.index, d ?? undefined)}
+      fieldReview={r.fieldReview}
+      onFieldReview={(field, d) => setFieldDecision(r.index, field, d)}
+      isPdf={r.filename.toLowerCase().endsWith(".pdf")}
+      compact
     />
   );
 
@@ -861,24 +883,31 @@ export function BatchReview() {
 
   const statusDot = (r: BatchRow, size = 22) => {
     const b = bucketOf(r, gateRuns);
-    const isFail = r.result?.overall === "warning_failure" || r.result?.overall === "not_a_label" ||
-      r.result?.fields.some((f) => f.verdict === "possible_mismatch" && r.fieldReview?.[f.field] !== "accepted");
+    // A bold type the agent REJECTED is a regulatory failure, not review work
+    // — the row reads red, the same as the panel's banner now does, and it is
+    // named as a warning failure rather than as a field "Mismatch".
+    const fieldFail = r.result?.fields.some((f) => f.verdict === "possible_mismatch" && r.fieldReview?.[f.field] !== "accepted");
+    const warnFail = r.result?.overall === "warning_failure" || r.boldReview === "flagged";
+    const isFail = warnFail || fieldFail || r.result?.overall === "not_a_label";
     // A green tick must mean FINISHED. While a bold glance is still owed,
     // the row reads amber "!" even though it sits in the Matched bucket.
     const boldOwed = boldPendingRow(r);
+    // A label the agent rejected reads red, matching its own pill and the
+    // panel it was rejected in — it is a finding now, not a queue item.
     const cls =
-      b === "error" || (isFail && r.agentReview !== "ok") ? "bg-red"
+      b === "error" || r.agentReview === "correction" || (isFail && r.agentReview !== "ok") ? "bg-red"
         : b === "review" || boldOwed ? "bg-amber"
         : b === "matched" ? "bg-green" : "bg-na";
     const labels: Record<Bucket, string> = {
       matched: "Matched", review: "Needs review", error: "Error", not_required: "Not required", pending: "Waiting",
     };
     const label =
-      r.agentReview === "ok" ? "Reviewed — OK" : r.agentReview === "correction" ? "Correction needed"
-        : b === "review" && isFail ? "Mismatch — needs review"
+      r.agentReview === "ok" ? "Accepted by you" : r.agentReview === "correction" ? "Rejected by you"
+        : b === "review" && fieldFail ? "Mismatch — needs review"
+        : b === "review" && warnFail ? "Government warning fails"
         : boldOwed ? "Bold type still needs a look" : labels[b];
     const glyph =
-      b === "error" || (isFail && r.agentReview !== "ok") ? "✕"
+      b === "error" || r.agentReview === "correction" || (isFail && r.agentReview !== "ok") ? "✕"
         : b === "review" || boldOwed ? "!"
         : b === "matched" ? "✓" : "–";
     return (
@@ -895,12 +924,13 @@ export function BatchReview() {
 
   const statusPill = (r: BatchRow) => {
     const b = bucketOf(r, gateRuns);
-    const isFail = r.result?.overall === "warning_failure" || r.result?.overall === "not_a_label" ||
-      r.result?.fields.some((f) => f.verdict === "possible_mismatch" && r.fieldReview?.[f.field] !== "accepted");
+    const fieldFail = r.result?.fields.some((f) => f.verdict === "possible_mismatch" && r.fieldReview?.[f.field] !== "accepted");
+    const warnFail = r.result?.overall === "warning_failure" || r.boldReview === "flagged";
+    const isFail = warnFail || fieldFail || r.result?.overall === "not_a_label";
     const boldOwed = boldPendingRow(r);
     const label =
-      r.agentReview === "ok" ? "Reviewed ✓" : r.agentReview === "correction" ? "Correction needed"
-        : b === "error" ? "Error" : b === "review" ? (isFail ? "Mismatch" : "Needs review")
+      r.agentReview === "ok" ? "Accepted ✓" : r.agentReview === "correction" ? "Rejected"
+        : b === "error" ? "Error" : b === "review" ? (fieldFail ? "Mismatch" : warnFail ? "Warning fails" : "Needs review")
         : boldOwed ? "Bold to confirm"
         : b === "matched" ? "Matched" : b === "not_required" ? "Not required" : "Waiting";
     const cls =
@@ -1110,7 +1140,13 @@ export function BatchReview() {
                   </span>
                   <button onClick={() => setStripDismissed(true)} aria-label="Hide bold confirmation" className="flex h-7 w-7 items-center justify-center rounded-[6px] text-ink-2 hover:bg-line-soft">✕</button>
                 </div>
-                <div className="grid gap-3 p-4 [grid-template-columns:repeat(auto-fill,minmax(230px,1fr))]">
+                {/* auto-FIT, not auto-fill: with three cards left the empty
+                    tracks used to hold their width and every crop stayed
+                    narrow. Collapsing them lets the remaining cards grow, and
+                    a bigger card is the cheapest legibility there is — capped
+                    at 340px so the last card left doesn't stretch across the
+                    whole strip. */}
+                <div className="grid gap-3 p-4 [grid-template-columns:repeat(auto-fit,minmax(260px,340px))]">
                   {boldPendingRows.map((r) => (
                     <BoldCard
                       key={r.index}
@@ -1307,37 +1343,25 @@ export function BatchReview() {
                   ))}
                 </div>
                 <div className="min-h-0 flex-1 overflow-auto px-6 py-4">
-                  {tab === "overview" ? (
-                    <>
-                    {reviewBar(detail)}
-                    <ResultView
-                      result={detail.result!}
-                      extraction={detail.extraction!}
-                      imageUrl={detail.imageUrl!}
-                      bands={detail.bands ?? {}}
-                      ms={detail.ms}
-                      boldAuto={detail.boldAuto ?? null} boldHuman={detail.boldReview ?? null}
-                      fieldReview={detail.fieldReview}
-                      onFieldReview={(field, d) => setFieldDecision(detail.index, field, d)}
-                      isPdf={detail.filename.toLowerCase().endsWith(".pdf")}
-                      compact
-                    />
-                    </>
-                  ) : (
-                    <AuditTrail row={detail} />
-                  )}
+                  {tab === "overview" ? panelResult(detail) : <AuditTrail row={detail} />}
                 </div>
-                <div className="flex items-center justify-between border-t border-line px-6 py-3">
-                  <span className="text-[12px] text-muted-2">Label {orderPos + 1} of {order.length}</span>
-                  <span className="flex items-center gap-2">
-                    <span className="flex overflow-hidden rounded-[7px] border border-line-input">
-                      <button onClick={() => stepPanel(-1)} aria-label="Previous label" className="flex h-[38px] w-[38px] items-center justify-center border-r border-line-input text-ink-2 hover:bg-line-soft">←</button>
-                      <button onClick={() => stepPanel(1)} aria-label="Next label" className="flex h-[38px] w-[38px] items-center justify-center text-ink-2 hover:bg-line-soft">→</button>
+                {/* The ruling on the whole label closes the panel, after the
+                    evidence — never above it competing with the per-row
+                    controls for the same decision. */}
+                <div className="flex flex-col gap-2.5 border-t border-line px-6 py-3">
+                  {rulingBar(detail)}
+                  <div className="flex items-center justify-between">
+                    <span className="text-[12px] text-muted-2">Label {orderPos + 1} of {order.length}</span>
+                    <span className="flex items-center gap-2">
+                      <span className="flex overflow-hidden rounded-[7px] border border-line-input">
+                        <button onClick={() => stepPanel(-1)} aria-label="Previous label" className="flex h-[38px] w-[38px] items-center justify-center border-r border-line-input text-ink-2 hover:bg-line-soft">←</button>
+                        <button onClick={() => stepPanel(1)} aria-label="Next label" className="flex h-[38px] w-[38px] items-center justify-center text-ink-2 hover:bg-line-soft">→</button>
+                      </span>
+                      <button onClick={() => stepPanel(1)} className="h-[38px] rounded-[7px] bg-navy px-4 text-[13px] font-bold text-white hover:bg-navy-hover">
+                        {atLast ? "Done — back to list" : "Review next"}
+                      </button>
                     </span>
-                    <button onClick={() => stepPanel(1)} className="h-[38px] rounded-[7px] bg-navy px-4 text-[13px] font-bold text-white hover:bg-navy-hover">
-                      {atLast ? "Done — back to list" : "Review next"}
-                    </button>
-                  </span>
+                  </div>
                 </div>
               </>
             );
@@ -1376,20 +1400,16 @@ export function BatchReview() {
             ))}
           </div>
           <div className="min-h-0 flex-1 overflow-auto px-6 py-4">
-            {tab === "overview" ? (
-              <>
-              {reviewBar(detail)}
-              <ResultView result={detail.result} extraction={detail.extraction} imageUrl={detail.imageUrl} bands={detail.bands ?? {}} ms={detail.ms} boldAuto={detail.boldAuto ?? null} boldHuman={detail.boldReview ?? null} fieldReview={detail.fieldReview} onFieldReview={(field, d) => setFieldDecision(detail.index, field, d)} isPdf={detail.filename.toLowerCase().endsWith(".pdf")} compact />
-              </>
-            ) : (
-              <AuditTrail row={detail} />
-            )}
+            {tab === "overview" ? panelResult(detail) : <AuditTrail row={detail} />}
           </div>
-          <div className="flex items-center justify-between border-t border-line px-6 py-3">
-            <span className="text-[12px] text-muted-2">Label {orderPos + 1} of {order.length}</span>
-            <button onClick={() => stepPanel(1)} className="h-[38px] rounded-[7px] bg-navy px-4 text-[13px] font-bold text-white hover:bg-navy-hover">
-              {atLast ? "Done — back to list" : "Review next"}
-            </button>
+          <div className="flex flex-col gap-2.5 border-t border-line px-6 py-3">
+            {rulingBar(detail)}
+            <div className="flex items-center justify-between">
+              <span className="text-[12px] text-muted-2">Label {orderPos + 1} of {order.length}</span>
+              <button onClick={() => stepPanel(1)} className="h-[38px] rounded-[7px] bg-navy px-4 text-[13px] font-bold text-white hover:bg-navy-hover">
+                {atLast ? "Done — back to list" : "Review next"}
+              </button>
+            </div>
           </div>
         </section>
       )}
@@ -1404,15 +1424,23 @@ export function BatchReview() {
   );
 }
 
-/** "Your review" — the agent's durable ruling on a row (outranks machine
- *  triage, exports as agent_review) plus a changeable bold decision.
+/** The agent's durable ruling on a ROW — outranks machine triage and exports
+ *  as agent_review. It sits in the panel footer, after the evidence.
+ *
+ *  It used to sit above the evidence and carry its own pair of bold buttons,
+ *  which meant one screen offered the bold decision in two places, in two
+ *  vocabularies ("Looks bold / Not bold" up top, "Accept / Reject" on the
+ *  warning row), while flagged fields decided on their own rows in a third
+ *  spot. The bold decision now lives only where the single-check page puts it:
+ *  on the government-warning Formatting row. This bar rules on the whole label
+ *  and nothing else.
  *
  *  Exception-based by design: a row with nothing outstanding shows one calm
  *  line, not two decision buttons. Offering a verdict on a label that already
  *  passed everything manufactures doubt and trains people to click through.
  *  The override stays one quiet link away — the agent must always be able to
  *  disagree with the tool. */
-function ReviewBar({
+function RulingBar({
   row: r,
   gateRuns,
   onReview,
@@ -1424,7 +1452,7 @@ function ReviewBar({
   gateRuns: boolean;
   onReview: (v: "ok" | "correction" | undefined) => void;
   onMarkBold: (index: number, v: "confirmed" | "flagged" | undefined) => void;
-  /** clears the per-field rulings made on the comparison rows below */
+  /** clears the per-field rulings made on the comparison rows above */
   onClearFields: () => void;
 }) {
   const [open, setOpen] = useState(false);
@@ -1434,18 +1462,9 @@ function ReviewBar({
   const decided = !!r.agentReview || !!r.boldReview || fieldsDecided;
   const show = open || decided || bucket === "review" || bucket === "error" || boldOwed;
 
-  // Bold controls appear only when the glance is actually owed or a human
-  // already ruled — a machine-verified label needs no buttons.
-  const showBold = boldEligible(r) && (boldOwed || !!r.boldReview || open);
-  const boldLabel =
-    r.boldReview === "confirmed" ? "confirmed by you" : r.boldReview === "flagged" ? "flagged by you"
-      : r.boldAuto === "bold" ? "verified by measurement" : r.boldAuto === "not_bold" ? "measurement says check it"
-      : r.boldAuto === undefined ? "measuring…" : "needs your glance";
-  const pair = "grid grid-cols-2 gap-2";
-
   if (!show) {
     return (
-      <div className="mb-4 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-[10px] border border-ok-line bg-ok-bg px-4 py-2.5">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-[10px] border border-ok-line bg-ok-bg px-3 py-2">
         <span className="text-[12.5px] text-ink">
           <b className="font-semibold text-ok">Nothing to review</b> — every field matched and the warning checks passed.
         </span>
@@ -1460,58 +1479,61 @@ function ReviewBar({
   }
 
   return (
-    <div className="mb-4 overflow-hidden rounded-[10px] border border-line bg-card">
-      <div className="flex items-center gap-2 border-b border-hairline px-4 py-2.5">
-        <p className="flex-1 text-[11.5px] font-semibold uppercase tracking-wider text-ink-faint">Your review</p>
-        {decided && (
-          <button
-            onClick={() => { onReview(undefined); onMarkBold(r.index, undefined); onClearFields(); }}
-            className="text-[11.5px] font-semibold text-muted hover:text-ink hover:underline"
-          >
-            Clear
-          </button>
-        )}
-      </div>
-      <div className="flex flex-col gap-2 px-4 py-3">
-        <div className={pair}>
-          <button
-            onClick={() => onReview(r.agentReview === "ok" ? undefined : "ok")}
-            className={`${CTRL_BASE} justify-center ${r.agentReview === "ok" ? CTRL_ON.green : CTRL_IDLE}`}
-          >
-            {r.agentReview === "ok" ? "Reviewed ✓" : "Reviewed — OK"}
-          </button>
-          <button
-            onClick={() => onReview(r.agentReview === "correction" ? undefined : "correction")}
-            className={`${CTRL_BASE} justify-center ${r.agentReview === "correction" ? CTRL_ON.red : CTRL_IDLE}`}
-          >
-            Needs correction
-          </button>
-        </div>
-        {showBold && (
-          <>
-            <p className="mt-1 text-[12px] text-muted">
-              Bold type — <span className="font-semibold text-ink">{boldLabel}</span>
-            </p>
-            <div className={pair}>
-              <button
-                onClick={() => onMarkBold(r.index, r.boldReview === "confirmed" ? undefined : "confirmed")}
-                className={`${CTRL_BASE} justify-center ${r.boldReview === "confirmed" ? CTRL_ON.green : CTRL_IDLE}`}
-              >
-                {r.boldReview === "confirmed" ? "Confirmed ✓" : "Looks bold"}
-              </button>
-              <button
-                onClick={() => onMarkBold(r.index, r.boldReview === "flagged" ? undefined : "flagged")}
-                className={`${CTRL_BASE} justify-center ${r.boldReview === "flagged" ? CTRL_ON.red : CTRL_IDLE}`}
-              >
-                {r.boldReview === "flagged" ? "Flagged" : "Not bold"}
-              </button>
-            </div>
-          </>
-        )}
-      </div>
+    <div className="flex items-center gap-3 rounded-[10px] border border-line bg-card px-3 py-2">
+      <p className="shrink-0 text-[11.5px] font-semibold uppercase tracking-wider text-ink-faint">
+        This label
+      </p>
+      <span className="min-w-0 flex-1">
+        {/* Same control, same two words, as every other decision on the screen. */}
+        <DecidePair
+          orientation="row"
+          value={r.agentReview === "ok" ? "accept" : r.agentReview === "correction" ? "reject" : null}
+          onChange={(v) => onReview(v === "accept" ? "ok" : v === "reject" ? "correction" : undefined)}
+          acceptLabel="Accept label"
+          rejectLabel="Reject label"
+          ariaPrefix="This label"
+        />
+      </span>
+      {decided && (
+        <button
+          onClick={() => { onReview(undefined); onMarkBold(r.index, undefined); onClearFields(); }}
+          className="shrink-0 text-[11.5px] font-semibold text-muted hover:text-ink hover:underline"
+        >
+          Clear
+        </button>
+      )}
     </div>
   );
 }
+
+/** The crop renders the label at AT LEAST this width in CSS pixels.
+ *
+ *  The card used to fit the whole label width into its ~230px box, so a 418px
+ *  phone photo showed its warning around 4px tall — a grey smudge. Bold is
+ *  judged by comparing the prefix's strokes with the body words beside it, both
+ *  on the first line, so a small label has to be scaled UP, and letting the
+ *  right-hand end of the line overflow the card costs nothing. Never scaled
+ *  down: a large scan already reads at 1:1. */
+const BOLD_CARD_MIN_RENDER_W = 640;
+/** Tallest the crop box gets; past this the lower lines of the warning are
+ *  clipped, which is the right thing to lose — the prefix is on line one. */
+const BOLD_CARD_MAX_H = 150;
+/** How much of the foot of the label to show when the warning was never
+ *  located, as a fraction of the label's height.
+ *
+ *  Two labels in the sample batch land here: the locator returns no warning
+ *  band at all for the shadowed gin, and it puts the rosé's in the wrong half
+ *  of the label, after which reading the image for it fails too (its text is
+ *  ~4px tall). Both cards then showed nothing but "couldn't locate the
+ *  warning", which is honest and useless — the card exists so a person can
+ *  look. The mandated warning sits at the foot of the label on essentially
+ *  every submission, so the crop falls back to the bottom of the label,
+ *  anchored to the BOTTOM edge (a top-anchored guess showed the empty space
+ *  above the warning), and the card says in words that it is guessing. */
+const BOLD_CARD_FALLBACK_FRAC = 0.22;
+/** A guessed crop gets a taller box than a located one — it has to contain the
+ *  warning wherever in the foot of the label it actually sits. */
+const BOLD_CARD_GUESS_MAX_H = 190;
 
 /** One card in the bold spot-check strip: the label's warning area cropped
  *  and zoomed (via its located band), with confirm/flag actions. Clicking
@@ -1525,20 +1547,34 @@ function BoldCard({
   onMark: (index: number, v: "confirmed" | "flagged" | undefined) => void;
   onOpen: (index: number) => void;
 }) {
-  const [aspect, setAspect] = useState<number | null>(null);
   // Hover magnifier: the whole point of the strip is judging stroke weight
-  // without opening rows, so the crop magnifies under the cursor.
+  // without opening rows, so the crop magnifies further under the cursor.
   const [lens, setLens] = useState<{ x: number; y: number } | null>(null);
+  const [nat, setNat] = useState<{ w: number; h: number } | null>(null);
   const isPdf = row.file?.type === "application/pdf" || row.filename.toLowerCase().endsWith(".pdf");
-  const band = row.bands?.warning;
-  const tried = row.bands !== undefined;
-  // Generous padding: located bands sometimes clip the first or last line of
-  // the warning, and a clipped warning can't be judged.
-  const top = band ? Math.max(0, band[0] / 10 - 4) : 0;
-  const bh = band ? Math.max(6, Math.min(100, band[1] / 10 + 4) - top) : 0;
+  // Only fall back once the locator has actually finished and come up empty —
+  // while it is still working the card says so instead of guessing.
+  const located = row.bands?.warning;
+  const settled = row.bands !== undefined && !row.locateError;
+  const guessing = !located && settled;
   const state = row.boldReview;
   const auto = row.boldAuto;
-  const cropReady = !isPdf && !!band && aspect !== null;
+  const cropReady = !isPdf && (!!located || guessing) && !!nat;
+  // Scale the label up until it renders wide enough to read, never down.
+  const scale = nat ? Math.max(1, BOLD_CARD_MIN_RENDER_W / nat.w) : 1;
+  const renderedH = nat ? nat.h * scale : 0;
+  // Generous padding: located bands sometimes clip the first or last line of
+  // the warning, and a clipped warning can't be judged.
+  const top = located ? Math.max(0, located[0] / 10 - 4) : 0;
+  const bh = located ? Math.max(6, Math.min(100, located[1] / 10 + 4) - top) : BOLD_CARD_FALLBACK_FRAC * 100;
+  const boxH = !nat
+    ? 64
+    : guessing
+      ? Math.min(BOLD_CARD_GUESS_MAX_H, Math.round(BOLD_CARD_FALLBACK_FRAC * renderedH))
+      : Math.min(BOLD_CARD_MAX_H, Math.max(72, Math.round((bh / 100) * nat.h * scale)));
+  // A located band is shown from its top (line one carries the prefix); a guess
+  // is pinned to the foot of the label, where the warning has to be.
+  const shiftPct = guessing && renderedH ? Math.max(0, 100 - (boxH / renderedH) * 100) : top;
   return (
     <div
       className={`flex flex-col gap-2 rounded-[10px] border p-2.5 transition ${
@@ -1561,7 +1597,7 @@ function BoldCard({
         onPointerLeave={() => setLens(null)}
         onBlur={() => setLens(null)}
         className="relative w-full cursor-zoom-in overflow-hidden rounded-[6px] border border-paper-line bg-paper text-left"
-        style={cropReady ? { aspectRatio: `${100 / (aspect! * bh)}`, maxHeight: 120 } : { height: 64 }}
+        style={{ height: cropReady ? boxH : 64 }}
       >
         {isPdf ? (
           <span className="flex h-full items-center justify-center px-2 text-center text-[11px] font-semibold text-muted">
@@ -1579,26 +1615,40 @@ function BoldCard({
               <img
                 src={row.imageUrl}
                 alt={`Warning area of ${row.filename}`}
-                onLoad={(e) => setAspect(e.currentTarget.naturalHeight / e.currentTarget.naturalWidth)}
-                className="absolute left-0 top-0 w-full"
-                style={{ transform: `translateY(-${top}%)`, visibility: cropReady ? "visible" : "hidden" }}
+                onLoad={(e) => setNat({ w: e.currentTarget.naturalWidth, h: e.currentTarget.naturalHeight })}
+                className="absolute left-0 top-0 max-w-none"
+                style={{
+                  // The label renders at `scale`, so the warning's own text is
+                  // legible; the box shows the band's top-left corner and lets
+                  // the rest of the line run off the right edge, because the
+                  // prefix and the body words beside it are the whole
+                  // comparison.
+                  width: nat ? `${Math.round(nat.w * scale)}px` : "100%",
+                  transform: `translateY(-${shiftPct}%)`,
+                  visibility: cropReady ? "visible" : "hidden",
+                }}
               />
             </span>
             {!cropReady && (
-              <span className={`absolute inset-0 flex items-center justify-center px-2 text-center text-[11px] text-muted-2 ${tried && !band && !row.locateError ? "" : "animate-pulse"}`}>
+              <span className={`absolute inset-0 flex items-center justify-center px-2 text-center text-[11px] text-muted-2 ${row.locateError ? "animate-pulse" : ""}`}>
                 {row.locateError === "busy"
                   ? "waiting for a free slot to find the warning…"
                   : row.locateError === "failed"
                     ? "couldn't reach the finder — retrying…"
-                    : tried && !band
-                      ? "couldn't locate the warning — open the row"
-                      : "finding the warning…"}
+                    : "finding the warning…"}
               </span>
             )}
           </>
         ) : null}
       </button>
       <span className="truncate text-[11.5px] font-semibold text-ink" title={row.filename}>{row.filename}</span>
+      {guessing && !isPdf && (
+        // Says what it is showing and what it does not know. Without this the
+        // card would claim a located warning it never found.
+        <span className="rounded-[5px] bg-amber-tint px-1.5 py-0.5 text-[10.5px] font-bold text-amber">
+          Couldn&apos;t pinpoint the warning — showing the foot of the label. Open the row if it isn&apos;t here.
+        </span>
+      )}
       {!state && auto === "bold" && (
         <span className="rounded-[5px] bg-green-tint px-1.5 py-0.5 text-[10.5px] font-bold text-green">
           ✓ Verified by measurement — prefix strokes are heavier

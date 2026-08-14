@@ -56,10 +56,28 @@ const BANNED_FAMILIES = new Set(['jpeg', 'combined']);
 const DEMO_SPEC = [
   // wine-label--rot1 was tried and rejected: margin 1/3, and on one live run the
   // two warning readings disagreed, putting an amber warning row on the card
-  // whose entire claim is "everything lines up". clean-match preserves through
-  // the FULL rotation range (margin 3/3) and tilts further, so it demonstrates
-  // the deskew better and does it reliably.
-  { card: 'clean',    label: 'clean-match',       family: 'rotation', capCond: 'rot2' },
+  // whose entire claim is "everything lines up".
+  //
+  // clean-match--rot2 then held this slot and was rejected in turn, for a
+  // reason the matrix cannot see: it preserves the VERDICT (clean/pass) but the
+  // deskewed letterforms are too soft for the shipped stroke-width gate, which
+  // returned "human" — so the card that promises "everything lines up" came
+  // back amber, asking for a bold confirmation. A card whose whole claim is
+  // "clean" must resolve EVERY check, bold included, so this slot is now picked
+  // against samples/tools/bold-gate-rescore.mjs as well as the matrix, and then
+  // run live several times over: the matrix is one API call per image and the
+  // model varies between runs, which is exactly how a card ends up amber in
+  // front of an owner.
+  //
+  // Measured, four live runs each: overexposed (bright1) was tried and
+  // rejected — it clears the gate but its washed-out body text made the two
+  // warning readings disagree on one run, downgrading the card to review; blur1
+  // failed the same way 1 run in 3. glare2 was 4/4 clean/pass with the widest
+  // bold margin measured on this label (sw=2.00, dens=1.86). Glare is rejected
+  // for the WARNING card lower down for a different reason — it softens the
+  // prefix, and that card's whole defect is prefix CASE — which does not apply
+  // to a card that only has to come back clean.
+  { card: 'clean',    label: 'clean-match',       family: 'glare',    capCond: 'glare2' },
   { card: 'mismatch', label: 'harbor-gin',        family: 'lowlight'  },
   // glare2 was tried and rejected LIVE, despite margin 2/2 in the matrix: the
   // matrix never calls /api/confirm, so it cannot see the second independent
@@ -76,7 +94,10 @@ const DEMO_SPEC = [
   // The low-resolution axis is carried by the batch (batch-rose--small1) instead.
   { card: 'complex',  label: 'batch-vodka',       family: 'shadow'    },
   // the three "Need test files?" download links (SingleCheck.tsx:399)
-  { card: 'download', label: 'wine-label',        family: 'glare'     },
+  // moved off glare when the clean card took it. rotation is the family the
+  // clean card vacated, and a download can carry the weaker margin (rot1, 1/3)
+  // that a card should not: nothing on screen depends on its verdict.
+  { card: 'download', label: 'wine-label',        family: 'rotation', capCond: 'rot1' },
   { card: 'download', label: 'case-diff',         family: 'blur'      },
   // angle only became selectable once the deskew shipped — pre-enhancement no
   // angled variant of this label preserved its verdict past the mildest tilt.

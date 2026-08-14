@@ -83,7 +83,18 @@ export async function POST(req: Request) {
     bottler_name_address: field("bottler_name_address") || undefined,
     country_of_origin: field("country_of_origin") || undefined,
   };
-  if (!app.brand_name.trim() && !app.class_type.trim() && !app.alcohol_content.trim() && !app.net_contents.trim()) {
+  // ANY application field counts, including the two optional ones. This used
+  // to demand one of the four core fields, which threw away real work: a back
+  // label's application row often carries only the bottler's name and address,
+  // and refusing the row also refused the GOVERNMENT WARNING check — the one
+  // check that needs no application data at all. Found by running a batch of
+  // real approved TTB back labels, where two of three rows errored out with
+  // "the application fields are empty" on rows that plainly were not.
+  const hasApplicationData = [
+    app.brand_name, app.class_type, app.alcohol_content, app.net_contents,
+    app.bottler_name_address, app.country_of_origin,
+  ].some((v) => v?.trim());
+  if (!hasApplicationData) {
     return NextResponse.json(
       { error: "The application fields are empty. Enter at least one field to check against." },
       { status: 400 },

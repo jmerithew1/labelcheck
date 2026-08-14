@@ -5,6 +5,7 @@ import type { CheckResult } from "@/lib/compare/index.ts";
 import type { LabelExtraction } from "@/lib/vision/contract.ts";
 import type { Bands, BandField } from "@/lib/vision/locate.ts";
 import { CANONICAL_WARNING } from "@/lib/compare/canonical.ts";
+import { summarizeVerdict, type FieldDecision } from "@/lib/verdict.ts";
 import { CharDiff } from "./CharDiff.tsx";
 import { Chip, Icon, fieldChip, FIELD_LABELS } from "./chips.tsx";
 import { LabelViewer, TONE_COLORS, type Tone } from "./LabelViewer.tsx";
@@ -17,11 +18,8 @@ const LOCATABLE = new Set(["brand_name", "class_type", "alcohol_content", "net_c
 
 const wvPasses = (v: string) => v === "pass" || v === "pass_formatting_note";
 
-/** The agent's ruling on one flagged field: "accepted" = looked at it and the
- *  label is fine (re-files the row as matched); "confirmed" = a real problem.
- *  The machine's verdict is never erased — the decision sits on top of it,
- *  the same way the bold confirm sits on top of the measurement gate. */
-export type FieldDecision = "accepted" | "confirmed";
+/** Re-exported so the components that render decisions keep one import. */
+export type { FieldDecision };
 
 const isRedVerdict = (v: string) => v === "possible_mismatch" || v === "absent_on_label";
 
@@ -51,22 +49,28 @@ const CROSS = (
   </svg>
 );
 
-/** The two-button decision control used by every surface that records one. */
-function DecidePair({
+/** The two-button decision control used by every surface that records one —
+ *  flagged comparison rows, the bold glance, and the batch panel's ruling on
+ *  the whole label. One control, one pair of words, everywhere a decision is
+ *  made, so nobody has to learn a second vocabulary in the batch view. */
+export function DecidePair({
   value,
   onChange,
   acceptLabel,
   rejectLabel,
   ariaPrefix,
+  orientation = "stacked",
 }: {
   value: "accept" | "reject" | null;
   onChange: (v: "accept" | "reject" | null) => void;
   acceptLabel: string;
   rejectLabel: string;
   ariaPrefix: string;
+  /** "row" for wide containers (the batch panel footer) */
+  orientation?: "stacked" | "row";
 }) {
   return (
-    <span className="no-print flex w-full flex-col gap-1.5">
+    <span className={`no-print flex w-full gap-1.5 ${orientation === "row" ? "flex-row" : "flex-col"}`}>
       <button
         onClick={(e) => { e.stopPropagation(); onChange(value === "accept" ? null : "accept"); }}
         aria-pressed={value === "accept"}
@@ -167,6 +171,7 @@ export function ResultView({
   confirming = false,
   boldAuto = null,
   boldHuman = null,
+  boldMeasuring = false,
   isPdf = false,
   appNumber,
   fieldReview,
@@ -191,6 +196,9 @@ export function ResultView({
   boldAuto?: "bold" | "not_bold" | "human" | null;
   /** the agent's own bold decision — outranks the gate in this panel */
   boldHuman?: "confirmed" | "flagged" | null;
+  /** the gate is still measuring: the glance is not owed YET, so the headline
+   *  says "checking" instead of flickering through "1 to confirm" and back */
+  boldMeasuring?: boolean;
   /** the submitted file is a PDF — the viewer shows a placeholder, not <img> */
   isPdf?: boolean;
   /** optional TTB application number — shown on the printed report */
@@ -206,23 +214,13 @@ export function ResultView({
   const overlayRef = useRef<HTMLElement | null>(null);
   const [connector, setConnector] = useState<{ path: string; x1: number; y1: number; x2: number; y2: number } | null>(null);
 
-  const counts = useMemo(() => {
-    let matched = 0, mismatch = 0, review = 0, notRequired = 0, accepted = 0;
-    for (const f of result.fields) {
-      if (f.verdict === "match" || f.verdict === "match_formatting") matched++;
-      else if (isRedVerdict(f.verdict)) {
-        // An accepted row is resolved: it counts as matched (and is named in
-        // its own chip so the ruling stays visible in the headline).
-        if (fieldReview?.[f.field] === "accepted") { matched++; accepted++; }
-        else mismatch++;
-      }
-      else if (f.verdict === "unreadable") review++;
-      else notRequired++;
-    }
-    const warningFails = result.warning.verdict.startsWith("fail");
-    const warningReview = result.warning.verdict === "unreadable";
-    return { matched, mismatch, review, notRequired, accepted, warningFails, warningReview };
-  }, [result, fieldReview]);
+  // ONE tally, shared with the stepper in the top bar and the batch status
+  // pill (lib/verdict.ts) so no two surfaces can describe the same label
+  // differently.
+  const counts = useMemo(
+    () => summarizeVerdict(result, fieldReview, { auto: boldAuto, human: boldHuman, measuring: boldMeasuring }, confirming),
+    [result, fieldReview, boldAuto, boldHuman, boldMeasuring, confirming],
+  );
 
   // Issue fields keep their highlight on the label at all times (mockups 3-5).
   const issueTones = useMemo(() => {
@@ -233,8 +231,11 @@ export function ResultView({
         tones[f.field as BandField] = fieldReview?.[f.field] === "accepted" ? "ok" : "bad";
       else if (f.verdict === "unreadable") tones[f.field as BandField] = "warn";
     }
-    if (counts.warningFails && result.warning.verdict !== "fail_missing") tones.warning = "bad";
-    else if (counts.warningReview) tones.warning = "warn";
+    // A rejected bold type is a failure of the warning, so the region on the
+    // label reads red — the same colour the Formatting row now carries.
+    if ((counts.warningFails && result.warning.verdict !== "fail_missing") || counts.bold === "rejected")
+      tones.warning = "bad";
+    else if (counts.warningReview || counts.bold === "owed") tones.warning = "warn";
     return tones;
   }, [result, counts, fieldReview]);
 
@@ -331,66 +332,17 @@ export function ResultView({
     );
   }
 
-  const issueCount = counts.mismatch + (counts.warningFails ? 1 : 0);
-  // A bold glance the machine couldn't resolve is an outstanding item, so it
-  // belongs in the count — a green "matches" headline that then asks for a
-  // check contradicts itself (and the row's amber status in the batch table).
-  const boldGlanceOwed =
-    wvPasses(result.warning.verdict) && boldHuman !== "confirmed" && boldAuto !== null && boldAuto !== "bold";
-  const confirmCount = counts.review + (counts.warningReview ? 1 : 0) + (boldGlanceOwed ? 1 : 0);
+  // Banner dressing for the shared verdict. Count chips carry their tone
+  // (conformance #5): matched green, mismatch red, review/confirm amber,
+  // not-required grey — and every one of them is built in lib/verdict.ts, so
+  // the chips can't contradict the headline above them.
   const banner =
-    counts.warningFails && counts.mismatch === 0
-      ? {
-          cls: "border-bad-line bg-bad-bg", iconCls: "bg-bad", icon: Icon.x,
-          title: "Government warning fails",
-          titleCls: "text-bad",
-          sub: "The label's warning statement does not meet the requirement.",
-        }
-      : issueCount > 0
-      ? {
-          cls: "border-bad-line bg-bad-bg", iconCls: "bg-bad", icon: Icon.x,
-          title: `${issueCount} item${issueCount === 1 ? "" : "s"} need${issueCount === 1 ? "s" : ""} review`,
-          titleCls: "text-bad",
-          sub: "The label does not match the application.",
-        }
-      : confirmCount > 0
-        ? {
-            cls: "border-warn-line bg-warn-bg", iconCls: "bg-warn", icon: Icon.dot,
-            title: `${confirmCount} item${confirmCount === 1 ? "" : "s"} need${confirmCount === 1 ? "s" : ""} confirmation`,
-            titleCls: "text-warn",
-            sub: boldGlanceOwed
-              ? "Every field matches and the warning wording is exact — just confirm “GOVERNMENT WARNING” looks bold on the label."
-              : "The label matches, with a visual confirmation needed.",
-          }
-        : {
-            cls: "border-ok-line bg-ok-bg", iconCls: "bg-ok", icon: Icon.check,
-            title: "Label matches the application",
-            titleCls: "text-ok",
-            // The one thing the AI can't verify never hides behind the green
-            // headline — the bold confirm is named in the verdict itself,
-            // unless the measurement gate resolved it.
-            sub:
-              boldHuman === "confirmed"
-                ? "All required fields match, the warning wording is exact, and you accepted the bold type."
-                : boldAuto === "bold"
-                ? "All required fields match, the warning wording is exact, and the prefix strokes measure heavier than the warning body."
-                : "All required fields match and the warning wording is exact. One last step: glance at the label to confirm “GOVERNMENT WARNING” is in bold type — the computer can't be sure of bold.",
-          };
-
-  // Resolved = the agent confirmed it, or the gate verified it. Agreeing with
-  // the machine must never make the panel look worse than not touching it.
-  const boldResolved = boldHuman === "confirmed" || boldAuto === "bold";
-  const boldConfirmPending = wvPasses(result.warning.verdict) && !boldResolved;
-  // Count chips carry their tone (conformance #5): matched green, mismatch
-  // red, review/confirm amber, not-required grey.
-  const countBits = [
-    { text: `${counts.matched} matched`, cls: "text-green" },
-    counts.accepted > 0 ? { text: `${counts.accepted} accepted by you`, cls: "text-green font-semibold" } : null,
-    issueCount > 0 ? { text: `${issueCount} mismatch${issueCount === 1 ? "" : "es"}`, cls: "text-red font-semibold" } : null,
-    confirmCount > 0 ? { text: `${confirmCount} review`, cls: "text-amber font-semibold" } : null,
-    boldConfirmPending ? { text: "1 to confirm (bold)", cls: "text-amber" } : null,
-    { text: `${counts.notRequired} not required`, cls: "text-muted-2" },
-  ].filter(Boolean) as { text: string; cls: string }[];
+    counts.tone === "bad"
+      ? { cls: "border-bad-line bg-bad-bg", iconCls: "bg-bad", icon: Icon.x, titleCls: "text-bad" }
+      : counts.tone === "warn"
+        ? { cls: "border-warn-line bg-warn-bg", iconCls: "bg-warn", icon: Icon.dot, titleCls: "text-warn" }
+        : { cls: "border-ok-line bg-ok-bg", iconCls: "bg-ok", icon: Icon.check, titleCls: "text-ok" };
+  const countBits = counts.chips;
 
   const wv = result.warning.verdict;
   const wordingRow =
@@ -406,6 +358,8 @@ export function ResultView({
         ? { chip: <Chip tone="ok">PASS</Chip>, text: "You accepted the bold type." }
         : boldHuman === "flagged"
         ? { chip: <Chip tone="bad">FAIL</Chip>, text: "You rejected the bold type — “GOVERNMENT WARNING:” is not bold (required by 27 CFR 16.22(a)(2))." }
+        : boldMeasuring && boldAuto === null
+        ? { chip: <Chip tone="muted">Checking</Chip>, text: "Measuring the stroke width of “GOVERNMENT WARNING:” against the warning body — one moment." }
         : boldAuto === "bold"
         ? { chip: <Chip tone="ok">PASS</Chip>, text: "The prefix strokes measure heavier than the warning body, and the visual reading agrees. Stroke width is measured from the image, so this is strong evidence rather than proof — anything borderline, or any image too low-resolution to measure, is sent to you instead." }
         : boldAuto === "not_bold"
@@ -481,8 +435,8 @@ export function ResultView({
           {banner.icon}
         </span>
         <div className="min-w-0 flex-1">
-          <p className={`text-[18px] font-bold ${banner.titleCls}`}>{banner.title}</p>
-          <p className="text-[13px] text-muted">{banner.sub}</p>
+          <p className={`text-[18px] font-bold ${banner.titleCls}`}>{counts.title}</p>
+          <p className="text-[13px] text-muted">{counts.sub}</p>
           <p className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-[12.5px] font-medium">
             {countBits.map((b) => (
               <span key={b.text} className={`whitespace-nowrap ${b.cls}`}>{b.text}</span>
@@ -647,8 +601,12 @@ export function ResultView({
           onSelect={() => setFocusedField(focusedField === "warning" ? null : "warning")}
           extra={
             // The bold decision uses the same control, in the same column,
-            // with the same two words as the comparison rows.
-            onBoldReview && wvPasses(wv) && (boldHuman !== null || boldAuto !== "bold") ? (
+            // with the same two words as the comparison rows. Hidden while the
+            // gate is still measuring — asking for a glance the machine is
+            // about to resolve is how the batch panel ended up with two sets
+            // of bold buttons in two different places.
+            onBoldReview && wvPasses(wv) && !(boldMeasuring && boldAuto === null) &&
+            (boldHuman !== null || boldAuto !== "bold") ? (
               <DecidePair
                 value={boldHuman === "confirmed" ? "accept" : boldHuman === "flagged" ? "reject" : null}
                 onChange={(v) =>

@@ -54,7 +54,7 @@ export function compareLabel(app: ApplicationData, ex: LabelExtraction): CheckRe
       compareNetContents(app.net_contents, ex.net_contents.text),
       ex.net_contents, app.net_contents, "net_contents",
     ),
-    compareTextField("bottler_name_address", app.bottler_name_address ?? "", ex.bottler_name_address, { optional: true }),
+    compareTextField("bottler_name_address", app.bottler_name_address ?? "", ex.bottler_name_address, { optional: true, stripLeadIn: true }),
     compareTextField("country_of_origin", app.country_of_origin ?? "", ex.country_of_origin, { optional: true }),
   ];
 

@@ -1,16 +1,16 @@
 {
-  "generated": "2026-08-13T15:58:19.124Z",
+  "generated": "2026-08-14T00:23:17.149Z",
   "generator": "samples/tools/pick-demo-samples.mjs",
   "note": "Every entry was selected because its measured verdict in docs/robustness-matrix.json matches its label pristine baseline. Images degrade; verdicts do not.",
   "single_check": [
     {
       "card": "clean",
-      "file": "clean-match--rot2.png",
+      "file": "clean-match--glare2.png",
       "label": "clean-match",
-      "cond": "rot2",
-      "family": "rotation",
+      "cond": "glare2",
+      "family": "glare",
       "verdict": "clean/pass",
-      "margin": "2/3"
+      "margin": "2/2"
     },
     {
       "card": "mismatch",
@@ -41,12 +41,12 @@
     },
     {
       "card": "download",
-      "file": "wine-label--glare2.png",
+      "file": "wine-label--rot1.png",
       "label": "wine-label",
-      "cond": "glare2",
-      "family": "glare",
+      "cond": "rot1",
+      "family": "rotation",
       "verdict": "clean/pass",
-      "margin": "2/2"
+      "margin": "1/3"
     },
     {
       "card": "download",

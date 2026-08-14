@@ -17,17 +17,23 @@
  *     strongest measured result we have is 544 degraded images across the
  *     brief's three photo conditions with zero false rejections.
  *
- *  Four distinct labels across four distinct condition families (rotation,
- *  low light, glare, low resolution), and each variant was selected because
- *  its measured verdict MATCHES its pristine baseline — the picture gets
- *  visibly worse, the verdict does not move. Change an image here only via
- *  that script, or the card can quietly start demonstrating something else.
+ *  Four distinct labels across four distinct condition families (glare, low
+ *  light, colour cast, shadow), and each variant was selected because its
+ *  measured verdict MATCHES its pristine baseline — the picture gets visibly
+ *  worse, the verdict does not move. Change an image here only via that
+ *  script, or the card can quietly start demonstrating something else.
  */
 
 export interface DemoSample {
   id: string;
   title: string;
   blurb: string;
+  /** The dot on the card, which must be the colour the card's RESULT lands on.
+   *  The "warning issue" card carried an amber dot and returned a red failure —
+   *  the one card whose whole job is to show a hard fail was advertising itself
+   *  as a maybe. A card's dot is a promise about its verdict; keep it in step
+   *  with the measured verdict in samples/demo/manifest.json. */
+  tone: "green" | "amber" | "red";
   /** file under samples/demo (falls back to samples/labels) */
   png: string;
   application: {
@@ -63,11 +69,18 @@ const VODKA = {
 
 export const DEMO_SAMPLES: DemoSample[] = [
   {
-    // rotated on the glass — the deskew pass straightens it before the read
+    // Shot through a glare off the glass. Chosen over the rotated variant
+    // because a card promising "everything lines up" has to COME BACK clean,
+    // and the deskewed rotation left the stroke-width gate unable to resolve
+    // the bold prefix — so the one spotless demo ended on an amber "1 item
+    // needs confirmation". This variant measured 4/4 clean/pass live with the
+    // widest bold margin on the label; see pick-demo-samples.mjs for the two
+    // candidates rejected in between.
     id: "clean",
     title: "Clean match",
     blurb: "Everything lines up",
-    png: "clean-match--rot2.png",
+    tone: "green",
+    png: "clean-match--glare2.png",
     application: OLD_TOM,
   },
   {
@@ -75,6 +88,7 @@ export const DEMO_SAMPLES: DemoSample[] = [
     id: "mismatch",
     title: "Mismatch",
     blurb: "Alcohol content differs",
+    tone: "red",
     png: "harbor-gin--dark3.png",
     application: { ...GIN, alcohol_content: "40% Alc./Vol. (80 Proof)" },
   },
@@ -83,6 +97,9 @@ export const DEMO_SAMPLES: DemoSample[] = [
     id: "warning",
     title: "Warning issue",
     blurb: "Warning formatting fails",
+    // red, not amber: Title Case in the prefix is an outright failure of
+    // 27 CFR 16.22(a)(2), and the result screen says so in red.
+    tone: "red",
     png: "title-case-prefix--cast2.png",
     application: OLD_TOM,
   },
@@ -91,6 +108,7 @@ export const DEMO_SAMPLES: DemoSample[] = [
     id: "complex",
     title: "Multiple issues",
     blurb: "Two fields to review",
+    tone: "red",
     png: "batch-vodka--shadow2.png",
     application: {
       ...VODKA,
@@ -101,10 +119,10 @@ export const DEMO_SAMPLES: DemoSample[] = [
 ];
 
 /** The "Need test files?" downloads. Deliberately different conditions again —
- *  shadow, blur and a steep angle — so anyone who grabs these to try the tool
+ *  a tilt, a blur and a steep angle — so anyone who grabs these to try the tool
  *  themselves is testing it on photographs, not on clean artwork. */
 export const DOWNLOAD_SAMPLES = [
-  "wine-label--glare2.png",
+  "wine-label--rot1.png",
   "case-diff--blur2.png",
   "word-drop--angle3.png",
 ];

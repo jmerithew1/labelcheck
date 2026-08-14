@@ -8,10 +8,11 @@ import { DEMO_SAMPLES, DOWNLOAD_SAMPLES, type DemoSample } from "@/lib/samples.t
 import { prepareImage } from "@/lib/downscale.ts";
 import { applyBoldGate, type BoldGateResult } from "@/lib/compare/boldGate.ts";
 import { measureBoldSignals, ocrWarningBand } from "@/lib/boldMeasure.ts";
+import { summarizeVerdict, type FieldDecision } from "@/lib/verdict.ts";
 import { Shell } from "./Shell.tsx";
 import { Stepper, type StepPhase, type Outcome } from "./Stepper.tsx";
 import { CheckingCard } from "./CheckingCard.tsx";
-import { ResultView, type FieldDecision } from "./ResultView.tsx";
+import { ResultView } from "./ResultView.tsx";
 
 interface AppFields {
   brand_name: string;
@@ -36,27 +37,20 @@ interface OutcomeData {
   confirmMs?: number;
 }
 
-function outcomeSummary(o: OutcomeData | null, fieldReview: Partial<Record<string, FieldDecision>>): Outcome {
+/** The stepper's terminal step reports the SAME verdict as the result banner,
+ *  from the same tally — including the agent's own rulings. It used to run its
+ *  own count that knew nothing about the bold decision, so rejecting the bold
+ *  type left the top of the page saying "Result: matched". */
+function outcomeSummary(
+  o: OutcomeData | null,
+  fieldReview: Partial<Record<string, FieldDecision>>,
+  bold: { auto: BoldGateResult | null; human: "confirmed" | "flagged" | null; measuring: boolean },
+  confirming: boolean,
+): Outcome {
   if (!o) return null;
-  const r = o.result;
-  // Accepted rows are resolved — the stepper mirrors the banner, not the
-  // machine's original tally.
-  const fieldMismatches = r.fields.filter(
-    (f) => (f.verdict === "possible_mismatch" || f.verdict === "absent_on_label") && fieldReview[f.field] !== "accepted",
-  ).length;
-  const warningFails = r.warning.verdict.startsWith("fail");
-  const reviews =
-    r.fields.filter((f) => f.verdict === "unreadable").length + (r.warning.verdict === "unreadable" ? 1 : 0);
-  if (!r.is_alcohol_label) return { tone: "warn", label: "not a label" };
-  // A warning failure is a rule violation, not a field mismatch — it gets
-  // its own name (vocabulary audit: red owns "fails", amber owns "confirm").
-  if (warningFails && fieldMismatches === 0) return { tone: "bad", label: "warning fails" };
-  if (fieldMismatches > 0) {
-    const n = fieldMismatches + (warningFails ? 1 : 0);
-    return { tone: "bad", label: `${n} mismatch${n === 1 ? "" : "es"}` };
-  }
-  if (reviews > 0) return { tone: "warn", label: `${reviews} to confirm` };
-  return { tone: "ok", label: "matched" };
+  if (!o.result.is_alcohol_label) return { tone: "warn", label: "not a label" };
+  const s = summarizeVerdict(o.result, fieldReview, bold, confirming);
+  return { tone: s.tone, label: s.short };
 }
 
 export function SingleCheck() {
@@ -71,6 +65,10 @@ export function SingleCheck() {
   const [confirming, setConfirming] = useState(false);
   const [sampleLoading, setSampleLoading] = useState(false);
   const [boldAuto, setBoldAuto] = useState<BoldGateResult | null>(null);
+  // The stroke-width gate is running. Until it answers, the bold glance is not
+  // owed — the headline says "checking" rather than asking for a confirmation
+  // it is about to resolve on its own.
+  const [boldMeasuring, setBoldMeasuring] = useState(false);
   // The agent's decisions on this result: per-field rulings on flagged rows
   // and the bold glance. Layered over the machine verdicts, never replacing
   // them — ResultView renders both.
@@ -105,14 +103,24 @@ export function SingleCheck() {
     setError(null);
     setConfirming(false);
     setBoldAuto(null);
+    setBoldMeasuring(false);
     setFieldReview({});
     setBoldHuman(null);
     setStep("form");
   }
 
-  // Multi-signal bold gate: when a result with a passing warning and a located
-  // warning band renders, measure the crop and either resolve the bold glance
-  // or leave the advisory in place.
+  // Multi-signal bold gate: when a result with a passing warning renders,
+  // measure the warning crop and either resolve the bold glance or leave the
+  // advisory in place.
+  //
+  // It runs whether or not the LOCATOR found the warning. It used to bail out
+  // when `bands.warning` was absent, which is how the "clean match" card came
+  // back amber roughly half the time on production: the band is a model output
+  // and it is sometimes simply missing, and with no band this effect never
+  // started, so the glance was declared owed on a label the machine had never
+  // looked at. The batch path had repaired that case since it shipped — read
+  // the image for the warning and measure that — and the single-check path
+  // simply never got the same treatment.
   //
   // The effect depends on `outcome` and also WRITES to it (the band
   // correction below), so it must be idempotent per band or it feeds itself.
@@ -125,21 +133,35 @@ export function SingleCheck() {
   useEffect(() => {
     const wv = outcome?.result.warning.verdict;
     const band = outcome?.bands?.warning;
-    if (!outcome || !previewUrl || !band || (wv !== "pass" && wv !== "pass_formatting_note")) return;
+    if (!outcome || !previewUrl || (wv !== "pass" && wv !== "pass_formatting_note")) return;
     if (file?.type === "application/pdf") return;
     const token = runToken.current;
-    const key = `${token}:${band[0]},${band[1]}`;
+    const key = `${token}:${band ? `${band[0]},${band[1]}` : "no-band"}`;
     if (boldRunKey.current === key) return; // already measured this exact band
     boldRunKey.current = key;
     void (async () => {
-      let signals = await measureBoldSignals(previewUrl, band);
+      // No band located: read the image for the warning before giving up on
+      // it. A missing band is a locator miss, not an unreadable label.
+      let start = band;
+      if (!start) {
+        const found = await ocrWarningBand(previewUrl);
+        if (token !== runToken.current) return;
+        if (!found) {
+          setBoldAuto("human"); // genuinely cannot find it — the glance is owed
+          setBoldMeasuring(false);
+          return;
+        }
+        start = found;
+        setOutcome((prev) => (prev ? { ...prev, bands: { ...prev.bands, warning: found } } : prev));
+      }
+      let signals = await measureBoldSignals(previewUrl, start);
       // Same correction the batch path makes: no GOVERNMENT prefix in the
       // located band usually means the band is wrong, not that the label is
       // unreadable. Read the image for the warning and retry once.
-      if (!signals) {
+      if (!signals && band) {
         const found = await ocrWarningBand(previewUrl);
         if (token !== runToken.current) return;
-        if (found && (found[0] !== band[0] || found[1] !== band[1])) {
+        if (found && (found[0] !== start[0] || found[1] !== start[1])) {
           signals = await measureBoldSignals(previewUrl, found);
         }
         if (token !== runToken.current) return;
@@ -156,6 +178,7 @@ export function SingleCheck() {
       }
       if (token !== runToken.current) return;
       setBoldAuto(applyBoldGate(signals, outcome.result.warning.boldAdvisory));
+      setBoldMeasuring(false);
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [outcome]);
@@ -168,6 +191,7 @@ export function SingleCheck() {
     setOutcome(null);
     setConfirming(false);
     setBoldAuto(null);
+    setBoldMeasuring(false);
     setFieldReview({});
     setBoldHuman(null);
     try {
@@ -201,6 +225,15 @@ export function SingleCheck() {
         return;
       }
       setOutcome({ result: body.result, extraction: body.extraction, bands: body.bands ?? {}, ms: body.ms });
+      // Flag the gate as running BEFORE the effect below starts it, so the
+      // first painted frame of the result never shows a bold confirmation the
+      // measurement is about to resolve.
+      // Not conditioned on a located band any more: with no band the effect
+      // above now goes looking for the warning itself, so the gate IS running.
+      setBoldMeasuring(
+        (body.result.warning.verdict === "pass" || body.result.warning.verdict === "pass_formatting_note") &&
+          small.type !== "application/pdf",
+      );
       if (body.confirm_pending) {
         setConfirming(true);
         void runConfirm(small, body.result, body.extraction, token);
@@ -288,9 +321,12 @@ export function SingleCheck() {
     }
   }
 
-  const canCheck =
-    file !== null &&
-    Boolean(fields.brand_name.trim() || fields.class_type.trim() || fields.alcohol_content.trim() || fields.net_contents.trim());
+  // Any field the agent has typed counts — including the two marked optional.
+  // The form and /api/check must agree on this, and both used to ignore the
+  // bottler and country fields, so a page that looked ready to check refused
+  // the request (and with it the government-warning check, which needs no
+  // application data at all).
+  const canCheck = file !== null && Object.values(fields).some((v) => v.trim());
 
   const input = (name: keyof AppFields, label: string, placeholder: string, optional = false) => (
     <label className="flex flex-col gap-1.5">
@@ -310,7 +346,17 @@ export function SingleCheck() {
 
   return (
     <Shell
-      topBar={<Stepper phase={step} outcome={outcomeSummary(outcome, fieldReview)} />}
+      topBar={
+        <Stepper
+          phase={step}
+          outcome={outcomeSummary(
+            outcome,
+            fieldReview,
+            { auto: boldAuto, human: boldHuman, measuring: boldMeasuring && boldAuto === null },
+            confirming,
+          )}
+        />
+      }
       onReenterHome={step === "form" ? undefined : resetAll}
     >
       <div className="mx-auto max-w-[1120px]">
@@ -410,7 +456,9 @@ export function SingleCheck() {
                     <span className="text-[12px] font-bold uppercase tracking-[0.06em] text-muted-2">Try a sample</span>
                     <div className="grid w-full grid-cols-2 gap-2.5">
                       {DEMO_SAMPLES.map((s) => {
-                        const dot = s.id === "clean" ? "bg-green" : s.id === "warning" ? "bg-amber" : "bg-red";
+                        // The dot is the card's promise about its verdict, so
+                        // it comes from the sample itself, not its position.
+                        const dot = s.tone === "green" ? "bg-green" : s.tone === "amber" ? "bg-amber" : "bg-red";
                         return (
                           <button
                             key={s.id}
@@ -482,6 +530,7 @@ export function SingleCheck() {
             confirming={confirming}
             boldAuto={boldAuto}
             boldHuman={boldHuman}
+            boldMeasuring={boldMeasuring && boldAuto === null}
             onBoldReview={setBoldHuman}
             fieldReview={fieldReview}
             onFieldReview={(field, d) =>
