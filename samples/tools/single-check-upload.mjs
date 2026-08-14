@@ -18,11 +18,12 @@
 //   node single-check-upload.mjs [base-url] [label-name]
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';
 
-const BASE = process.argv[2] || 'http://localhost:3011';
+const BASE = process.argv[2] || 'http://localhost:3000';
 const LABEL = process.argv[3] || 'allcaps-body';
-const ROOT = 'C:/dev/labelcheck';
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const img = path.join(ROOT, 'samples', 'labels', `${LABEL}.png`);
 const gt = JSON.parse(fs.readFileSync(path.join(ROOT, 'samples', 'labels', `${LABEL}.json`), 'utf8'));
 

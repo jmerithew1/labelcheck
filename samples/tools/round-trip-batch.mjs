@@ -22,7 +22,7 @@
 // and come back with verdicts — with no false rejection on a label whose
 // sidecar says it is clean.
 //
-//   node round-trip-batch.mjs [--base=http://localhost:3011] [--csvs=2]
+//   node round-trip-batch.mjs [--base=http://localhost:3000] [--csvs=2]
 //                             [--rows=4] [--quick] [--seed=123]
 //
 // --quick verifies pairing and stops before any run, so it costs zero API
@@ -44,7 +44,7 @@ const arg = (k, d) => {
   const a = argv.find((x) => x.startsWith(`--${k}=`));
   return a ? a.split('=')[1] : d;
 };
-const BASE = arg('base', 'http://localhost:3011').replace(/\/$/, '');
+const BASE = arg('base', 'http://localhost:3000').replace(/\/$/, '');
 const CSVS = Number(arg('csvs', 2));
 const ROWS = Number(arg('rows', 4));
 const QUICK = argv.includes('--quick');

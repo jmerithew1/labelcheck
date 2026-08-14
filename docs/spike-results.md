@@ -1,5 +1,7 @@
 # Spike Results (Phase 0b) — 2026-08-10
 
+> **Day-1 benchmarks, kept as the record of what drove the architecture.** One conclusion below was later superseded: C9's "bold is surfaced as an advisory AI judgment; the agent decides" describes the day-1 design. The shipped app puts that judgment behind a multi-signal gate that resolves most labels without a human — measured in [approach.md § How accurate is the bold check?](approach.md#how-accurate-is-the-bold-check).
+
 Raw data: [spike-results.json](spike-results.json) (v1 runs, incl. per-label Haiku bold reads), [spike-bold-v2.json](spike-bold-v2.json) (the v3 Sonnet bold-only run — the file records `variant: 2` because v2 and v3 shared the script and output path, and the Haiku v2 raw rows were overwritten by the later Sonnet run; the v2 14/17 tally survives in this doc and the decision log). 66 + 34 API calls, under the 120-call guard. Prompt-variant cap (3) reached: v1 full-schema, v2 bold-only/Haiku, v3 bold-only/Sonnet.
 
 ## Question 1 — Does the model transcribe the warning verbatim, or reconstruct the memorized canonical text?

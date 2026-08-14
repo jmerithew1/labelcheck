@@ -79,7 +79,7 @@ One vision call per label does **perception only**: Claude Haiku 4.5 transcribes
 
 ### Measurement harnesses
 
-The twenty-two scripts in `samples/tools` are the measurement rig behind every number in the docs. Generated images are gitignored and regenerable — the scored summaries in `docs/*.json` are the evidence. All default to `http://localhost:3000`; pass a URL to target a deployment.
+The twenty-two scripts in `samples/tools` are the measurement rig behind every number in the docs. Generated images are gitignored and regenerable — the scored summaries in `docs/*.json` are the evidence. All default to `http://localhost:3000` (what `npm run dev` serves); pass a URL — `--base=<url>` or a first argument, per the usage comment at the top of each script — to target a deployment instead. They resolve the repo root from their own location, so they run from a fresh clone.
 
 | Script | Measures | Writes |
 |---|---|---|

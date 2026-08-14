@@ -2,12 +2,15 @@
 // warning, on REAL approved TTB labels — as shipped, vs with the image
 // normalised to 1000px tall before the locate call?
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
 import { createWorker } from 'tesseract.js';
 
-const ROOT = 'C:/dev/labelcheck';
-const BASE = 'http://localhost:56907';
+// Usage: node locate-band-audit.mjs [n] [base-url]
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
+const BASE = process.argv[3] || 'http://localhost:3000';
 const REAL = path.join(ROOT, 'samples', 'real');
 const N = Number(process.argv[2] ?? 14);
 
@@ -25,7 +28,7 @@ const step = Math.max(1, Math.floor(sized.length / N));
 const pick = sized.filter((_, i) => i % step === 0).slice(0, N);
 
 const worker = await createWorker('eng');
-const tmp = 'C:/Users/merit/AppData/Local/Temp/claude/_band.png';
+const tmp = path.join(os.tmpdir(), 'labelcheck_band.png');
 
 async function locate(buf) {
   const fd = new FormData();

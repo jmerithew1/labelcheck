@@ -3,6 +3,8 @@
 Synthesized from three-lens scoping (economics / psychology / technology), 2026-08-10.
 Requirements tracked in [rubric.md](rubric.md) — any missed hard requirement is an auto-fail.
 
+> **This is the original build spec, kept as a record of what was planned.** Where it and the shipped app differ, the app and [approach.md](approach.md) are current — notably: perception is now *two* parallel model calls (Haiku transcribes, Sonnet judges bold) rather than one, XLSX manifests were cut to CSV only, and bold is resolved by a measured multi-signal gate rather than an unaided model judgment.
+
 **Outcome:** A TTB compliance agent uploads a label image (or a batch of 200–300) plus the application data, and in ~5 seconds per label gets evidence they can verify at a glance — per-field comparisons with diffs, and a deterministic pass/fail on the government warning.
 
 **For:** TTB compliance agents (half over 50, some skeptical of AI) triaging routine label applications — and the evaluator who opens the deployed URL owning zero test data.

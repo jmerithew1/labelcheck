@@ -29,7 +29,7 @@
 // pre-processing, and a harness that measures something else is how the last
 // pick got through.
 //
-//   node bold-gate-shipped-path.mjs --base=http://localhost:3011 --runs=4 \
+//   node bold-gate-shipped-path.mjs --base=http://localhost:3000 --runs=4 \
 //        clean-match--glare2.png clean-match--dark1.png
 import fs from 'node:fs';
 import path from 'node:path';
@@ -45,7 +45,7 @@ const arg = (k, d) => {
   const a = argv.find((x) => x.startsWith(`--${k}=`));
   return a ? a.split('=')[1] : d;
 };
-const BASE = arg('base', 'http://localhost:3011');
+const BASE = arg('base', 'http://localhost:3000');
 const RUNS = Number(arg('runs', 4));
 const ADVISORY = arg('advisory', 'bold'); // the gate's permissive branch
 const files = argv.filter((a) => !a.startsWith('--'));
