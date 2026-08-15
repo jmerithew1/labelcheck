@@ -156,6 +156,8 @@ async function waitAndTally(timeoutMs = 180000) {
 /** Raw bytes of the report the app exports, captured in scenario 2 and fed back
  *  through the picker in 2b. Null under --quick, which never runs a batch. */
 let exportedReport = null;
+/** The unpacked bundle labels, re-dropped alongside the report in 2b. */
+let bundleLabels = [];
 
 console.log(`round-trip batch harness -> ${BASE}`);
 console.log(`workspace: ${work}\n`);
@@ -195,6 +197,8 @@ console.log('\n2. the sample bundle (zip), unpacked and fed back through the pic
     record('zip round trip completes', !!t && t.errors === 0 && t.rows === r.rows,
       t ? `checked ${t.rows}, errors=${t.errors}, clean=${t.clean}, needs_review=${t.needsReview}, warning_failure=${t.warningFailures}` : 'no report captured');
     exportedReport = t?.raw ?? null;
+    // Keep the unpacked labels for 2b: the report must be re-dropped WITH them.
+    bundleLabels = files.filter((f) => /\.(png|jpe?g|webp|pdf)$/i.test(f));
   }
 }
 
@@ -209,16 +213,24 @@ console.log('\n2. the sample bundle (zip), unpacked and fed back through the pic
 //
 // Uses the bytes captured from the real export above, not a synthetic file, so
 // a change to the export header cannot pass this while breaking the round trip.
-if (exportedReport) {
-  console.log('\n2b. the report this app produced, dropped straight back in');
+if (exportedReport && bundleLabels.length) {
+  console.log('\n2b. the report this app produced, dropped back in WITH its labels');
   const out = path.join(work, 'labelcheck-batch-results.csv');
   fs.writeFileSync(out, exportedReport, 'utf8');
-  const r = await dropAndRead([out]);
+  // WITH the labels, deliberately. A CSV dropped alone hits the earlier
+  // "spreadsheet on its own" guard (scenario 1) and never reaches the
+  // results-export check — so dropping the report by itself would pass this
+  // scenario for the wrong reason and leave the real defect untested. The
+  // dangerous shape is the one a person actually produces when re-running a
+  // batch: the report plus the same label files. The first version of this
+  // scenario made exactly that mistake and went red against a build that was
+  // already fixed.
+  const r = await dropAndRead([out, ...bundleLabels], { settleMs: 3000 });
   const namesIt = /results file this tool produced/i.test(r.globalError);
   const saysWhy = /verdict/i.test(r.globalError);
   const pass = r.rows === 0 && r.errorRows === 0 && namesIt && saysWhy;
   record('report round trip is refused, not silently mis-run', pass,
-    `rows=${r.rows} (want 0), per-row errors=${r.errorRows} (want 0), banner ${namesIt && saysWhy ? 'names it and explains' : 'MISSING/WRONG'}: "${r.globalError.slice(0, 140)}"`);
+    `dropped report + ${bundleLabels.length} labels; rows=${r.rows} (want 0), per-row errors=${r.errorRows} (want 0), banner ${namesIt && saysWhy ? 'names it and explains' : 'MISSING/WRONG'}: "${r.globalError.slice(0, 140)}"`);
 }
 
 // ---------------------------------------------------------------- scenario 3
