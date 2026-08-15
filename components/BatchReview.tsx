@@ -10,6 +10,7 @@ import { applyBoldGate, type BoldGateResult } from "@/lib/compare/boldGate.ts";
 import { measureBoldSignals, ocrWarningBand } from "@/lib/boldMeasure.ts";
 import { DecidePair, ResultView, type FieldDecision } from "./ResultView.tsx";
 import { boldEligible, boldPendingRow, bucketOf, redFields, resolvedByFieldReview, type Bucket } from "@/lib/batchTriage.ts";
+import { isResultsExport, RESULTS_EXPORT_MESSAGE } from "@/lib/batchCsv.ts";
 import { AuditTrail } from "./AuditTrail.tsx";
 import { CheckingCard } from "./CheckingCard.tsx";
 import { Shell } from "./Shell.tsx";
@@ -203,6 +204,16 @@ export function BatchReview() {
     const parsed = parseCsv(csvText);
     if (!parsed.length) { setGlobalError("The spreadsheet file is empty."); return false; }
     const headers = parsed[0].map(canonicalHeader);
+    // Checked BEFORE the missing-column test, because the results export is not
+    // missing any: it carries every required header, so it passed validation and
+    // then compared each label against the word "match" — a confident mismatch
+    // on every row. Ordering it first also means a trimmed export gets this
+    // message rather than a generic "missing columns" one, which would send the
+    // agent to edit the wrong file.
+    if (isResultsExport(headers)) {
+      setGlobalError(RESULTS_EXPORT_MESSAGE);
+      return false;
+    }
     const missing = REQUIRED_HEADERS.filter((h) => !headers.includes(h));
     if (missing.length) {
       setGlobalError(`The spreadsheet is missing required column${missing.length > 1 ? "s" : ""}: ${missing.join(", ").replace(/_/g, " ")}. Download the sample CSV to see the expected format.`);

@@ -131,8 +131,13 @@ async function waitAndTally(timeoutMs = 180000) {
     URL.createObjectURL = oc;
     HTMLAnchorElement.prototype.click = ock;
     if (!captured) return null;
-    const body = (await captured.text()).trim().split('\n').slice(1);
+    const raw = await captured.text();
+    const body = raw.trim().split('\n').slice(1);
     return {
+      // The exact bytes the export produced. Scenario 4 feeds these back through
+      // the picker, so that round trip runs on the real export path instead of a
+      // synthetic file that could silently drift from it.
+      raw,
       rows: body.length,
       errors: body.filter((l) => /ERROR:/.test(l)).length,
       warningFailures: body.filter((l) => /,warning_failure,/.test(l)).length,
@@ -147,6 +152,10 @@ async function waitAndTally(timeoutMs = 180000) {
     };
   });
 }
+
+/** Raw bytes of the report the app exports, captured in scenario 2 and fed back
+ *  through the picker in 2b. Null under --quick, which never runs a batch. */
+let exportedReport = null;
 
 console.log(`round-trip batch harness -> ${BASE}`);
 console.log(`workspace: ${work}\n`);
@@ -185,7 +194,31 @@ console.log('\n2. the sample bundle (zip), unpacked and fed back through the pic
     const t = await waitAndTally();
     record('zip round trip completes', !!t && t.errors === 0 && t.rows === r.rows,
       t ? `checked ${t.rows}, errors=${t.errors}, clean=${t.clean}, needs_review=${t.needsReview}, warning_failure=${t.warningFailures}` : 'no report captured');
+    exportedReport = t?.raw ?? null;
   }
+}
+
+// ---------------------------------------------------------------- scenario 2b
+// The report the app just produced, fed straight back into the dropzone it came
+// from. This is the emit point the other two scenarios missed: the report
+// carries EVERY column the batch page requires (filename, brand_name,
+// class_type, alcohol_content, net_contents), so it passed validation and ran a
+// full batch comparing each label against the literal word "match" — a
+// confident mismatch on every field of every row. A loud error is recoverable;
+// a wrong verdict sends the agent to re-examine a label that was fine.
+//
+// Uses the bytes captured from the real export above, not a synthetic file, so
+// a change to the export header cannot pass this while breaking the round trip.
+if (exportedReport) {
+  console.log('\n2b. the report this app produced, dropped straight back in');
+  const out = path.join(work, 'labelcheck-batch-results.csv');
+  fs.writeFileSync(out, exportedReport, 'utf8');
+  const r = await dropAndRead([out]);
+  const namesIt = /results file this tool produced/i.test(r.globalError);
+  const saysWhy = /verdict/i.test(r.globalError);
+  const pass = r.rows === 0 && r.errorRows === 0 && namesIt && saysWhy;
+  record('report round trip is refused, not silently mis-run', pass,
+    `rows=${r.rows} (want 0), per-row errors=${r.errorRows} (want 0), banner ${namesIt && saysWhy ? 'names it and explains' : 'MISSING/WRONG'}: "${r.globalError.slice(0, 140)}"`);
 }
 
 // ---------------------------------------------------------------- scenario 3
@@ -263,8 +296,25 @@ const out = {
   results,
   why: 'Closes the loop the other batch harnesses structurally cannot: app output (download link) -> disk -> app input (real file picker). Every other batch test constructs a valid payload in-page and therefore assumes away the step where a user assembles theirs.',
 };
-fs.writeFileSync(path.join(ROOT, 'docs', 'round-trip-batch.json'), JSON.stringify(out, null, 2) + '\n');
-console.log(`\n${passed}/${results.length} passed -> docs/round-trip-batch.json`);
+// A --quick run must never clobber a full run's record. The evidence file is
+// cited by name in approach.md ("Last run: 7/7"), and --quick covers strictly
+// less: it stops before any label is checked, so it cannot produce the
+// completion scenarios. Overwriting a production full-run record with a local
+// pairing-only one silently makes the docs' claim false while every command
+// still exits 0 — and it happened, which is why this guard exists.
+const reportPath = path.join(ROOT, 'docs', 'round-trip-batch.json');
+let prior = null;
+try { prior = JSON.parse(fs.readFileSync(reportPath, 'utf8')); } catch { /* first run */ }
+if (QUICK && prior && prior.quick === false) {
+  console.log(`\n${passed}/${results.length} passed (quick)`);
+  console.log(`  NOT written: ${path.relative(ROOT, reportPath)} holds a FULL run`);
+  console.log(`  (${prior.passed}/${prior.total} against ${prior.base}, ${prior.ran}).`);
+  console.log('  A quick run covers less, so it does not replace that record.');
+  console.log('  Re-run without --quick to update the evidence file.');
+} else {
+  fs.writeFileSync(reportPath, JSON.stringify(out, null, 2) + '\n');
+  console.log(`\n${passed}/${results.length} passed -> docs/round-trip-batch.json`);
+}
 process.exit(passed === results.length ? 0 : 1);
 
 /** Minimal store/deflate unzip via the central directory. */
